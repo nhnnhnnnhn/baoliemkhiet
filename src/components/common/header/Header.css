@@ -1,0 +1,103 @@
+/* Định dạng chung cho Header */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: white !important;
+    
+  }
+  /* Logo */
+  .header .logo-container {
+    display: flex;
+    align-items: center;
+  }
+  
+  .header .logo-container img {
+    height: 100px;
+    width: auto; 
+  }
+  
+  
+  /* Navigation Menu */
+  .header .nav-links {
+    display: flex;
+    gap: 20px;
+    list-style: none;
+  }
+  
+  .header .nav-links .custom-nav-link {
+    color: black !important;
+    font-size: 16px;
+    font-weight: 500;
+    text-transform: none; 
+  }
+  
+  .header .nav-links .custom-nav-link:hover {
+    color: darkred !important;
+  }
+  
+  /* Search Bar */
+  .header .search-bar {
+    display: flex;
+    align-items: center;
+    background: #f5f5f5;
+    padding: 5px 15px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+  }
+  
+  .header .search-bar input {
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 5px;
+    font-size: 14px;
+  }
+  
+  /* Nút đăng nhập */
+  .header .login-btn {
+    background: darkred;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+   
+  }
+  
+  .header .login-btn:hover {
+    background: #a00;
+  }
+.breaking-news {
+  width: 100%;
+  background-color: darkred;
+  color: white;
+  padding: 6px 0;
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: uppercase;
+  overflow: hidden;
+  position: relative;
+}
+
+.news-content {
+  display: inline-block;
+  white-space: nowrap;
+  animation: scroll-text 20s linear infinite;
+  padding-left: 100%;
+}
+
+.news-content span {
+  margin-right: 150px; 
+}
+  
+@keyframes scroll-text {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
