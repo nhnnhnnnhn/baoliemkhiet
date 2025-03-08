@@ -49,8 +49,8 @@ src/
 
 1. Clone dự án về máy:
 ```bash
-git clone [địa chỉ repository]
-cd [tên folder]
+git clone https://github.com/nhnnhnnnhn/baoliemkhiet
+cd baoliemkhiet
 ```
 
 2. Cài đặt các phụ thuộc:
