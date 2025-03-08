@@ -20,7 +20,6 @@ const Header = () => {
           <Button className="custom-nav-link">Thế giới</Button>
           <Button className="custom-nav-link">Kinh doanh</Button>
           <Button className="custom-nav-link">Công nghệ</Button>
-          <Button className="custom-nav-link">Khoa học</Button>
           <Button className="custom-nav-link">Thể thao</Button>
         </Box>
 
