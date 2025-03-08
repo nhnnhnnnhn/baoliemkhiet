@@ -1,34 +1,242 @@
-.main-title {
-    display: flex;
-    align-items: stretch; 
-    background-color: #111; 
-    color: white;
-    padding: 0;
-    height: 600px; 
-  }
+
+.homepage {
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: sans-serif;
+}
+
+/*PHẦN TIN NÓNG */
+.top-news {
+  display: flex;
+  align-items: stretch;
+  background-color: #111;
+  color: #fff;
+  height: 600px;
+  margin-bottom: 2rem;
+}
+.top-news__text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 20px;
+}
+.top-news__text h2 {
+  font-size: 30px;
+  font-weight: bold;
+  line-height: 1.6;
+  margin: 0;
+}
+.top-news__link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+.top-news__link:hover h2 {
+  text-decoration: underline;
+}
+.top-news__image {
+  flex: 1;
+}
+.top-news__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* PHẦN TIN CHÍNH*/
+.main-news {
+  margin-bottom: 2rem;
+}
+.main-news__container {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+.main-news__text {
+  flex: 0 0 40%;
+}
+.main-news__text h3 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+.main-news__text p {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 0.8rem;
+}
+.main-news__link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+.main-news__link:hover h3 {
+  text-decoration: underline;
+}
+.main-author {
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+}
+.main-news__image {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.main-news__image img {
+  width: 100%;
+  max-height: 500px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+/*DANH SÁCH TIN NGẮN*/
+.short-news ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  justify-content: space-between; 
+  gap: 2rem;                    
+}
+
+.short-news li {
+  font-size: 1.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
+  max-width: 200px;      
+  white-space: normal;  
+  word-wrap: break-word; 
+  line-height: 1.2;     
+}
+
+.short-news li:hover {
+  color: #007bff;
+}
+
+
+/* PHẦN TIN MỚI */
+.other-news {
+  margin-bottom: 2rem;
+  display: flex;  
+  gap: 2rem;     
+}
+
+/* Cột trái: 1 tin chính */
+.other-news__left {
+  flex: 0 0 60%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+}
+
+/* Khung chứa text bên trái + ảnh bên phải */
+.left-top {
+  display: flex;
+  gap: 1rem;
+}
+.left-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+.left-text h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: bold;
+  line-height: 1.4;
+}
+.left-text p {
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: #333;
+}
+/* Ảnh bên phải */
+.left-top img {
+  width: 500px; 
+  height: auto;
+  object-fit: cover;
   
-  .main-title-left {
-    flex: 1;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    padding: 20px;
-  }
+}
+
+/* Dòng nhỏ dưới cùng */
+.left-bottom {
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+  text-align: center; 
+  margin-top: 0.5rem; 
+}
+
+/* Cột phải: 3 tin không ảnh */
+.other-news__right {
+  flex: 1; 
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.other-news__item {
+  background-color: #fff; 
+  padding: 0.75rem;
+  box-sizing: border-box;
+}
+.other-news__item h4 {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.4;
+  font-weight: normal;
+  font-weight: bold;
+}
+.other-news__item:hover h4 {
+  color: #007bff;
+  cursor: pointer;
+}
+/* TIN TỨC CUỐI CÙNG*/
+.last-news {
+  margin-bottom: 2rem; 
+}
+.last-news__title {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: bold;
+  text-align: center;
+}
+.last-news__list {
+  display: flex;
+  flex-wrap: wrap;  
+  gap: 1rem;       
+}
+.last-news__item {
+  flex: 1 1 calc(25% - 1rem); 
+  background-color: #fff;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
   
-  .main-title-left h2 {
-    font-size: 30px;
-    font-weight: bold;
-    line-height: 1.6;
-    max-width: 100%;
-  }
-  
-  .main-title-right {
-    flex: 1;
-  }
-  
-  .main-title-right img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; 
-  }
-  
+}
+.last-news__item img {
+  width: 100%;
+  height: 160px; 
+  object-fit: cover;
+  margin-bottom: 0.5rem;
+}
+.last-news__item h3 {
+  font-size: 1rem;
+  margin: 0;
+  line-height: 1.4;
+  font-weight: normal;
+  color: #333;
+  flex: 1;  
+}
+.last-news__item:hover h3 {
+  color: #007bff;
+  cursor: pointer;
+}
