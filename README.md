@@ -1,73 +1,99 @@
-# Getting Started with Create React App
+# Ứng Dụng Tin Tức
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Đây là ứng dụng tin tức được xây dựng bằng React, cho phép người dùng đọc tin tức từ nhiều danh mục khác nhau như thể thao và các chủ đề khác.
 
-## Available Scripts
+## Tính Năng
 
-In the project directory, you can run:
+- Giao diện người dùng thân thiện với Material UI
+- Hệ thống định tuyến (routing) để dễ dàng điều hướng giữa các trang
+- Các trang tin tức theo chủ đề (thể thao, v.v.)
+- Chức năng tìm kiếm tin tức
+- Hệ thống đăng nhập tài khoản
+- Khu vực quản trị dành cho admin
 
-### `npm i`
--Run before starting the project
+## Công Nghệ Sử Dụng
 
-### `npm start`
+- React 18
+- React Router v7
+- Material UI
+- Context API cho quản lý trạng thái
+- Custom hooks
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Cấu Trúc Dự Án
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```
+src/
+|-- apis/            # Các API calls và xử lý dữ liệu
+|-- assets/          # Tài nguyên (hình ảnh, fonts, v.v.)
+|-- components/      # Các component tái sử dụng
+|   |-- common/      # Components dùng chung (header, footer)
+|   |-- news/        # Components liên quan đến tin tức
+|   |-- admin/       # Components dành cho quản trị viên
+|-- context/         # Context providers
+|-- hooks/           # Custom hooks
+|-- layouts/         # Bố cục trang
+|-- module/          # Các module chức năng
+|-- pages/           # Các trang trong ứng dụng
+|   |-- news/        # Trang tin tức
+|   |-- home/        # Trang chủ
+|   |-- search/      # Trang tìm kiếm
+|   |-- login/       # Trang đăng nhập
+|   |-- account/     # Trang tài khoản người dùng
+|   |-- admin/       # Trang quản trị
+|-- router/          # Cấu hình định tuyến
+```
 
-### `npm test`
+## Bắt Đầu
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Cài Đặt
 
-### `npm run build`
+1. Clone dự án về máy:
+```bash
+git clone [địa chỉ repository]
+cd [tên folder]
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+2. Cài đặt các phụ thuộc:
+```bash
+npm install
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Các Lệnh Có Sẵn
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+#### `npm start`
 
-### `npm run eject`
+Chạy ứng dụng ở chế độ phát triển.\
+Mở [http://localhost:3000](http://localhost:3000) để xem trong trình duyệt.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Trang sẽ tự động tải lại khi bạn thay đổi mã nguồn.\
+Bạn cũng có thể xem lỗi lint trong console.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+#### `npm test`
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Chạy trình kiểm thử ở chế độ tương tác.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+#### `npm run build`
 
-## Learn More
+Biên dịch ứng dụng cho môi trường sản xuất vào thư mục `build`.\
+Đóng gói React ở chế độ sản xuất và tối ưu hóa build để hiệu suất tốt nhất.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Build được tối thiểu hóa và tên tệp bao gồm hàm băm.\
+Ứng dụng của bạn đã sẵn sàng để triển khai!
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Triển Khai
 
-### Code Splitting
+Ứng dụng này có thể được triển khai trên nhiều nền tảng khác nhau:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+- Netlify
+- Vercel
+- GitHub Pages
+- Firebase Hosting
+- AWS Amplify
 
-### Analyzing the Bundle Size
+## Đóng Góp
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Vui lòng đọc [CONTRIBUTING.md](CONTRIBUTING.md) để biết chi tiết về quy trình gửi yêu cầu hợp nhất (pull request).
 
-### Making a Progressive Web App
+## Giấy Phép
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Dự án này được cấp phép theo Giấy Phép MIT - xem tệp [LICENSE.md](LICENSE.md) để biết chi tiết.
