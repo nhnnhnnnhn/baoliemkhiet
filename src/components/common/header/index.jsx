@@ -3,7 +3,7 @@ import { AppBar, Toolbar, Button, IconButton, InputBase, Box } from "@mui/materi
 import { Search, Notifications } from "@mui/icons-material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { Link } from "react-router-dom";
-import { AuthContext } from "../../../contexts/AuthContext"; // Chú ý đường dẫn: nếu AuthContext.js nằm ở src/contexts/
+import { AuthContext } from "../../../contexts/AuthContext"; // Kiểm tra đường dẫn chính xác
 import "./Header.css";
 import logo from "../../../assets/logo.png";
 
@@ -22,11 +22,21 @@ const Header = () => {
 
         {/* Danh mục */}
         <Box className="nav-links">
-          <Button className="custom-nav-link">Thời sự</Button>
-          <Button className="custom-nav-link">Thế giới</Button>
-          <Button className="custom-nav-link">Kinh doanh</Button>
-          <Button className="custom-nav-link">Công nghệ</Button>
-          <Button className="custom-nav-link">Thể thao</Button>
+          <Button component={Link} to="/news/thoi-su" className="custom-nav-link">
+            Thời sự
+          </Button>
+          <Button component={Link} to="/news/the-gioi" className="custom-nav-link">
+            Thế giới
+          </Button>
+          <Button component={Link} to="/news/kinh-doanh" className="custom-nav-link">
+            Kinh doanh
+          </Button>
+          <Button component={Link} to="/news/cong-nghe" className="custom-nav-link">
+            Công nghệ
+          </Button>
+          <Button component={Link} to="/sport" className="custom-nav-link">
+            Thể thao
+          </Button>
         </Box>
 
         {/* Thanh tìm kiếm */}
