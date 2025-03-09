@@ -19,7 +19,6 @@ const Header = () => {
             <img src={logo} alt="Logo" className="logo" />
           </Link>
         </Box>
-
         {/* Danh mục */}
         <Box className="nav-links">
           <Button component={Link} to="/news/thoi-su" className="custom-nav-link">
@@ -49,8 +48,6 @@ const Header = () => {
             <Search />
           </IconButton>
         </Box>
-
-        {/* Hành động: thông báo và đăng nhập/đăng xuất */}
         <Box className="actions">
           <IconButton className="notification-icon">
             <Notifications />
