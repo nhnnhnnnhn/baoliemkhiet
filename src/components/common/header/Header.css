@@ -5,16 +5,23 @@
     align-items: center;
     justify-content: space-between;
     background-color: white !important;
-    position: sticky; /* Giữ header cố định ở phía trên */
-    top: 0; /* Cố định ở vị trí trên cùng */
+    position: sticky !important;
+    top: 0;
     left: 0;
     right: 0;
-    width: 100%; /* Chiều dài của header - đầy đủ chiều rộng màn hình */
-    max-width: 1920px; /* Giới hạn chiều dài tối đa nếu màn hình quá rộng */
-    height: 120px; /* Chiều rộng cố định */
-    margin: 0 auto; /* Căn giữa header nếu màn hình rộng hơn max-width */
-    z-index: 1000; /* Đảm bảo header hiển thị trên các phần tử khác */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Thêm bóng đổ nhẹ */
+    width: 100%;
+    max-width: 1920px;
+    height: 120px;
+    margin: 0 auto;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Style đặc biệt cho header ở trang chính */
+.header.transparent {
+    background-color: transparent !important;
+    position: fixed !important;
+    box-shadow: none;
 }
 
 /* Toolbar của header - phần chứa nội dung chính */
@@ -28,123 +35,175 @@
     justify-content: space-between !important;
 }
 
-/* Thêm padding cho phần nội dung chính để tránh bị header che phủ */
-.homepage {
-  padding-top: 10px;
+/* Gradient background cho toolbar khi ở trang chính */
+.header.transparent .MuiToolbar-root {
+    background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 70%, transparent 100%);
 }
 
 /* Logo */
 .header .logo-container {
-  display: flex;
-  align-items: center;
-  margin-right: 15px; /* Khoảng cách giữa logo và menu */
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
 }
 
 .header .logo-container img {
-  height: 70px; /* Chiều cao logo */
-  width: auto; 
-  object-fit: contain; /* Đảm bảo logo SVG hiển thị đúng tỷ lệ */
+    height: 70px;
+    width: auto;
+    object-fit: contain;
+}
+
+/* Logo màu trắng khi ở trang chính */
+.header.transparent .logo-container img {
+    filter: brightness(0) invert(1);
 }
 
 /* Navigation Menu */
 .header .nav-links {
-  display: flex;
-  gap: 15px;
-  list-style: none;
-  margin: 0 20px; /* Khoảng cách từ menu với các phần tử khác */
-  flex-grow: 1; /* Cho phép menu mở rộng để lấp đầy không gian */
-  justify-content: center; /* Căn giữa các liên kết */
+    display: flex;
+    gap: 15px;
+    list-style: none;
+    margin: 0 20px;
+    flex-grow: 1;
+    justify-content: center;
 }
 
 .header .nav-links .custom-nav-link {
-  color: black !important;
-  font-size: 16px;
-  font-weight: 500;
-  text-transform: none; 
-  padding: 8px 12px; /* Thêm padding cho các nút menu */
+    color: black !important;
+    font-size: 16px;
+    font-weight: 500;
+    text-transform: none;
+    padding: 8px 12px;
+}
+
+/* Menu màu trắng khi ở trang chính */
+.header.transparent .nav-links .custom-nav-link {
+    color: white !important;
 }
 
 .header .nav-links .custom-nav-link:hover {
-  color: darkred !important;
-  background-color: rgba(139, 0, 0, 0.05); /* Hiệu ứng hover */
-  border-radius: 4px;
+    color: darkred !important;
+    background-color: rgba(139, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.header.transparent .nav-links .custom-nav-link:hover {
+    color: rgba(255,255,255,0.8) !important;
+    background-color: rgba(255,255,255,0.1);
 }
 
 /* Search Bar */
 .header .search-bar {
-  display: flex;
-  align-items: center;
-  background: #f5f5f5;
-  padding: 5px 10px;
-  border-radius: 13px;
-  border: 1px solid #ddd;
-  margin: 0 10px; /* Khoảng cách với các phần tử khác */
-  max-width: 300px; /* Giới hạn chiều rộng tối đa */
-  flex-shrink: 1; /* Cho phép thu nhỏ khi cần */
+    display: flex;
+    align-items: center;
+    background: #f5f5f5;
+    padding: 5px 10px;
+    border-radius: 13px;
+    border: 1px solid #ddd;
+    margin: 0 10px;
+    max-width: 300px;
+    flex-shrink: 1;
+}
+
+/* Search bar trong suốt khi ở trang chính */
+.header.transparent .search-bar {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
 }
 
 .header .search-bar input {
-  border: none;
-  outline: none;
-  background: transparent;
-  padding: 5px;
-  font-size: 14px;
-  width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 5px;
+    font-size: 14px;
+    width: 100%;
+    color: black;
 }
 
-/* Nút đăng nhập và profile user */
+.header.transparent .search-bar input {
+    color: white;
+}
+
+.header.transparent .search-bar input::placeholder {
+    color: rgba(255,255,255,0.8);
+}
+
+/* Icon màu trắng khi ở trang chính */
+.header.transparent .search-bar .MuiIconButton-root,
+.header.transparent .notification-icon {
+    color: white !important;
+}
+
+/* Nút đăng nhập */
 .header .login-btn {
-  background: darkred;
-  color: #fff;
-  padding: 8px 16px;
-  border-radius: 20px;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: bold;
-  margin-left: 10px; /* Khoảng cách với phần tử bên trái */
+    background: darkred;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+/* Nút đăng nhập trong suốt khi ở trang chính */
+.header.transparent .login-btn {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
 }
 
 .header .login-btn:hover {
-  background: #a00;
+    background: #a00;
 }
 
-/* Vùng chứa user profile (khi đã đăng nhập) */
-.header .user-profile-container {
-  display: flex;
-  align-items: center;
-  margin-left: 10px;
+.header.transparent .login-btn:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+/* Email user */
+.header span {
+    color: black !important;
+}
+
+.header.transparent span {
+    color: white !important;
 }
 
 /* Breaking news */
 .breaking-news {
-  width: 100%;
-  background-color: darkred;
-  color: white;
-  padding: 6px 0;
-  font-size: 14px;
-  font-weight: bold;
-  text-transform: uppercase;
-  overflow: hidden;
-  position: relative;
+    width: 100%;
+    background-color: darkred;
+    color: white;
+    padding: 6px 0;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    overflow: hidden;
+    position: relative;
+}
+
+.header.transparent .breaking-news {
+    background-color: rgba(139,0,0,0.8);
 }
 
 .news-content {
-  display: inline-block;
-  white-space: nowrap;
-  animation: scroll-text 20s linear infinite;
-  padding-left: 100%;
+    display: inline-block;
+    white-space: nowrap;
+    animation: scroll-text 20s linear infinite;
+    padding-left: 100%;
 }
 
 .news-content span {
-  margin-right: 150px; 
+    margin-right: 150px; 
 }
   
 @keyframes scroll-text {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-100%);
-  }
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-100%);
+    }
 }

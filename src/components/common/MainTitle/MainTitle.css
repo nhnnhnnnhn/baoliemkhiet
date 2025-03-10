@@ -1,71 +1,96 @@
-
 .homepage {
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
   font-family: sans-serif;
 }
 
 /*PHẦN TIN NÓNG */
 .top-news {
   width: 100%;
+  height: 100vh; /* Chiều cao full màn hình */
   margin: 0;
   padding: 0;
-  position: relative; /* để overlay text chồng lên ảnh */
+  position: relative;
+  overflow: hidden;
 }
 
 /* Ảnh full màn hình */
-.top-news__image img {
+.top-news__image {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: auto;
-  display: block; /* Xóa khoảng trắng thừa */
+  height: 100%;
 }
 
-/* Overlay chứa tiêu đề chồng lên ảnh, sát góc trái dưới */
+.top-news__image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+/* Overlay chứa tiêu đề chồng lên ảnh */
 .top-news__overlay {
   position: absolute;
-  bottom: 10px;   /* hoặc 0 nếu muốn sát viền */
-  left: 10px;     /* hoặc 0 nếu muốn sát viền */
+  bottom: 80px;
+  left: 50px;
   transform: none;
   color: #fff;
   text-align: left;
-  max-width: 600px; /* giới hạn độ rộng text */
+  max-width: 800px;
   margin: 0;
-  background: rgba(0,0,0,0.4); /* nền đen mờ */
-  padding: 16px;
-  
+  background: rgba(0,0,0,0.5);
+  padding: 40px;
+  border-radius: 4px;
 }
 
 /* Tiêu đề */
 .top-news__overlay h2 {
-  font-size: 2.5rem; 
+  font-size: 3.5rem;
   font-weight: bold;
-  line-height: 1.4;
-  margin: 0;
+  margin: 0 0 20px 0;
+  line-height: 1.2;
+  text-transform: uppercase;
 }
+
+/* Mô tả */
 .top-news__overlay p {
-  font-size: 1rem;
-  line-height: 1.4;
+  font-size: 1.3rem;
   margin: 0;
-  font-weight: 400;    /* mỏng hơn */
+  line-height: 1.6;
+  max-width: 700px;
 }
 
-/* Link giữ nguyên màu trắng */
+/* Link không gạch chân */
 .top-news__link {
+  color: white;
   text-decoration: none;
-  color: inherit;
+  display: block;
 }
 
+/* Container cho phần nội dung còn lại */
+.content-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
 
 /* PHẦN TIN CHÍNH*/
 .main-news {
   margin-bottom: 2rem;
+  background: transparent;
+  padding: 0;
 }
+
 .main-news__container {
   display: flex;
   align-items: center;
   gap: 1.5rem;
   margin-bottom: 1rem;
 }
+
 .main-news__text {
   flex: 0 0 40%;
 }
@@ -251,4 +276,83 @@
 .last-news__item:hover h3 {
   color: #007bff;
   cursor: pointer;
+}
+
+/* Phần thời sự */
+.thoi-su-nav {
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+}
+
+.thoi-su-nav ul {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 40px;
+  align-items: center;
+}
+
+.thoi-su-nav li {
+  cursor: pointer;
+}
+
+.thoi-su-nav li:first-child {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #C00;
+  padding-right: 30px;
+}
+
+.thoi-su-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.thoi-su-main {
+  position: relative;
+}
+
+.thoi-su-main img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.thoi-su-main h3 {
+  margin-top: 10px;
+  font-size: 1.5rem;
+  line-height: 1.4;
+}
+
+.thoi-su-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.thoi-su-item {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 15px;
+}
+
+.thoi-su-item img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+}
+
+.thoi-su-item h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+
+/* Section divider */
+.section-divider {
+  border: none;
+  border-top: 1px solid #989898;
+  margin: 30px 0;
 }

@@ -1,4 +1,5 @@
 import React, { useContext, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   AppBar,
   Toolbar,
@@ -18,12 +19,14 @@ import {
 import { Link } from "react-router-dom";
 import { AuthContext } from "../../../contexts/AuthContext";
 import "./Header.css";
-import logo from "../../../assets/logo.png";
+import logo from "../../../assets/Logo.svg";
 
 const Header = () => {
   const { user, logout } = useContext(AuthContext);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
@@ -33,8 +36,16 @@ const Header = () => {
     logout();
   };
 
+  const handleDashboard = () => {
+    handleMenuClose();
+    navigate('/admin');
+  };
+
+  // Kiểm tra xem có phải đang ở trang chính không
+  const isHomePage = location.pathname === "/";
+
   return (
-    <AppBar position="static" className="header">
+    <AppBar position="static" className={`header ${isHomePage ? 'transparent' : ''}`}>
       <Toolbar 
         sx={{
           display: "flex",
@@ -79,17 +90,24 @@ const Header = () => {
             alignItems: "center",
             backgroundColor: "#f2f2f2",
             borderRadius: 2,
-            px: 2,
-            py: 0.5,
-            minWidth: "280px" // Tùy chỉnh độ rộng search
+            px: 0.8,
+            py: 0.15,
+            minWidth: "180px" // Giảm độ rộng tối thiểu
           }}
         >
-          <IconButton>
-            <MenuIcon />
+          <IconButton size="small">
+            <MenuIcon fontSize="small" />
           </IconButton>
-          <InputBase placeholder="Tìm tin chấn động" sx={{ ml: 1, flex: 1 }} />
-          <IconButton>
-            <Search />
+          <InputBase 
+            placeholder="Tìm tin chấn động"
+            sx={{ 
+              ml: 1, 
+              flex: 1,
+              fontSize: '0.9rem' // Giảm kích thước font
+            }} 
+          />
+          <IconButton size="small">
+            <Search fontSize="small" />
           </IconButton>
         </Box>
 
@@ -116,7 +134,7 @@ const Header = () => {
                 anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
                 transformOrigin={{ vertical: "top", horizontal: "right" }}
               >
-                <MenuItem onClick={handleMenuClose}>Dashboard</MenuItem>
+                <MenuItem onClick={handleDashboard}>Dashboard</MenuItem>
                 <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
               </Menu>
             </Box>
