@@ -3,9 +3,9 @@ import "./AdminHeader.css";
 import { IoNotificationsSharp } from "react-icons/io5";
 import default_avatar from "../../../assets/default_avatar.png";
 
-const Header = () => {
+const AdminHeader = () => {
   return (
-    <div className="header">
+    <div className="admin-header">
       <div className="header-right">
         <div className="notification-icon">
           <span className="icon">
@@ -26,4 +26,4 @@ const Header = () => {
   );
 };
 
-export default Header;
+export default AdminHeader;
