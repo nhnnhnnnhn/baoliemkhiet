@@ -128,7 +128,7 @@ export default function TechnologyPage() {
         {firstTwo.map((item) => (
           <Grid item xs={12} md={6} key={item.id}>
             <Card sx={{ height: "100%", position: "relative", borderRadius: 0  }}>
-              <CardActionArea sx={{ height: "100%", position: "relative" }}>
+              <CardActionArea sx={{ height: "100%", position: "relative"}}>
                 {/* Ảnh */}
                 <CardMedia
                   component="img"
@@ -168,7 +168,7 @@ export default function TechnologyPage() {
       <Grid container spacing={0} sx={{ mb: 2 }}>
         {nextFour.map((item) => (
           <Grid item xs={12} sm={6} md={3} key={item.id}  >
-            <Card sx={{ height: "100%", borderRadius: 0, boxShadow: 0  }}>
+            <Card sx={{ height: "100%", borderRadius: 0, boxShadow: 0,  }}>
               <CardActionArea>
                 <CardMedia
                   component="img"
@@ -177,7 +177,7 @@ export default function TechnologyPage() {
                   alt={item.title}
                 />
                 <CardContent>
-                  <Typography variant="subtitle1" gutterBottom>
+                  <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: "bold" }}>
                     {item.title}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -206,7 +206,7 @@ export default function TechnologyPage() {
               {/* Nội dung bên phải */}
               <Box sx={{ display: "flex", flexDirection: "column", flex: 1 }}>
                 <CardContent>
-                  <Typography variant="subtitle1" gutterBottom>
+                  <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: "bold" }}>
                     {item.title}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
