@@ -15,16 +15,13 @@ import {
   Menu as MenuIcon,
   ArrowDropDown as ArrowDropDownIcon
 } from "@mui/icons-material";
-import { Link, useNavigate } from "react-router-dom";
-import { AuthContext } from "../../../contexts/AuthContext"; 
+import { Link } from "react-router-dom";
+import { AuthContext } from "../../../contexts/AuthContext";
 import "./Header.css";
-import logo from "../../../assets/Logo.svg";
+import logo from "../../../assets/logo.png";
 
 const Header = () => {
   const { user, logout } = useContext(AuthContext);
-  const navigate = useNavigate();
-
-  // Menu dropdown khi bấm mũi tên
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
@@ -34,41 +31,47 @@ const Header = () => {
   const handleLogout = () => {
     handleMenuClose();
     logout();
-    // Chuyển hướng về trang chủ sau khi đăng xuất
-    navigate('/');
-    console.log("Đã đăng xuất và chuyển hướng về trang chủ");
   };
 
   return (
     <AppBar position="static" className="header">
-      <Toolbar sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-        {/* Logo */}
-        <Box className="logo-container" sx={{ mr: 2 }}>
-          <Link to="/" style={{ textDecoration: "none" }}>
-            <img src={logo} alt="Logo" className="logo" />
-          </Link>
+      <Toolbar
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between" // Tách thành 3 cụm: trái - giữa - phải
+        }}
+      >
+        {/* Cụm 1: Logo + Danh mục */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          {/* Logo */}
+          <Box className="logo-container" sx={{ mr: 2 }}>
+            <Link to="/" style={{ textDecoration: "none" }}>
+              <img src={logo} alt="Logo" className="logo" />
+            </Link>
+          </Box>
+
+          {/* Nav links */}
+          <Box className="nav-links" sx={{ display: "flex", gap: 1 }}>
+            <Button component={Link} to="/news/thoi-su" className="custom-nav-link">
+              Thời sự
+            </Button>
+            <Button component={Link} to="/news/the-gioi" className="custom-nav-link">
+              Thế giới
+            </Button>
+            <Button component={Link} to="/news/kinh-doanh" className="custom-nav-link">
+              Kinh doanh
+            </Button>
+            <Button component={Link} to="/news/cong-nghe" className="custom-nav-link">
+              Công nghệ
+            </Button>
+            <Button component={Link} to="/sport" className="custom-nav-link">
+              Thể thao
+            </Button>
+          </Box>
         </Box>
 
-        {/* Danh mục (Thời sự, Thế giới, v.v.) */}
-        <Box className="nav-links" sx={{ display: "flex", gap: 1 }}>
-          <Button component={Link} to="/thoi-su" className="custom-nav-link">
-            Thời sự
-          </Button>
-          <Button component={Link} to="/the-gioi" className="custom-nav-link">
-            Thế giới
-          </Button>
-          <Button component={Link} to="/kinh-doanh" className="custom-nav-link">
-            Kinh doanh
-          </Button>
-          <Button component={Link} to="/cong-nghe" className="custom-nav-link">
-            Công nghệ
-          </Button>
-          <Button component={Link} to="/sport" className="custom-nav-link">
-            Thể thao
-          </Button>
-        </Box>
-
-        {/* Thanh tìm kiếm */}
+        {/* Cụm 2: Thanh tìm kiếm */}
         <Box
           className="search-bar"
           sx={{
@@ -77,7 +80,8 @@ const Header = () => {
             backgroundColor: "#f2f2f2",
             borderRadius: 2,
             px: 2,
-            py: 0.5
+            py: 0.5,
+            minWidth: "280px" // Tùy chỉnh độ rộng search
           }}
         >
           <IconButton>
@@ -89,48 +93,42 @@ const Header = () => {
           </IconButton>
         </Box>
 
-        {/* Nút chuông thông báo */}
-        <IconButton className="notification-icon">
-          <Notifications />
-        </IconButton>
+        {/* Cụm 3: Nút thông báo + User info */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {/* Nút chuông thông báo */}
+          <IconButton className="notification-icon">
+            <Notifications />
+          </IconButton>
 
-        {/* Nếu user login -> hiển thị email + mũi tên => menu, nếu chưa -> nút Đăng nhập */}
-        {user ? (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            {/* Email user */}
-            <span style={{ fontWeight: "bold", color: "#000" }}>
-              {user.email || "admin@gmail.com"}
-            </span>
-
-            {/* Mũi tên -> Mở menu */}
-            <IconButton onClick={handleMenuOpen} sx={{ p: 0 }}>
-              <ArrowDropDownIcon />
-            </IconButton>
-
-            {/* Menu: Dashboard, Đăng xuất */}
-            <Menu
-              anchorEl={anchorEl}
-              open={open}
-              onClose={handleMenuClose}
-              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-              transformOrigin={{ vertical: "top", horizontal: "right" }}
-            >
-              {user && user.role === "admin" && (
-                <MenuItem component={Link} to="/admin" onClick={handleMenuClose}>
-                  Dashboard
-                </MenuItem>
-              )}
-              <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
-            </Menu>
-          </Box>
-        ) : (
-          <Button component={Link} to="/login" className="login-btn">
-            Đăng nhập
-          </Button>
-        )}
+          {/* Nếu user login -> hiển thị email + mũi tên => menu, nếu chưa -> nút Đăng nhập */}
+          {user ? (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <span style={{ fontWeight: "bold", color: "#000" }}>
+                {user.email || "admin@gmail.com"}
+              </span>
+              <IconButton onClick={handleMenuOpen} sx={{ p: 0 }}>
+                <ArrowDropDownIcon />
+              </IconButton>
+              <Menu
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleMenuClose}
+                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                transformOrigin={{ vertical: "top", horizontal: "right" }}
+              >
+                <MenuItem onClick={handleMenuClose}>Dashboard</MenuItem>
+                <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
+              </Menu>
+            </Box>
+          ) : (
+            <Button component={Link} to="/login" className="login-btn">
+              Đăng nhập
+            </Button>
+          )}
+        </Box>
       </Toolbar>
 
-      {/* Dòng chữ chạy breaking news */}
+      {/* Breaking news */}
       <Box className="breaking-news" sx={{ width: "100%" }}>
         <div className="news-content">
           <span>ĐỘI BÓNG HÀNG DA ĐÁNH RƠI CHIẾN THẮNG TRƯỚC ANH LONG</span>
