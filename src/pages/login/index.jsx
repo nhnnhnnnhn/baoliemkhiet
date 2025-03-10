@@ -1,5 +1,5 @@
-import React, { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useContext, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import { AuthContext } from "../../contexts/AuthContext"; 
 import googleIcon from "../../assets/google.png"; // Logo Google đa màu
@@ -19,18 +19,53 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
-  const { login } = useContext(AuthContext); 
+  const location = useLocation();
+  const { login, user } = useContext(AuthContext);
+  
+  // Lấy đường dẫn trước đó mà người dùng muốn truy cập (nếu có)
+  const from = location.state?.from?.pathname || "/admin";
+  
+  // Nếu đã đăng nhập, chuyển hướng đến trang yêu cầu
+  useEffect(() => {
+    if (user) {
+      if (user.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
+    }
+  }, [user, navigate]);
 
   const handleLogin = () => {
+    setErrorMessage("");
+    
+    if (!email || !password) {
+      setErrorMessage("Vui lòng nhập email và mật khẩu");
+      return;
+    }
+    
     if (email === "admin@gmail.com" && password === "123") {
-      // Sử dụng hàm login từ AuthContext để lưu thông tin user
-      login({ email, role: "admin" });
-      navigate("/");
+      // Lưu thông tin user với role admin
+      const success = login({ email, role: "admin" });
+      
+      if (success) {
+        console.log("Đăng nhập thành công, chuyển hướng đến:", from);
+        navigate(from);
+      }
     } else {
-      alert("Tài khoản hoặc mật khẩu không đúng!");
+      setErrorMessage("Tài khoản hoặc mật khẩu không đúng!");
     }
   };
+  
+  // Handle Enter key press
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleLogin();
+    }
+  };
+
   return (
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
       {/* Cột trái */}
@@ -91,6 +126,7 @@ export default function LoginPage() {
             type={showPass ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onKeyPress={handleKeyPress}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -106,6 +142,13 @@ export default function LoginPage() {
               )
             }}
           />
+
+          {/* Hiển thị thông báo lỗi nếu có */}
+          {errorMessage && (
+            <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+              {errorMessage}
+            </Typography>
+          )}
 
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <FormControlLabel control={<Checkbox />} label="Remember me" />
@@ -138,7 +181,7 @@ export default function LoginPage() {
           </Button>
 
           <Box sx={{ fontSize: "0.9rem" }}>
-            Don’t have an account?{" "}
+            Don't have an account?{" "}
             <Button variant="text" size="small" sx={{ textTransform: "none", p: 0 }}>
               Signup
             </Button>

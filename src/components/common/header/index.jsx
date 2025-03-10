@@ -15,13 +15,14 @@ import {
   Menu as MenuIcon,
   ArrowDropDown as ArrowDropDownIcon
 } from "@mui/icons-material";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../../contexts/AuthContext"; 
 import "./Header.css";
 import logo from "../../../assets/logo.png";
 
 const Header = () => {
   const { user, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   // Menu dropdown khi bấm mũi tên
   const [anchorEl, setAnchorEl] = useState(null);
@@ -33,6 +34,9 @@ const Header = () => {
   const handleLogout = () => {
     handleMenuClose();
     logout();
+    // Chuyển hướng về trang chủ sau khi đăng xuất
+    navigate('/');
+    console.log("Đã đăng xuất và chuyển hướng về trang chủ");
   };
 
   return (
@@ -111,7 +115,11 @@ const Header = () => {
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
               transformOrigin={{ vertical: "top", horizontal: "right" }}
             >
-              <MenuItem onClick={handleMenuClose}>Dashboard</MenuItem>
+              {user && user.role === "admin" && (
+                <MenuItem component={Link} to="/admin" onClick={handleMenuClose}>
+                  Dashboard
+                </MenuItem>
+              )}
               <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
             </Menu>
           </Box>

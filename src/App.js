@@ -33,13 +33,26 @@ function AdminLayout() {
 
 // Route bảo vệ cho admin
 function RequireAuth() {
-  const { user } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const location = useLocation();
   
-  if (!user || user.role !== "admin") {
+  // Nếu đang loading, hiển thị thông báo đang tải
+  if (loading) {
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <p>Đang kiểm tra thông tin đăng nhập...</p>
+    </div>;
+  }
+  
+  console.log("RequireAuth - Thông tin user:", user);
+  console.log("RequireAuth - Có quyền admin:", isAdmin());
+  
+  // Nếu chưa đăng nhập hoặc không phải admin, chuyển hướng đến trang login
+  if (!isAdmin()) {
+    console.log("Không có quyền admin, chuyển hướng đến trang login");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
   
+  console.log("Đã xác thực quyền admin");
   return <Outlet />;
 }
 
@@ -55,12 +68,31 @@ function UserLayout() {
 }
 
 function AppLayout() {
+  const { user, loading } = useAuth();
+  const location = useLocation();
+  
+  console.log("AppLayout - Thông tin user hiện tại:", user);
+  
+  // Hiển thị loading spinner khi đang kiểm tra trạng thái đăng nhập
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <p>Đang tải...</p>
+      </div>
+    );
+  }
+  
+  // Nếu đường dẫn bắt đầu bằng /admin và không phải là admin, chuyển hướng về login
+  if (location.pathname.startsWith('/admin') && (!user || user.role !== 'admin')) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+  
   return (
     <Routes>
       {/* Admin Routes */}
       <Route element={<RequireAuth />}>
-        <Route path="/admin/*" element={<AdminLayout />}>
-          <Route index element={<div>Trang quản trị</div>} />
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<div>Trang quản trị Admin</div>} />
           <Route path="dashboard" element={<div>Dashboard Admin</div>} />
           <Route path="users" element={<div>Quản lý người dùng</div>} />
           <Route path="posts" element={<div>Quản lý bài viết</div>} />
@@ -75,6 +107,9 @@ function AppLayout() {
       
       {/* Login Route (không có layout) */}
       <Route path="/login" element={<LoginPage />} />
+      
+      {/* Route mặc định - redirect về trang chủ */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
