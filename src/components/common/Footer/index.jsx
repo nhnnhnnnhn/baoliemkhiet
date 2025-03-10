@@ -1,30 +1,28 @@
 import React from "react";
 import { Box, Grid, Typography } from "@mui/material";
 import { Link } from "react-router-dom";
+import logo from "../../../assets/Logo.svg";
 
 const Footer = () => {
   return (
     <Box sx={{ backgroundColor: "#f8f8f8", p: 4, mt: 4 }}>
       <Grid container spacing={2}>
-        {/* Cột 1: Logo + Slogan */}
+        {/* Cột 1: Logo */}
         <Grid item xs={12} sm={6} md={3}>
-          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#000", mb: 1 }}>
-            Báo Liêm Khiết
-          </Typography>
-          <Typography variant="subtitle2" sx={{ color: "#000" }}>
-            Chúng ta trung thực, còn bạn thì sao?
-          </Typography>
+          <Box sx={{ mb: 1 }}>
+            <img src={logo} alt="Logo" style={{ height: 100 }} />
+          </Box>
         </Grid>
 
         {/* Cột 2: Danh mục */}
         <Grid item xs={12} sm={6} md={3}>
-          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#000", mb: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#971616", mb: 1 }}>
             Danh mục
           </Typography>
           <Box component="ul" sx={{ listStyle: "none", p: 0, m: 0 }}>
             <li>
               <Link
-                to="/category/thoi-su"
+                to="/news/thoi-su"
                 style={{ color: "#000", textDecoration: "none" }}
               >
                 Thời sự
@@ -32,7 +30,7 @@ const Footer = () => {
             </li>
             <li>
               <Link
-                to="/category/the-gioi"
+                to="/news/the-gioi"
                 style={{ color: "#000", textDecoration: "none" }}
               >
                 Thế giới
@@ -40,7 +38,7 @@ const Footer = () => {
             </li>
             <li>
               <Link
-                to="/category/kinh-doanh"
+                to="/news/kinh-doanh"
                 style={{ color: "#000", textDecoration: "none" }}
               >
                 Kinh doanh
@@ -48,7 +46,7 @@ const Footer = () => {
             </li>
             <li>
               <Link
-                to="/category/cong-nghe"
+                to="/news/cong-nghe"
                 style={{ color: "#000", textDecoration: "none" }}
               >
                 Công nghệ
@@ -56,7 +54,7 @@ const Footer = () => {
             </li>
             <li>
               <Link
-                to="/category/khoa-hoc"
+                to="/sport"
                 style={{ color: "#000", textDecoration: "none" }}
               >
                 Khoa học
@@ -67,7 +65,7 @@ const Footer = () => {
 
         {/* Cột 3: Thông tin */}
         <Grid item xs={12} sm={6} md={3}>
-          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#000", mb: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#971616", mb: 1 }}>
             Thông tin
           </Typography>
           <Box component="ul" sx={{ listStyle: "none", p: 0, m: 0 }}>
@@ -96,7 +94,7 @@ const Footer = () => {
 
         {/* Cột 4: Kết nối */}
         <Grid item xs={12} sm={6} md={3}>
-          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#000", mb: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#971616", mb: 1 }}>
             Kết nối
           </Typography>
           <Box sx={{ display: "flex", gap: 2 }}>
@@ -124,7 +122,7 @@ const Footer = () => {
           color: "#000",
         }}
       >
-        <p>© 2025 Báo Liêm Khiết. Tất cả các quyền được bảo lưu.</p>
+        <p>© 2025 <img src={logo} alt="Logo" style={{ height: 20, verticalAlign: 'middle' }} />. Tất cả các quyền được bảo lưu.</p>
       </Box>
     </Box>
   );
