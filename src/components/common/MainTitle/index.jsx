@@ -14,17 +14,19 @@ const MainTitle = () => {
     <div className="homepage">
       {/*PHẦN TIN NÓNG*/}
       <section className="top-news">
-        <div className="top-news__text">
+        <div className="top-news__overlay">
           <Link to="/news/pham-thoai-sao-ke" className="top-news__link">
             <h2>
-              NÓNG: PHẠM THOẠI TUNG 28 TRANG SAO KÊ TÀI KHOẢN MB, ĐỒNG THỜẠI CHẤT VẤN:
-              <br />
-              "CHO MÌNH HỎI NHỮNG CON SỐ 1.8 TỶ, 2 TỶ, 3.5 TỶ CÁC BẠN LẤY Ở ĐÂU Ạ?"
+            Sẽ trình Trung ương đề xuất sửa Điều lệ Đảng và Hiến pháp
             </h2>
+            <p>
+              Chủ tịch Quốc hội Trần Thanh Mẫn giao Thường trực Ủy ban Pháp luật - Tư pháp 
+              nghiên cứu sửa một số điều của Hiến pháp về tổ chức bộ máy, để báo cáo cấp có thẩm quyền.
+            </p>
           </Link>
         </div>
         <div className="top-news__image">
-          <img src={hotNewsImage} alt="Phạm ThoẠi Sao Kê" />
+        <img src={hotNewsImage} alt="Banner hiển thị tin nóng" />
         </div>
       </section>
 
