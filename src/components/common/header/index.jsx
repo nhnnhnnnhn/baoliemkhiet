@@ -1,26 +1,52 @@
-import React, { useContext } from "react";
-import { AppBar, Toolbar, Button, IconButton, InputBase, Box } from "@mui/material";
-import { Search, Notifications } from "@mui/icons-material";
-import MenuIcon from "@mui/icons-material/Menu";
+import React, { useContext, useState } from "react";
+import {
+  AppBar,
+  Toolbar,
+  Button,
+  IconButton,
+  InputBase,
+  Box,
+  Menu,
+  MenuItem
+} from "@mui/material";
+import {
+  Search,
+  Notifications,
+  Menu as MenuIcon,
+  ArrowDropDown as ArrowDropDownIcon
+} from "@mui/icons-material";
 import { Link } from "react-router-dom";
-import { AuthContext } from "../../../contexts/AuthContext"; // Kiểm tra đường dẫn chính xác
+import { AuthContext } from "../../../contexts/AuthContext"; 
 import "./Header.css";
 import logo from "../../../assets/logo.png";
 
 const Header = () => {
   const { user, logout } = useContext(AuthContext);
 
+  // Menu dropdown khi bấm mũi tên
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
+
+  const handleLogout = () => {
+    handleMenuClose();
+    logout();
+  };
+
   return (
     <AppBar position="static" className="header">
-      <Toolbar>
+      <Toolbar sx={{ display: "flex", alignItems: "center", gap: 2 }}>
         {/* Logo */}
-        <Box className="logo-container">
+        <Box className="logo-container" sx={{ mr: 2 }}>
           <Link to="/" style={{ textDecoration: "none" }}>
             <img src={logo} alt="Logo" className="logo" />
           </Link>
         </Box>
-        {/* Danh mục */}
-        <Box className="nav-links">
+
+        {/* Danh mục (Thời sự, Thế giới, v.v.) */}
+        <Box className="nav-links" sx={{ display: "flex", gap: 1 }}>
           <Button component={Link} to="/news/thoi-su" className="custom-nav-link">
             Thời sự
           </Button>
@@ -39,35 +65,61 @@ const Header = () => {
         </Box>
 
         {/* Thanh tìm kiếm */}
-        <Box className="search-bar">
+        <Box
+          className="search-bar"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            backgroundColor: "#f2f2f2",
+            borderRadius: 2,
+            px: 2,
+            py: 0.5
+          }}
+        >
           <IconButton>
             <MenuIcon />
           </IconButton>
-          <InputBase placeholder="Tìm tin chấn động" />
+          <InputBase placeholder="Tìm tin chấn động" sx={{ ml: 1, flex: 1 }} />
           <IconButton>
             <Search />
           </IconButton>
         </Box>
-        <Box className="actions">
-          <IconButton className="notification-icon">
-            <Notifications />
-          </IconButton>
 
-          {user ? (
-            <>
-              <span style={{ marginRight: "8px", fontWeight: "bold", color: "#000" }}>
-                {user.email}
-              </span>
-              <Button onClick={logout} className="login-btn">
-                Đăng xuất
-              </Button>
-            </>
-          ) : (
-            <Button component={Link} to="/login" className="login-btn">
-              Đăng nhập
-            </Button>
-          )}
-        </Box>
+        {/* Nút chuông thông báo */}
+        <IconButton className="notification-icon">
+          <Notifications />
+        </IconButton>
+
+        {/* Nếu user login -> hiển thị email + mũi tên => menu, nếu chưa -> nút Đăng nhập */}
+        {user ? (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            {/* Email user */}
+            <span style={{ fontWeight: "bold", color: "#000" }}>
+              {user.email || "admin@gmail.com"}
+            </span>
+
+            {/* Mũi tên -> Mở menu */}
+            <IconButton onClick={handleMenuOpen} sx={{ p: 0 }}>
+              <ArrowDropDownIcon />
+            </IconButton>
+
+            {/* Menu: Dashboard, Đăng xuất */}
+            <Menu
+              anchorEl={anchorEl}
+              open={open}
+              onClose={handleMenuClose}
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+              transformOrigin={{ vertical: "top", horizontal: "right" }}
+            >
+              <MenuItem onClick={handleMenuClose}>Dashboard</MenuItem>
+              <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
+            </Menu>
+          </Box>
+        ) : (
+          <Button component={Link} to="/login" className="login-btn">
+            Đăng nhập
+          </Button>
+        )}
       </Toolbar>
 
       {/* Dòng chữ chạy breaking news */}
