@@ -4,7 +4,8 @@ import Header from "./components/common/header";
 import MainTitle from "./components/common/MainTitle";
 import LoginPage from "./pages/login";
 import SportPage from "./pages/news/sport";
-import { AuthProvider } from "./contexts/AuthContext"; 
+import { AuthProvider } from "./contexts/AuthContext";
+import Footer from "./components/common/Footer";
 
 function App() {
   return (
@@ -16,7 +17,9 @@ function App() {
           <Route path="/sport" element={<SportPage />} />
           <Route path="/login" element={<LoginPage />} />
         </Routes>
+        <Footer/>
       </Router>
+      
     </AuthProvider>
   );
 }

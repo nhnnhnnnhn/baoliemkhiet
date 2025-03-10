@@ -20,7 +20,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const navigate = useNavigate();
-  const { login } = useContext(AuthContext); // Sử dụng AuthContext
+  const { login } = useContext(AuthContext); 
 
   const handleLogin = () => {
     if (email === "admin@gmail.com" && password === "123") {
