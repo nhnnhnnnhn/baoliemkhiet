@@ -61,7 +61,9 @@ function UserLayout() {
   return (
     <>
       <Header />
-      <Outlet />
+      <div style={{ paddingTop: "10px" }}>
+        <Outlet />
+      </div>
       <Footer />
     </>
   );

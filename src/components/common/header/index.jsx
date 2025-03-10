@@ -18,7 +18,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../../contexts/AuthContext"; 
 import "./Header.css";
-import logo from "../../../assets/logo.png";
+import logo from "../../../assets/Logo.svg";
 
 const Header = () => {
   const { user, logout } = useContext(AuthContext);
@@ -51,16 +51,16 @@ const Header = () => {
 
         {/* Danh mục (Thời sự, Thế giới, v.v.) */}
         <Box className="nav-links" sx={{ display: "flex", gap: 1 }}>
-          <Button component={Link} to="/news/thoi-su" className="custom-nav-link">
+          <Button component={Link} to="/thoi-su" className="custom-nav-link">
             Thời sự
           </Button>
-          <Button component={Link} to="/news/the-gioi" className="custom-nav-link">
+          <Button component={Link} to="/the-gioi" className="custom-nav-link">
             Thế giới
           </Button>
-          <Button component={Link} to="/news/kinh-doanh" className="custom-nav-link">
+          <Button component={Link} to="/kinh-doanh" className="custom-nav-link">
             Kinh doanh
           </Button>
-          <Button component={Link} to="/news/cong-nghe" className="custom-nav-link">
+          <Button component={Link} to="/cong-nghe" className="custom-nav-link">
             Công nghệ
           </Button>
           <Button component={Link} to="/sport" className="custom-nav-link">

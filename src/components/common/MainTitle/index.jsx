@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import "./MainTitle.css"; 
 import hotNewsImage from "../../../assets/MainTitle.png";
 import anthonyImage from "../../../assets/antony.png";
@@ -14,13 +15,13 @@ const MainTitle = () => {
       {/*PHẦN TIN NÓNG*/}
       <section className="top-news">
         <div className="top-news__text">
-          <a href="#" className="top-news__link">
+          <Link to="/news/pham-thoai-sao-ke" className="top-news__link">
             <h2>
               NÓNG: PHẠM THOẠI TUNG 28 TRANG SAO KÊ TÀI KHOẢN MB, ĐỒNG THỜẠI CHẤT VẤN:
               <br />
-              “CHO MÌNH HỎI NHỮNG CON SỐ 1.8 TỶ, 2 TỶ, 3.5 TỶ CÁC BẠN LẤY Ở ĐÂU Ạ?”
+              "CHO MÌNH HỎI NHỮNG CON SỐ 1.8 TỶ, 2 TỶ, 3.5 TỶ CÁC BẠN LẤY Ở ĐÂU Ạ?"
             </h2>
-          </a>
+          </Link>
         </div>
         <div className="top-news__image">
           <img src={hotNewsImage} alt="Phạm ThoẠi Sao Kê" />
@@ -33,9 +34,9 @@ const MainTitle = () => {
       <section className="main-news">
         <div className="main-news__container">
           <div className="main-news__text">
-            <a href="#" className="main-news__link">
-              <h3>“1 MÌNH” ANTONY CÂN CẢ MBAPPE VÀ VINICIUS?</h3>
-            </a>
+            <Link to="/sport/antony-mbappe-vinicius" className="main-news__link">
+              <h3>"1 MÌNH" ANTONY CÂN CẢ MBAPPE VÀ VINICIUS?</h3>
+            </Link>
             <p>
               Antony đang rất ổn, kể từ đội tuyển ngôi sao sáng nhất bên Betis.
               Mbappe tỏa sáng rực rỡ với những cú vô miệng của "Los Blancos".
@@ -100,7 +101,7 @@ const MainTitle = () => {
         <div className="last-news__list">
           <div className="last-news__item">
             <img src={newsImage1} alt="Tin 1" />
-            <h3>Binance bị “bảo mật” sao vì chưa niêm yết pei?</h3>
+            <h3>Binance bị "bảo mật" sao vì chưa niêm yết pei?</h3>
           </div>
           <div className="last-news__item">
             <img src={newsImage2} alt="Tin 2" />

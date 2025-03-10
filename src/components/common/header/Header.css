@@ -1,75 +1,122 @@
 /* Định dạng chung cho Header */
 .header {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: space-between;
     background-color: white !important;
-    
-  }
-  /* Logo */
-  .header .logo-container {
-    display: flex;
-    align-items: center;
-  }
-  
-  .header .logo-container img {
-    height: 100px;
-    width: auto; 
-  }
-  
-  
-  /* Navigation Menu */
-  .header .nav-links {
-    display: flex;
-    gap: 20px;
-    list-style: none;
-  }
-  
-  .header .nav-links .custom-nav-link {
-    color: black !important;
-    font-size: 16px;
-    font-weight: 500;
-    text-transform: none; 
-  }
-  
-  .header .nav-links .custom-nav-link:hover {
-    color: darkred !important;
-  }
-  
-  /* Search Bar */
-  .header .search-bar {
-    display: flex;
-    align-items: center;
-    background: #f5f5f5;
-    padding: 5px 15px;
-    border-radius: 20px;
-    border: 1px solid #ddd;
-  }
-  
-  .header .search-bar input {
-    border: none;
-    outline: none;
-    background: transparent;
-    padding: 5px;
-    font-size: 14px;
-  }
-  
-  /* Nút đăng nhập */
-  .header .login-btn {
-    background: darkred;
-    color: #fff;
-    padding: 8px 16px;
-    border-radius: 20px;
-    border: none;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: bold;
-   
-  }
-  
-  .header .login-btn:hover {
-    background: #a00;
-  }
+    position: sticky; /* Giữ header cố định ở phía trên */
+    top: 0; /* Cố định ở vị trí trên cùng */
+    left: 0;
+    right: 0;
+    width: 100%; /* Chiều dài của header - đầy đủ chiều rộng màn hình */
+    max-width: 1920px; /* Giới hạn chiều dài tối đa nếu màn hình quá rộng */
+    height: 120px; /* Chiều rộng cố định */
+    margin: 0 auto; /* Căn giữa header nếu màn hình rộng hơn max-width */
+    z-index: 1000; /* Đảm bảo header hiển thị trên các phần tử khác */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Thêm bóng đổ nhẹ */
+}
+
+/* Toolbar của header - phần chứa nội dung chính */
+.header .MuiToolbar-root {
+    width: 100%;
+    padding: 5px 20px;
+    height: auto;
+    min-height: 70px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+}
+
+/* Thêm padding cho phần nội dung chính để tránh bị header che phủ */
+.homepage {
+  padding-top: 10px;
+}
+
+/* Logo */
+.header .logo-container {
+  display: flex;
+  align-items: center;
+  margin-right: 15px; /* Khoảng cách giữa logo và menu */
+}
+
+.header .logo-container img {
+  height: 70px; /* Chiều cao logo */
+  width: auto; 
+  object-fit: contain; /* Đảm bảo logo SVG hiển thị đúng tỷ lệ */
+}
+
+/* Navigation Menu */
+.header .nav-links {
+  display: flex;
+  gap: 15px;
+  list-style: none;
+  margin: 0 20px; /* Khoảng cách từ menu với các phần tử khác */
+  flex-grow: 1; /* Cho phép menu mở rộng để lấp đầy không gian */
+  justify-content: center; /* Căn giữa các liên kết */
+}
+
+.header .nav-links .custom-nav-link {
+  color: black !important;
+  font-size: 16px;
+  font-weight: 500;
+  text-transform: none; 
+  padding: 8px 12px; /* Thêm padding cho các nút menu */
+}
+
+.header .nav-links .custom-nav-link:hover {
+  color: darkred !important;
+  background-color: rgba(139, 0, 0, 0.05); /* Hiệu ứng hover */
+  border-radius: 4px;
+}
+
+/* Search Bar */
+.header .search-bar {
+  display: flex;
+  align-items: center;
+  background: #f5f5f5;
+  padding: 5px 10px;
+  border-radius: 13px;
+  border: 1px solid #ddd;
+  margin: 0 10px; /* Khoảng cách với các phần tử khác */
+  max-width: 300px; /* Giới hạn chiều rộng tối đa */
+  flex-shrink: 1; /* Cho phép thu nhỏ khi cần */
+}
+
+.header .search-bar input {
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 5px;
+  font-size: 14px;
+  width: 100%;
+}
+
+/* Nút đăng nhập và profile user */
+.header .login-btn {
+  background: darkred;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  margin-left: 10px; /* Khoảng cách với phần tử bên trái */
+}
+
+.header .login-btn:hover {
+  background: #a00;
+}
+
+/* Vùng chứa user profile (khi đã đăng nhập) */
+.header .user-profile-container {
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+}
+
+/* Breaking news */
 .breaking-news {
   width: 100%;
   background-color: darkred;
