@@ -1,8 +1,16 @@
+/* Import Roboto và Merriweather từ Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Roboto:wght@300;400;500;700&display=swap');
+
 .homepage {
   max-width: 100%;
   margin: 0;
   padding: 0;
-  font-family: sans-serif;
+  font-family: 'Roboto', sans-serif;
+}
+
+/* Đảm bảo tất cả tiêu đề sử dụng font Merriweather */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Merriweather', serif;
 }
 
 /*PHẦN TIN NÓNG */
@@ -126,7 +134,6 @@
   width: 100%;
   max-height: 500px;
   object-fit: cover;
-  border-radius: 4px;
 }
 
 /*DANH SÁCH TIN NGẮN*/
