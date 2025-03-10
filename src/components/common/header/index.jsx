@@ -35,7 +35,7 @@ const Header = () => {
 
   return (
     <AppBar position="static" className="header">
-      <Toolbar
+      <Toolbar 
         sx={{
           display: "flex",
           alignItems: "center",
@@ -127,15 +127,6 @@ const Header = () => {
           )}
         </Box>
       </Toolbar>
-
-      {/* Breaking news */}
-      <Box className="breaking-news" sx={{ width: "100%" }}>
-        <div className="news-content">
-          <span>ĐỘI BÓNG HÀNG DA ĐÁNH RƠI CHIẾN THẮNG TRƯỚC ANH LONG</span>
-          <span>NÓNG: PHẠM THOẠI TUNG 28 TRANG SAO KÊ TÀI KHOẢN MB</span>
-          <span>KHUYẾN MÃI LỚN DỊP 8/3 - ƯU ĐÃI KHỦNG!</span>
-        </div>
-      </Box>
     </AppBar>
   );
 };
