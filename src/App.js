@@ -16,16 +16,26 @@ import Sidebar from "./pages/admin/sidebar/Sidebar";
 import AdminHeader from "./pages/admin/adminHeader/AdminHeader";
 import SignUpPage from "./pages/signup";
 import { Navigate } from "react-router-dom";
+import Dashboard from "./pages/admin/dashboard/Dashboard";
+import Posts from "./pages/admin/posts/Posts";
+
+// Admin Layout component to include both Sidebar and content
+function AdminLayout({ children }) {
+  return (
+    <div className="admin-layout" style={{ display: "flex" }}>
+      <Sidebar />
+      <div className="admin-content" style={{ flex: 1, padding: "20px" }}>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 function AppLayout() {
   const location = useLocation();
   return (
     <>
-      {location.pathname.startsWith("/admin/dashboard") ? (
-        <AdminHeader />
-      ) : (
-        <Header />
-      )}
+      {location.pathname.startsWith("/admin") ? <AdminHeader /> : <Header />}
       <Routes>
         <Route path="/" element={<MainTitle />} />
         <Route path="/sport" element={<SportPage />} />
@@ -33,8 +43,28 @@ function AppLayout() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
         <Route path="/admin/login" element={<LoginPage />} />
-        <Route path="/admin/dashboard" element={<Sidebar />} />
         <Route path="/signup" element={<SignUpPage />} />
+
+        {/* Update the admin dashboard route to use AdminLayout */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <AdminLayout>
+              <Dashboard />
+            </AdminLayout>
+          }
+        />
+
+        {/* Add more admin routes as needed */}
+        <Route
+          path="/admin/posts"
+          element={
+            <AdminLayout>
+              {/* User management component would go here */}
+              <Posts />
+            </AdminLayout>
+          }
+        />
       </Routes>
       {location.pathname.startsWith("/admin") ? null : <Footer />}
     </>
