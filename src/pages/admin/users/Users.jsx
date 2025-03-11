@@ -179,7 +179,7 @@ const Users = () => {
         role: "Người dùng",
         email: "",
         date: new Date().toISOString().split("T")[0],
-        status: "Đang hoạt động",
+        status: "offline",
       });
       setShowAddForm(false);
     }
