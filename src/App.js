@@ -18,6 +18,7 @@ import SignUpPage from "./pages/signup";
 import { Navigate } from "react-router-dom";
 import Dashboard from "./pages/admin/dashboard/Dashboard";
 import Posts from "./pages/admin/posts/Posts";
+import Comments from "./pages/admin/comments/Comments";
 
 // Admin Layout component to include both Sidebar and content
 function AdminLayout({ children }) {
@@ -65,7 +66,17 @@ function AppLayout() {
             </AdminLayout>
           }
         />
+        <Route
+          path="/admin/comments"
+          element={
+            <AdminLayout>
+              {/* User management component would go here */}
+              <Comments />
+            </AdminLayout>
+          }
+        />
       </Routes>
+
       {location.pathname.startsWith("/admin") ? null : <Footer />}
     </>
   );

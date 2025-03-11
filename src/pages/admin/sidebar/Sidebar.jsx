@@ -73,7 +73,7 @@ const Sidebar = () => {
           </div>
         </Link>
         <Link
-          to="/admin/dashboard/comments"
+          to="/admin/comments"
           style={{ textDecoration: "none", color: "inherit" }}
         >
           <div
@@ -89,7 +89,7 @@ const Sidebar = () => {
           </div>
         </Link>
         <Link
-          to="/admin/dashboard/categories"
+          to="/admin/categories"
           style={{ textDecoration: "none", color: "inherit" }}
         >
           <div
@@ -105,7 +105,7 @@ const Sidebar = () => {
           </div>
         </Link>
         <Link
-          to="/admin/dashboard/reports"
+          to="/admin/reports"
           style={{ textDecoration: "none", color: "inherit" }}
         >
           <div
@@ -124,7 +124,7 @@ const Sidebar = () => {
       <div className="sidebar-section">
         <h3>Quản trị</h3>
         <Link
-          to="/admin/dashboard/users"
+          to="/admin/users"
           style={{ textDecoration: "none", color: "inherit" }}
         >
           <div
@@ -140,7 +140,7 @@ const Sidebar = () => {
           </div>
         </Link>
         <Link
-          to="/admin/dashboard/settings"
+          to="/admin/settings"
           style={{ textDecoration: "none", color: "inherit" }}
         >
           <div
