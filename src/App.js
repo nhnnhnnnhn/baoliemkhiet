@@ -15,18 +15,25 @@ import Footer from "./components/common/Footer";
 import Sidebar from "./pages/admin/sidebar/Sidebar";
 import AdminHeader from "./pages/admin/adminHeader/AdminHeader";
 import SignUpPage from "./pages/signup";
+import { Navigate } from "react-router-dom";
 
 function AppLayout() {
   const location = useLocation();
   return (
     <>
-      {location.pathname.startsWith("/admin") ? <AdminHeader /> : <Header />}
+      {location.pathname.startsWith("/admin/dashboard") ? (
+        <AdminHeader />
+      ) : (
+        <Header />
+      )}
       <Routes>
         <Route path="/" element={<MainTitle />} />
         <Route path="/sport" element={<SportPage />} />
-        <Route path="/news/cong-nghe" element={<TechNewsPage/>} />
+        <Route path="/news/cong-nghe" element={<TechNewsPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/admin" element={<Sidebar />} />
+        <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+        <Route path="/admin/login" element={<LoginPage />} />
+        <Route path="/admin/dashboard" element={<Sidebar />} />
         <Route path="/signup" element={<SignUpPage />} />
       </Routes>
       {location.pathname.startsWith("/admin") ? null : <Footer />}
