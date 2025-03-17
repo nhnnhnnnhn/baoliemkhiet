@@ -6,10 +6,11 @@ import {
   TextField,
   Button,
   Link,
-  InputAdornment
+  InputAdornment,
+  IconButton
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import { Person, Email, Lock } from "@mui/icons-material";
+import { Person, Email, Lock, ArrowBack } from "@mui/icons-material";
 import logo from "../../assets/logo.png";
 
 export default function SignUpPage() {
@@ -21,6 +22,20 @@ export default function SignUpPage() {
 
   return (
     <Grid container sx={{ height: "100vh" }}>
+      {/* Nút quay lại */}
+      <IconButton
+        component={RouterLink}
+        to="/"
+        sx={{
+          position: 'absolute',
+          top: 16,
+          left: 16,
+          zIndex: 1,
+        }}
+      >
+        <ArrowBack />
+      </IconButton>
+
       {/* Cột trái (logo) */}
       <Grid
         item

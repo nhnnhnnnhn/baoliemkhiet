@@ -14,7 +14,7 @@ import {
   IconButton,
   InputAdornment,
 } from "@mui/material";
-import { Email, Lock, Visibility, VisibilityOff } from "@mui/icons-material";
+import { Email, Lock, Visibility, VisibilityOff, ArrowBack } from "@mui/icons-material";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -66,7 +66,24 @@ export default function LoginPage() {
   };
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh" }}>
+    <Box sx={{ display: "flex", minHeight: "100vh", position: "relative" }}>
+      <IconButton
+        component={RouterLink}
+        to="/"
+        sx={{
+          position: "absolute",
+          top: 20,
+          left: 20,
+          zIndex: 1,
+          bgcolor: "white",
+          "&:hover": {
+            bgcolor: "rgba(255,255,255,0.9)",
+          },
+        }}
+      >
+        <ArrowBack />
+      </IconButton>
+
       {/* Cột trái */}
       <Box
         sx={{
