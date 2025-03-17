@@ -4,6 +4,7 @@ import {
   Routes,
   Route,
   useLocation,
+  Navigate,
 } from "react-router-dom";
 import Header from "./components/common/header";
 import MainTitle from "./components/common/MainTitle";
@@ -15,13 +16,12 @@ import Footer from "./components/common/Footer";
 import Sidebar from "./pages/admin/sidebar/Sidebar";
 import AdminHeader from "./pages/admin/adminHeader/AdminHeader";
 import SignUpPage from "./pages/signup";
-import { Navigate } from "react-router-dom";
 import Dashboard from "./pages/admin/dashboard/Dashboard";
 import Posts from "./pages/admin/posts/Posts";
 import Comments from "./pages/admin/comments/Comments";
 import Users from "./pages/admin/users/Users";
 
-// Admin Layout component to include both Sidebar and content
+// Admin Layout component
 function AdminLayout({ children }) {
   return (
     <div className="admin-layout" style={{ display: "flex" }}>
@@ -33,21 +33,27 @@ function AdminLayout({ children }) {
   );
 }
 
+// Main App Layout
 function AppLayout() {
   const location = useLocation();
+
+  const hideHeaderFooter = ["/login", "/signup"].includes(location.pathname);
+  const isAdminPath = location.pathname.startsWith("/admin");
+
   return (
     <>
-      {location.pathname.startsWith("/admin") ? <AdminHeader /> : <Header />}
+      {!hideHeaderFooter && (isAdminPath ? <AdminHeader /> : <Header />)}
+
       <Routes>
         <Route path="/" element={<MainTitle />} />
         <Route path="/sport" element={<SportPage />} />
         <Route path="/news/cong-nghe" element={<TechNewsPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
-        <Route path="/admin/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
 
-        {/* Update the admin dashboard route to use AdminLayout */}
+        <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+        <Route path="/admin/login" element={<LoginPage />} />
+
         <Route
           path="/admin/dashboard"
           element={
@@ -56,13 +62,10 @@ function AppLayout() {
             </AdminLayout>
           }
         />
-
-        {/* Add more admin routes as needed */}
         <Route
           path="/admin/posts"
           element={
             <AdminLayout>
-              {/* User management component would go here */}
               <Posts />
             </AdminLayout>
           }
@@ -71,7 +74,6 @@ function AppLayout() {
           path="/admin/comments"
           element={
             <AdminLayout>
-              {/* User management component would go here */}
               <Comments />
             </AdminLayout>
           }
@@ -80,14 +82,13 @@ function AppLayout() {
           path="/admin/users"
           element={
             <AdminLayout>
-              {/* User management component would go here */}
               <Users />
             </AdminLayout>
           }
         />
       </Routes>
 
-      {location.pathname.startsWith("/admin") ? null : <Footer />}
+      {!hideHeaderFooter && !isAdminPath && <Footer />}
     </>
   );
 }
