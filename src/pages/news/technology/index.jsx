@@ -117,11 +117,19 @@ export default function TechnologyPage() {
     <Container maxWidth="lg" sx={{ mt: 4 }}>
       {/* Tiêu đề + đường kẻ ngang */}
       <Box sx={{ mb: 2 }}>
-        <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-          Công nghệ
-        </Typography>
-        <Divider sx={{ mt: 1, borderColor: "black" }} />
-      </Box>
+      <Typography
+        variant="h4"
+        sx={{
+          fontWeight: "600",
+          fontFamily: "Gloria Hallelujah",
+          color: "#971616", 
+          fontsize: "48px"
+        }}
+      >
+        Công nghệ
+      </Typography>
+      <Divider sx={{ mt: 2, borderBottomWidth: 2 }} />
+    </Box>
 
       {/* HÀNG 1: 2 bài lớn */}
       <Grid container spacing={0} sx={{ mb: 0 }}>
