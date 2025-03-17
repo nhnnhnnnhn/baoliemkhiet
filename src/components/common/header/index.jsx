@@ -45,12 +45,24 @@ const Header = () => {
   const isHomePage = location.pathname === "/";
 
   return (
-    <AppBar position="static" className={`header ${isHomePage ? 'transparent' : ''}`}>
+    <AppBar 
+      position="static" 
+      className={`header ${isHomePage ? 'transparent' : ''}`}
+      elevation={0}
+      sx={{ 
+        boxShadow: 'none', 
+        border: 'none', 
+        borderBottom: 'none'
+      }}
+    >
       <Toolbar 
         sx={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between" // Tách thành 3 cụm: trái - giữa - phải
+          justifyContent: "space-between", // Tách thành 3 cụm: trái - giữa - phải
+          boxShadow: 'none',
+          border: 'none',
+          borderBottom: 'none'
         }}
       >
         {/* Cụm 1: Logo + Danh mục */}
