@@ -21,6 +21,8 @@ import Dashboard from "./pages/admin/dashboard/Dashboard";
 import Posts from "./pages/admin/posts/Posts";
 import Comments from "./pages/admin/comments/Comments";
 import Users from "./pages/admin/users/Users";
+import PolicyDetail from "./pages/news/policy";
+
 
 // Admin Layout component
 function AdminLayout({ children }) {
@@ -54,7 +56,7 @@ function AppLayout() {
         <Route path="/news/kinh-doanh" element={<BusinessPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
-
+        <Route path="/news/sua-dieu-le-dang-va-hien-phap" element={<PolicyDetail />} />
         <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
         <Route path="/admin/login" element={<LoginPage />} />
 
