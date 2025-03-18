@@ -52,7 +52,138 @@
   font-size: 16px;
   font-weight: 600;
   margin-top: 40px;
+  margin-bottom: 40px;
   text-align: right;
+}
+
+/* Phần tin liên quan */
+.related-news {
+  margin-top: 60px;
+  margin-bottom: 60px;
+  border-top: 1px solid #eee;
+  padding-top: 30px;
+}
+
+.related-news-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #971616;
+}
+
+.related-news-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.related-news-item {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s;
+}
+
+.related-news-item:hover {
+  transform: translateY(-5px);
+}
+
+.related-news-item img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+
+.related-news-item h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #222;
+}
+
+.related-news-item p {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* Phần bình luận */
+.comments-section {
+  margin-top: 40px;
+  margin-bottom: 60px;
+  border-top: 1px solid #eee;
+  padding-top: 30px;
+}
+
+.comments-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #971616;
+}
+
+.comment-form {
+  margin-bottom: 30px;
+}
+
+.comment-form textarea {
+  width: 100%;
+  height: 100px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 16px;
+  margin-bottom: 15px;
+}
+
+.comment-form button {
+  background-color: #971616;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  float: right;
+}
+
+.comment-form button:hover {
+  background-color: #7a1212;
+}
+
+.comment-list {
+  margin-top: 20px;
+}
+
+.comment-item {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.comment-author {
+  font-weight: 600;
+  color: #333;
+}
+
+.comment-date {
+  color: #999;
+  font-size: 14px;
+}
+
+.comment-content {
+  line-height: 1.6;
+  color: #444;
 }
 
 @media (max-width: 768px) {
@@ -66,5 +197,9 @@
   
   .policy-detail-content {
     font-size: 16px;
+  }
+
+  .related-news-grid {
+    grid-template-columns: 1fr;
   }
 } 

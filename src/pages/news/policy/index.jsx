@@ -1,10 +1,80 @@
-import React from "react";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import "./PolicyDetail.css";
 
+// Dữ liệu mẫu cho tin liên quan
+const relatedNewsData = [
+  {
+    id: 1,
+    title: "Real Madrid tức giận vì huỷ bỏ thẻ đỏ của anh Long",
+    summary: "Đội bóng hoàng gia đã bày tỏ sự không hài lòng với quyết định của trọng tài.",
+    image: "/assets/sport/sreal.png",
+    link: "/sport"
+  },
+  {
+    id: 2,
+    title: "Messi trở lại Barcelona?",
+    summary: "Nhiều nguồn tin cho rằng siêu sao người Argentina đang cân nhắc quay trở lại câu lạc bộ cũ.",
+    image: "/assets/sport/messi.png",
+    link: "/sport"
+  },
+  {
+    id: 3,
+    title: "PSG VS LIVERPOOL: Sút 27 quả rồi thua vì có Alisson Becker ở đó",
+    summary: "Đội bóng Pháp đã không thể ghi bàn dù tạo ra rất nhiều cơ hội.",
+    image: "/assets/sport/psgliver.png",
+    link: "/sport"
+  }
+];
+
+// Dữ liệu mẫu cho bình luận
+const commentsData = [
+  {
+    id: 1,
+    author: "Nguyễn Văn A",
+    date: "28/02/2024 - 15:30",
+    content: "Việc sửa đổi Điều lệ Đảng và Hiến pháp là cần thiết để phù hợp với tình hình mới."
+  },
+  {
+    id: 2,
+    author: "Trần Thị B",
+    date: "28/02/2024 - 16:45",
+    content: "Tôi quan tâm đến việc sửa đổi Luật Cán bộ, công chức. Hy vọng sẽ có những điều chỉnh tích cực."
+  },
+  {
+    id: 3,
+    author: "Lê Văn C",
+    date: "29/02/2024 - 08:20",
+    content: "Hiến pháp 2013 đã có nhiều điểm tiến bộ, nhưng vẫn cần sửa đổi để hoàn thiện hơn nữa hệ thống pháp luật của chúng ta."
+  }
+];
+
 const PolicyDetail = () => {
+  const [commentText, setCommentText] = useState("");
+  const [comments, setComments] = useState(commentsData);
+
   React.useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  const handleCommentChange = (e) => {
+    setCommentText(e.target.value);
+  };
+
+  const handleCommentSubmit = (e) => {
+    e.preventDefault();
+    if (commentText.trim() === "") return;
+
+    const newComment = {
+      id: comments.length + 1,
+      author: "Người dùng",
+      date: new Date().toLocaleDateString("vi-VN") + " - " + new Date().toLocaleTimeString("vi-VN", { hour: '2-digit', minute: '2-digit' }),
+      content: commentText
+    };
+
+    setComments([newComment, ...comments]);
+    setCommentText("");
+  };
 
   return (
     <div className="policy-detail-container">
@@ -57,6 +127,50 @@ const PolicyDetail = () => {
       
       <div className="policy-detail-author">
         Vũ Tuân
+      </div>
+
+      {/* Phần tin liên quan */}
+      <div className="related-news">
+        <h2 className="related-news-title">Tin liên quan</h2>
+        <div className="related-news-grid">
+          {relatedNewsData.map(news => (
+            <Link to={news.link} key={news.id} className="related-news-item">
+              <img src={news.image} alt={news.title} />
+              <h3>{news.title}</h3>
+              <p>{news.summary}</p>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* Phần bình luận */}
+      <div className="comments-section">
+        <h2 className="comments-title">Bình luận ({comments.length})</h2>
+        
+        <form className="comment-form" onSubmit={handleCommentSubmit}>
+          <textarea 
+            placeholder="Viết bình luận của bạn..." 
+            value={commentText}
+            onChange={handleCommentChange}
+            required
+          />
+          <button type="submit">Gửi bình luận</button>
+          <div style={{ clear: 'both' }}></div>
+        </form>
+        
+        <div className="comment-list">
+          {comments.map(comment => (
+            <div key={comment.id} className="comment-item">
+              <div className="comment-header">
+                <span className="comment-author">{comment.author}</span>
+                <span className="comment-date">{comment.date}</span>
+              </div>
+              <div className="comment-content">
+                {comment.content}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
