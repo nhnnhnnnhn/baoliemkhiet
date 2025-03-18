@@ -82,18 +82,5 @@ Build được tối thiểu hóa và tên tệp bao gồm hàm băm.\
 
 ## Triển Khai
 
-Ứng dụng này có thể được triển khai trên nhiều nền tảng khác nhau:
+Ứng dụng này được triển khai trên nền tảng Vercel
 
-- Netlify
-- Vercel
-- GitHub Pages
-- Firebase Hosting
-- AWS Amplify
-
-## Đóng Góp
-
-Vui lòng đọc [CONTRIBUTING.md](CONTRIBUTING.md) để biết chi tiết về quy trình gửi yêu cầu hợp nhất (pull request).
-
-## Giấy Phép
-
-Dự án này được cấp phép theo Giấy Phép MIT - xem tệp [LICENSE.md](LICENSE.md) để biết chi tiết.
