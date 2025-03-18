@@ -11,6 +11,7 @@ import MainTitle from "./components/common/MainTitle";
 import LoginPage from "./pages/login";
 import SportPage from "./pages/news/sport";
 import TechNewsPage from "./pages/news/technology";
+import PolicyDetail from "./pages/news/policy";
 import { AuthProvider } from "./contexts/AuthContext";
 import Footer from "./components/common/Footer";
 import Sidebar from "./pages/admin/sidebar/Sidebar";
@@ -48,6 +49,7 @@ function AppLayout() {
         <Route path="/" element={<MainTitle />} />
         <Route path="/sport" element={<SportPage />} />
         <Route path="/news/cong-nghe" element={<TechNewsPage />} />
+        <Route path="/news/sua-dieu-le-dang-va-hien-phap" element={<PolicyDetail />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
 
