@@ -9,6 +9,10 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import barca from "../../../assets/barca.png";
+import mu from "../../../assets/mu.png";
+import antony from "../../../assets/antony.png";
+import daumat from "../../../assets/daumat.png";
 
 const Dashboard = () => {
   // Sample data for the dashboard
@@ -28,28 +32,28 @@ const Dashboard = () => {
       title: "Điều gì ngăn cản Barca vô địch C1 năm nay?",
       views: 15420,
       comments: 324,
-      image: "https://via.placeholder.com/150x100",
+      image: barca,
     },
     {
       id: 2,
       title: "Vấn đề của Manchester United là gì?",
       views: 12350,
       comments: 287,
-      image: "https://via.placeholder.com/150x100",
+      image: mu,
     },
     {
       id: 3,
       title: "Top 10 cầu thủ xuất sắc nhất mùa giải",
       views: 10280,
       comments: 198,
-      image: "https://via.placeholder.com/150x100",
+      image: antony,
     },
     {
       id: 4,
       title: "Đánh giá về giải Ngoại hạng Anh mùa này",
       views: 9870,
       comments: 175,
-      image: "https://via.placeholder.com/150x100",
+      image: daumat,
     },
   ];
 
@@ -84,7 +88,17 @@ const Dashboard = () => {
             {trendingPosts.map((post) => (
               <div className="compact-post-item" key={post.id}>
                 <div className="post-image">
-                  <img src={post.image} alt={post.title} />
+                  <img
+                    src={post.image}
+                    alt={post.title}
+                    style={{
+                      marginTop: "30px",
+                      width: "100%",
+                      height: "auto",
+                      maxWidth: "120px",
+                      objectFit: "cover",
+                    }}
+                  />
                 </div>
                 <div className="post-content">
                   <h3>{post.title}</h3>

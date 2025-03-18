@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import "./Posts.css";
 import { FiSearch, FiCalendar, FiFilter } from "react-icons/fi";
-
+import bida from "../../../assets/bida.png";
+import real from "../../../assets/real.png";
+import id1 from "../../../assets/id1.png";
+import id2 from "../../../assets/id2.png";
 const Posts = () => {
   // Sample data for demonstration
   const [posts, setPosts] = useState([
@@ -11,7 +14,7 @@ const Posts = () => {
         "Vụ vây bắt 4 anh: Chàng trai Sunshine là người được cư dân mạng hộ phục nhất",
       category: "Phốt",
       status: "Từ chối",
-      image: "/images/post1.jpg",
+      image: bida,
       date: "2025-03-01",
     },
     {
@@ -20,7 +23,7 @@ const Posts = () => {
         "Tân canh Đà Vũng Tàu: Vừa mới nổi đã diện phối gà gái, tưởng học bài ai ngờ trái họ",
       category: "Phốt",
       status: "Đã duyệt",
-      image: "/images/post2.jpg",
+      image: real,
       date: "2025-03-05",
     },
     {
@@ -28,7 +31,7 @@ const Posts = () => {
       title: "MacBook Air 2025 ra mắt với chip M4, giá rẻ hơn",
       category: "Công nghệ",
       status: "Chỉnh sửa",
-      image: "/images/post3.jpg",
+      image: id1,
       date: "2025-03-08",
     },
     {
@@ -36,7 +39,7 @@ const Posts = () => {
       title: "Canada, Trung Quốc áp thuế trả đũa Mỹ",
       category: "Kinh tế",
       status: "Đã duyệt",
-      image: "/images/post4.jpg",
+      image: id2,
       date: "2025-03-10",
     },
   ]);
@@ -155,7 +158,14 @@ const Posts = () => {
                 <tr key={post.id}>
                   <td className="post-info">
                     <div className="post-thumbnail">
-                      <img src={post.image} alt={post.title} />
+                      <img
+                        src={post.image}
+                        alt={post.title}
+                        style={{
+                          marginTop: "10px",
+                          objectFit: "cover",
+                        }}
+                      />
                     </div>
                     <div className="post-title">{post.title}</div>
                   </td>
@@ -182,7 +192,15 @@ const Posts = () => {
             {recentlyApproved.map((post) => (
               <div key={post.id} className="approved-post-card">
                 <div className="approved-post-thumbnail">
-                  <img src={post.image} alt={post.title} />
+                  <img
+                    src={post.image}
+                    alt={post.title}
+                    style={{
+                      width: "100%",
+                      height: "auto",
+                      objectFit: "cover",
+                    }}
+                  />
                 </div>
                 <div className="approved-post-details">
                   <h3>{post.title}</h3>
