@@ -38,7 +38,9 @@ function AdminLayout({ children }) {
 function AppLayout() {
   const location = useLocation();
 
-  const hideHeaderFooter = ["/login", "/signup"].includes(location.pathname);
+  const hideHeaderFooter = ["/login", "/signup", "/admin/login"].includes(
+    location.pathname
+  );
   const isAdminPath = location.pathname.startsWith("/admin");
 
   return (
@@ -49,7 +51,7 @@ function AppLayout() {
         <Route path="/" element={<MainTitle />} />
         <Route path="/sport" element={<SportPage />} />
         <Route path="/news/cong-nghe" element={<TechNewsPage />} />
-        <Route path="/news/kinh-doanh"element={<BusinessPage />} />
+        <Route path="/news/kinh-doanh" element={<BusinessPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
 

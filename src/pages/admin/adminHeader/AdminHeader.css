@@ -8,7 +8,8 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    padding: 40px 50px 40px 30px; /* Increased right padding */
+    padding: 40px 50px 40px 30px;
+    /* Increased right padding */
     background-color: white;
     border-bottom: 1.5px solid #D9D9D9;
     z-index: 500;
@@ -29,6 +30,14 @@
 .user-profile {
     display: flex;
     align-items: center;
+    position: relative;
+    /* Added for popup positioning */
+}
+
+.profile-container {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
 }
 
 .avatar {
@@ -60,4 +69,36 @@
     font-size: 13px;
     color: #888;
     font-family: "Inter", Arial, sans-serif;
+}
+
+/* Sign Out Popup Styles */
+.sign-out-popup {
+    position: absolute;
+    top: 45px;
+    right: 0;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    width: 150px;
+    z-index: 1000;
+    overflow: hidden;
+    border: 1px solid #eaeaea;
+}
+
+.popup-item {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.2s;
+    cursor: pointer;
+}
+
+.popup-item:hover {
+    background-color: #f5f5f5;
+}
+
+.logout-icon {
+    margin-right: 10px;
+    font-size: 18px;
+    color: #666;
 }
