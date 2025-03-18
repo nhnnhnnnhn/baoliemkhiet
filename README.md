@@ -1,4 +1,4 @@
-# Ứng Dụng Tin Tức
+# Báo Liêm Khiết
 
 Đây là ứng dụng tin tức được xây dựng bằng React, cho phép người dùng đọc tin tức từ nhiều danh mục khác nhau như thể thao và các chủ đề khác.
 
