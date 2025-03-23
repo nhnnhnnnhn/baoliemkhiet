@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Grid, Typography } from "@mui/material";
 import { Link } from "react-router-dom";
-import logo from "../../../assets/Logo.svg";
+import logo from "../../../assets/logo.png";
 
 const Footer = () => {
   return (

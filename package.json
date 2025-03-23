@@ -2,6 +2,7 @@
   "name": "ltw",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
@@ -17,15 +18,16 @@
     "react-dom": "^18.2.0",
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.3.0",
-    "react-scripts": "^5.0.1",
     "recharts": "^2.15.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "vite",
+    "build": "vite build",
+    "build:fast": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "eject": "echo \"Eject is not needed with Vite\""
   },
   "eslintConfig": {
     "extends": [
@@ -47,7 +49,9 @@
   },
   "devDependencies": {
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.15",
+    "@vitejs/plugin-react": "^4.3.4",
     "react-refresh": "^0.11.0",
+    "vite": "^6.2.2",
     "webpack": "^5.98.0"
   }
 }

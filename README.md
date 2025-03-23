@@ -1,86 +1,96 @@
-# Báo Liêm Khiết
+# Báo Liêm Khiết - Dự án Báo Điện Tử
 
-Đây là ứng dụng tin tức được xây dựng bằng React, cho phép người dùng đọc tin tức từ nhiều danh mục khác nhau như thể thao và các chủ đề khác.
+Trang báo điện tử sử dụng React và Vite, với giao diện hiện đại và đầy đủ chức năng.
 
-## Tính Năng
-
-- Giao diện người dùng thân thiện với Material UI
-- Hệ thống định tuyến (routing) để dễ dàng điều hướng giữa các trang
-- Các trang tin tức theo chủ đề (thể thao, v.v.)
-- Chức năng tìm kiếm tin tức
-- Hệ thống đăng nhập tài khoản
-- Khu vực quản trị dành cho admin
-
-## Công Nghệ Sử Dụng
+## Công nghệ sử dụng
 
 - React 18
-- React Router v7
-- Material UI
-- Context API cho quản lý trạng thái
-- Custom hooks
+- Vite
+- Material-UI 
+- React Router
+- Context API cho quản lý state
 
-## Cấu Trúc Dự Án
+## Cấu trúc thư mục
 
 ```
-src/
-|-- apis/            # Các API calls và xử lý dữ liệu
-|-- assets/          # Tài nguyên (hình ảnh, fonts, v.v.)
-|-- components/      # Các component tái sử dụng
-|   |-- common/      # Components dùng chung (header, footer)
-|   |-- news/        # Components liên quan đến tin tức
-|   |-- admin/       # Components dành cho quản trị viên
-|-- context/         # Context providers
-|-- hooks/           # Custom hooks
-|-- layouts/         # Bố cục trang
-|-- module/          # Các module chức năng
-|-- pages/           # Các trang trong ứng dụng
-|   |-- news/        # Trang tin tức
-|   |-- home/        # Trang chủ
-|   |-- search/      # Trang tìm kiếm
-|   |-- login/       # Trang đăng nhập
-|   |-- account/     # Trang tài khoản người dùng
-|   |-- admin/       # Trang quản trị
-|-- router/          # Cấu hình định tuyến
+baoliemkhiet/
+│
+├── public/                  # Static files
+│   ├── favicons/            # Các biểu tượng cho trình duyệt
+│   ├── site.webmanifest     # Web App Manifest
+│   └── browserconfig.xml    # Config cho Microsoft Edge
+│
+├── src/                     # Source code
+│   ├── assets/              # Hình ảnh, font chữ, etc.
+│   ├── components/          # React components
+│   │   ├── common/          # Shared components (Header, Footer, etc.)
+│   │   ├── layout/          # Layout components
+│   │   └── pages/           # Page components
+│   │
+│   ├── context/             # React Context API
+│   ├── hooks/               # Custom React hooks
+│   ├── utils/               # Utility functions
+│   ├── App.jsx              # Main App component
+│   └── main.jsx             # Application entry point
+│
+├── .env                     # Environment variables
+├── .gitignore               # Git ignore file
+├── index.html               # HTML entry point
+├── package.json             # Dependencies and scripts
+├── vite.config.js           # Vite configuration
+└── README.md                # Project documentation
 ```
 
-## Bắt Đầu
+## Cài đặt và Chạy
 
-### Cài Đặt
+### Yêu cầu
 
-1. Clone dự án về máy:
+- Node.js 16.x trở lên
+- npm hoặc pnpm
+
+### Cài đặt
+
 ```bash
-git clone https://github.com/nhnnhnnnhn/baoliemkhiet
-cd baoliemkhiet
-```
-
-2. Cài đặt các phụ thuộc:
-```bash
+# Sử dụng npm
 npm install
+
+# Hoặc sử dụng pnpm
+pnpm install
 ```
 
-### Các Lệnh Có Sẵn
+### Chạy môi trường phát triển
 
-#### `npm start`
+```bash
+# Sử dụng npm
+npm run dev
 
-Chạy ứng dụng ở chế độ phát triển.\
-Mở [http://localhost:3000](http://localhost:3000) để xem trong trình duyệt.
+# Hoặc sử dụng pnpm
+pnpm dev
+```
 
-Trang sẽ tự động tải lại khi bạn thay đổi mã nguồn.\
-Bạn cũng có thể xem lỗi lint trong console.
+Ứng dụng sẽ chạy tại địa chỉ [http://localhost:3000](http://localhost:3000)
 
-#### `npm test`
+### Build cho production
 
-Chạy trình kiểm thử ở chế độ tương tác.
+```bash
+# Sử dụng npm
+npm run build
 
-#### `npm run build`
+# Hoặc sử dụng pnpm
+pnpm build
+```
 
-Biên dịch ứng dụng cho môi trường sản xuất vào thư mục `build`.\
-Đóng gói React ở chế độ sản xuất và tối ưu hóa build để hiệu suất tốt nhất.
+## Tính năng
 
-Build được tối thiểu hóa và tên tệp bao gồm hàm băm.\
-Ứng dụng của bạn đã sẵn sàng để triển khai!
+- Trang chủ hiển thị các bài viết mới nhất
+- Phân loại bài viết theo chuyên mục
+- Tìm kiếm bài viết
+- Đăng nhập/Đăng ký tài khoản
+- Bình luận trên bài viết
+- Chế độ xem tối/sáng (Dark/Light mode)
+- Responsive design cho tất cả các thiết bị
 
-## Triển Khai
+## Lưu ý về migration từ CRA sang Vite
 
-Ứng dụng này được triển khai trên nền tảng Vercel
+Dự án này đã được chuyển đổi từ Create React App (CRA) sang Vite. Để biết thêm chi tiết về quá trình này, vui lòng xem file `MIGRATION_CRA_TO_VITE.md`.
 

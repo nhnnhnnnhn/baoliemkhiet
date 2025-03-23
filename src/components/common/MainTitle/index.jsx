@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import "./MainTitle.css";
 
 // Import các hình ảnh
-import hotNewsImage from "../../../assets/MainTitle.png"; // Sử dụng ảnh có sẵn
+import hotNewsImage from "../../../assets/MainTitle.png";
 import newsImage1 from "../../../assets/image1.png";
 import newsImage2 from "../../../assets/image2.png";
 import newsImage3 from "../../../assets/image3.png";

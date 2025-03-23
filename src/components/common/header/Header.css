@@ -72,6 +72,32 @@
     filter: brightness(0) invert(1);
 }
 
+/* Logo */
+.logo {
+    height: 50px;
+    width: auto;
+    display: block;
+    object-fit: contain;
+}
+
+/* Logo màu trắng khi ở trang chính */
+.header.transparent .logo-container img {
+    filter: brightness(0) invert(1);
+}
+
+/* Cập nhật CSS cho logo SVG */
+.header .logo-container svg,
+.header .logo-container img {
+  height: 50px;
+  width: auto;
+  display: block;
+}
+
+.header.transparent .logo-container svg,
+.header.transparent .logo-container img {
+  filter: brightness(0) invert(1);
+}
+
 /* Navigation Menu */
 .header .nav-links {
     display: flex;
