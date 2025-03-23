@@ -70,7 +70,16 @@ const Header = () => {
           {/* Logo */}
           <Box className="logo-container" sx={{ mr: 2 }}>
             <Link to="/" style={{ textDecoration: "none" }}>
-              <img src={logo} alt="Logo" className="logo" />
+              <img 
+                src={logo} 
+                alt="Logo" 
+                className="logo" 
+                style={{ 
+                  height: "50px", 
+                  width: "auto",
+                  display: "block"
+                }} 
+              />
             </Link>
           </Box>
 

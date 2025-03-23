@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import { AuthContext } from "../../contexts/AuthContext";
 import { Link as RouterLink } from "react-router-dom";
-import googleIcon from "../../assets/google.png"; // Logo Google đa màu
+import googleIcon from "../../assets/google.png";
 import {
   Box,
   Typography,
