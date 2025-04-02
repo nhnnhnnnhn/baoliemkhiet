@@ -37,7 +37,19 @@ async function register(req, res) {
     res.status(400).json({ message: error.message });
   }
 }
+
+async function changePassword(req, res) {
+  const { email, oldPassword, newPassword } = req.body;
+
+  try {
+    await authService.changePassword(email, oldPassword, newPassword);
+    res.status(200).json({ message: "Password changed successfully" });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+}
 module.exports = {
   login,
   register,
+  changePassword,
 };

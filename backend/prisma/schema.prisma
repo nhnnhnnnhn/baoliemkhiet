@@ -16,6 +16,7 @@ datasource db {
 model User {
   id         Int      @id @default(autoincrement())
   fullname   String
+  avatar     String?
   email      String   @unique
   bio        String?
   is_online  Boolean? @default(false)
@@ -37,8 +38,23 @@ model JwtToken {
   user User @relation(fields: [userId], references: [id])
 }
 
+model Otp {
+  id        Int       @id @default(autoincrement())
+  email     String
+  code      String
+  createdAt DateTime  @default(now())
+  expiredAt DateTime  @default(dbgenerated("NOW() + INTERVAL '60 seconds'"))
+  action    OtpAction
+}
+
 enum Role {
   USER
   ADMIN
   JOURNALIST
+}
+
+enum OtpAction {
+  REGISTER
+  FORGOT_PASSWORD
+  CHANGE_PASSWORD
 }
