@@ -1,4 +1,4 @@
-# Báo Liêm Khiết - Dự án Báo Điện Tử
+# Báo Liêm Khiết
 
 Trang báo điện tử sử dụng React và Vite, với giao diện hiện đại và đầy đủ chức năng.
 
@@ -9,6 +9,9 @@ Trang báo điện tử sử dụng React và Vite, với giao diện hiện đ�
 - Material-UI 
 - React Router
 - Context API cho quản lý state
+
+## Figma design:
+Link: https://www.figma.com/design/VIpv5gm3EdHzEThTRdD2Xh/B%C3%A1o-Li%C3%AAm-Khi%E1%BA%BFt?node-id=0-1&t=fnP7g8fG66vcw4Wb-1
 
 ## Cấu trúc thư mục
 
