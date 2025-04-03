@@ -6,6 +6,7 @@ const morgan = require("./configs/morgan.config");
 
 const authRoute = require("./routes/auth.route");
 const otpRoute = require("./routes/otp.route");
+const notificationRoute = require("./routes/notification.route");
 
 const prisma = new PrismaClient();
 const app = express();
@@ -16,5 +17,6 @@ app.use(morgan.errorHandler);
 
 app.use("/api/auth", authRoute);
 app.use("/api/otp", otpRoute);
+app.use("/api/notifications", notificationRoute);
 
 app.listen(3000, () => console.log("Server running on port 3000"));

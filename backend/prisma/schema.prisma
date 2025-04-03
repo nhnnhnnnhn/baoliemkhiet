@@ -25,26 +25,39 @@ model User {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  tokens JwtToken[]
+  tokens       JwtToken[]
+  Notification Notification[]
 }
 
 model JwtToken {
   id            Int      @id @default(autoincrement())
   token         String
   userId        Int
-  createdAt     DateTime @default(now())
+  created_at    DateTime @default(now())
   refresh_token String?
 
   user User @relation(fields: [userId], references: [id])
 }
 
 model Otp {
-  id        Int       @id @default(autoincrement())
-  email     String
-  code      String
-  createdAt DateTime  @default(now())
-  expiredAt DateTime  @default(dbgenerated("NOW() + INTERVAL '60 seconds'"))
-  action    OtpAction
+  id         Int       @id @default(autoincrement())
+  email      String
+  code       String
+  created_at DateTime  @default(now())
+  expired_at DateTime  @default(dbgenerated("NOW() + INTERVAL '60 seconds'"))
+  action     OtpAction
+}
+
+model Notification {
+  id          Int              @id @default(autoincrement())
+  receiver_id Int
+  type        NotificationType
+  content     String
+  is_read     Boolean          @default(false)
+  created_at  DateTime         @default(now())
+  read_at     DateTime?
+
+  user User @relation(fields: [receiver_id], references: [id])
 }
 
 enum Role {
@@ -57,4 +70,12 @@ enum OtpAction {
   REGISTER
   FORGOT_PASSWORD
   CHANGE_PASSWORD
+}
+
+enum NotificationType {
+  MESSAGE
+  COMMENT
+  LIKE
+  FOLLOW
+  ARTICLE_STATUS
 }
