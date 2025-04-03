@@ -1,5 +1,9 @@
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
+const { PrismaClient, NotificationType } = require("@prisma/client");
+const prisma = new PrismaClient();
+
+const notificationService = require("./services/notification.service");
 
 // Store connected clients
 const connectedClients = new Map();
@@ -85,6 +89,18 @@ function initWebSocket(server) {
         console.log(`Client disconnected: ${clientId}`);
       });
 
+      //handle notification
+      socket.on("notification", (payload) => {
+        const { receiver_id, content, type, article_id } = payload;
+        if (onlineUser.has(user_id)) {
+          const clientId = onlineUser.get(user_id);
+          const clientSocket = connectedClients.get(clientId);
+          if (clientSocket) {
+            clientSocket.emit("notification", notification); // Send notification to the specific user
+          }
+        }
+      });
+
       // Handle incoming messages
       socket.on("message", (data) => {
         console.log(`Received from ${clientId}:`, data);
@@ -98,4 +114,35 @@ function initWebSocket(server) {
   return io;
 }
 
-module.exports = { initWebSocket };
+async function sendNotification(receiver_id, content, type, article_id) {
+  // First, ensure the receiver is online
+  if (onlineUser.has(receiver_id)) {
+    const clientId = onlineUser.get(receiver_id);
+    const clientSocket = connectedClients.get(clientId);
+
+    await prisma.notification.create({
+      data: {
+        receiver_id,
+        content,
+        type,
+        article_id,
+      },
+    });
+
+    if (clientSocket) {
+      // Send the notification via WebSocket
+      const notification = {
+        content,
+        type,
+        article_id,
+      };
+
+      // Emit the notification to the specific client
+      clientSocket.emit("notification", notification);
+    }
+  } else {
+    console.log(`User ${receiver_id} is not online`);
+  }
+}
+
+module.exports = { initWebSocket, sendNotification };

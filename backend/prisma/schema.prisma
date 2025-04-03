@@ -27,6 +27,109 @@ model User {
 
   tokens       JwtToken[]
   Notification Notification[]
+  articles     Article[]      @relation("AuthorArticles")
+  comments     Comment[]
+  articleLikes ArticleLike[]
+  reports      Report[]       @relation("ReporterReports")
+  followers    Follow[]       @relation("Follower")
+  Follow       Follow[]
+}
+
+model Article {
+  id          Int       @id @default(autoincrement())
+  title       String
+  content     String
+  thumbnail   String?
+  authorId    Int
+  categoryId  Int
+  status      String    @default("draft")
+  publishedAt DateTime?
+  isPublish   Boolean
+  view        Int
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  author       User          @relation("AuthorArticles", fields: [authorId], references: [id])
+  category     Category      @relation(fields: [categoryId], references: [id])
+  comments     Comment[]
+  articleLikes ArticleLike[]
+  articleTags  ArticleTag[]
+  reports      Report[]
+}
+
+model ArticleLike {
+  id        Int      @id @default(autoincrement())
+  articleId Int
+  userId    Int
+  createdAt DateTime @default(now()) @map("created_at")
+
+  article Article @relation(fields: [articleId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+}
+
+model Follow {
+  id           Int      @id @default(autoincrement())
+  followerId   Int
+  journalistId Int
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  follower   User @relation("Follower", fields: [followerId], references: [id])
+  journalist User @relation(fields: [journalistId], references: [id])
+}
+
+model Category {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  articles Article[]
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  articleId Int
+  userId    Int
+  content   String
+  status    String   @default("pending")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  article Article  @relation(fields: [articleId], references: [id])
+  user    User     @relation(fields: [userId], references: [id])
+  reports Report[]
+}
+
+model Tag {
+  id        Int          @id @default(autoincrement())
+  name      String       @unique
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @default(now()) @updatedAt @map("updated_at")
+  articles  ArticleTag[]
+}
+
+model ArticleTag {
+  id        Int @id @default(autoincrement())
+  articleId Int
+  tagId     Int
+
+  article Article @relation(fields: [articleId], references: [id])
+  tag     Tag     @relation(fields: [tagId], references: [id])
+}
+
+model Report {
+  id         Int      @id @default(autoincrement())
+  reportedBy Int
+  articleId  Int?
+  commentId  Int?
+  reason     String
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at")
+
+  reportedByUser User     @relation("ReporterReports", fields: [reportedBy], references: [id])
+  article        Article? @relation(fields: [articleId], references: [id])
+  comment        Comment? @relation(fields: [commentId], references: [id])
 }
 
 model JwtToken {
@@ -53,11 +156,24 @@ model Notification {
   receiver_id Int
   type        NotificationType
   content     String
+  article_id  Int?
   is_read     Boolean          @default(false)
   created_at  DateTime         @default(now())
   read_at     DateTime?
 
   user User @relation(fields: [receiver_id], references: [id])
+}
+
+model Configuration {
+  id        Int      @id @default(autoincrement())
+  facebook  String?
+  zalo      String?
+  aboutUs   String?
+  hotline   String?
+  address   String?
+  email     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 }
 
 enum Role {
