@@ -172,3 +172,6 @@ Unknown argument `isRead`. Did you mean `is_read`? Available options are marked 
 [ 2025-04-03 11:30:22 ] [ morgan ] [ error ] : $method /api/notifications/read-all 404 - 1.499 ms - message: -
 [ 2025-04-03 11:30:30 ] [ morgan ] [ info ] : $method /api/notifications/read-all 204 - 149.393 ms
 [ 2025-04-03 11:30:50 ] [ morgan ] [ info ] : $method /api/notifications/count-unread 200 - 33.959 ms
+[ 2025-04-03 13:39:37 ] [ morgan ] [ info ] : $method /api/auth/login 200 - 185.973 ms
+[ 2025-04-03 14:17:44 ] [ morgan ] [ info ] : $method /api/auth/login 200 - 187.401 ms
+[ 2025-04-03 14:21:20 ] [ morgan ] [ info ] : $method /api/auth/login 200 - 179.700 ms
