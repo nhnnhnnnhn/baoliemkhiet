@@ -175,3 +175,29 @@ Unknown argument `isRead`. Did you mean `is_read`? Available options are marked 
 [ 2025-04-03 13:39:37 ] [ morgan ] [ info ] : $method /api/auth/login 200 - 185.973 ms
 [ 2025-04-03 14:17:44 ] [ morgan ] [ info ] : $method /api/auth/login 200 - 187.401 ms
 [ 2025-04-03 14:21:20 ] [ morgan ] [ info ] : $method /api/auth/login 200 - 179.700 ms
+[ 2025-04-03 16:42:28 ] [ morgan ] [ error ] : $method /api/otp/send 400 - 2.083 ms - message: prisma is not defined
+[ 2025-04-03 16:42:46 ] [ morgan ] [ error ] : $method /api/otp/send 400 - 147.153 ms - message: Cannot read properties of undefined (reading 'otp')
+[ 2025-04-03 16:43:32 ] [ morgan ] [ error ] : $method /api/otp/send 400 - 128.258 ms - message: Cannot read properties of undefined (reading 'otp')
+[ 2025-04-03 16:43:46 ] [ morgan ] [ error ] : $method /api/otp/send 400 - 143.622 ms - message: Cannot read properties of undefined (reading 'otp')
+[ 2025-04-03 16:44:30 ] [ morgan ] [ error ] : $method /api/otp/send 400 - 114.772 ms - message: Cannot read properties of undefined (reading 'otp')
+[ 2025-04-03 16:46:12 ] [ morgan ] [ error ] : $method /api/otp/send 400 - 122.345 ms - message: Cannot read properties of undefined (reading 'otp')
+[ 2025-04-03 16:46:45 ] [ morgan ] [ error ] : $method /api/otp/send 400 - 143.335 ms - message: Cannot read properties of undefined (reading 'otp')
+[ 2025-04-03 16:47:02 ] [ morgan ] [ info ] : $method /api/otp/send 200 - 2787.469 ms
+[ 2025-04-03 16:49:03 ] [ morgan ] [ error ] : $method /api/otp/send 400 - 122.328 ms - message: 
+Invalid `prisma.otp.create()` invocation in
+/home/nhaatj/School/Lập trình Web/BTL/baoliemkhiet/backend/src/services/otp.service.js:22:32
+
+  19 if (user && action === "REGISTER") {
+  20   throw new Error("Email already exists");
+  21 }
+→ 22 const otp = await prisma.otp.create({
+       data: {
+         email: "nguyenngocnhat2004st@gmail.com",
+         code: 738864,
+               ~~~~~~
+         action: "REGISTER"
+       }
+     })
+
+Argument `code`: Invalid value provided. Expected String, provided Int.
+[ 2025-04-03 16:49:44 ] [ morgan ] [ info ] : $method /api/otp/send 200 - 3349.347 ms
