@@ -1,0 +1,14 @@
+[ 2025-04-03 10:21:30 ] [ morgan ] [ error ] : $method /api/auth/login 401 - 143.078 ms - message: -
+[ 2025-04-03 10:25:20 ] [ morgan ] [ error ] : $method /api/auth/login 401 - 138.670 ms - message: 
+Invalid `prisma.user.findUnique()` invocation in
+/home/nhaatj/School/Lập trình Web/BTL/baoliemkhiet/backend/src/services/auth.service.js:8:34
+
+  5 const { sendOtp, verifyOtp } = require("./otp.service");
+  6 
+  7 async function loginUser(email, password) {
+→ 8   const user = await prisma.user.findUnique(
+The column `User.avatar` does not exist in the current database.
+[ 2025-04-03 10:26:07 ] [ morgan ] [ error ] : $method /api/auth/login 401 - 249.037 ms - message: Invalid password
+[ 2025-04-03 10:26:15 ] [ morgan ] [ info ] : $method /api/auth/login 200 - 138.728 ms
+[ 2025-04-03 10:28:25 ] [ morgan ] [ info ] : $method /api/auth/login 200 - 334.074 ms
+[ 2025-04-03 10:28:30 ] [ morgan ] [ error ] : $method /api/auth/login 400 - 134.373 ms - message: Invalid password
