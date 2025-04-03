@@ -1,5 +1,6 @@
 const nodeMailer = require("nodemailer");
 const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
 const transporter = nodeMailer.createTransport({
   service: "Gmail",
@@ -18,13 +19,17 @@ async function sendOtp(email, action) {
   if (user && action === "REGISTER") {
     throw new Error("Email already exists");
   }
-  const otp = await this.prisma.otp.create({
+  const otp = await prisma.otp.create({
     data: {
       email,
-      code: this.otpGenerator(),
+      code: otpGenerator().toString(),
       action,
     },
   });
+  if (!otp) {
+    throw new Error("Failed to generate OTP");
+  }
+
   await transporter.sendMail({
     from: process.env.GMAIL_USER,
     to: email,
