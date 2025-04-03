@@ -1,24 +1,17 @@
 const otpService = require("../services/otp.service");
+const controllerHandler = require("../utils/controllerHandler");
 
-async function sendOtp(req, res) {
+const sendOtp = controllerHandler(async (req, res) => {
   const { email, action } = req.body;
-  try {
-    const otp = await otpService.sendOtp(email, action);
-    res.status(200).json({ message: "OTP sent successfully", otp });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-}
+  const otp = await otpService.sendOtp(email, action);
+  res.status(200).json({ message: "OTP sent successfully", otp });
+});
 
-async function verifyOtp(req, res) {
+const verifyOtp = controllerHandler(async (req, res) => {
   const { email, code, action } = req.body;
-  try {
-    await otpService.verifyOtp(email, code, action);
-    res.status(200).json({ message: "OTP verified successfully" });
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-}
+  await otpService.verifyOtp(email, code, action);
+  res.status(200).json({ message: "OTP verified successfully" });
+});
 
 module.exports = {
   sendOtp,

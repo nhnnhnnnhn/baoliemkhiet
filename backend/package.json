@@ -19,7 +19,9 @@
     "nodemailer": "^6.10.0",
     "prisma": "^6.5.0",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
     "dotenv": "^16.4.7",
