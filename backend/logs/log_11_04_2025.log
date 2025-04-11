@@ -1,0 +1,37 @@
+[ 2025-04-11 21:39:29 ] [ morgan ] [ info ] : $method /api/auth/login 200 - 317.654 ms
+[ 2025-04-11 21:42:12 ] [ morgan ] [ error ] : $method /api/follows 401 - 1.767 ms - message: -
+[ 2025-04-11 21:42:29 ] [ morgan ] [ info ] : $method /api/auth/login 200 - 320.250 ms
+[ 2025-04-11 21:42:48 ] [ morgan ] [ info ] : $method /api/follows 201 - 220.926 ms
+[ 2025-04-11 21:48:11 ] [ morgan ] [ info ] : $method /api/tags 201 - 272.079 ms
+[ 2025-04-11 21:50:12 ] [ morgan ] [ info ] : $method /api/tags 201 - 43.644 ms
+[ 2025-04-11 21:55:53 ] [ morgan ] [ error ] : $method //api/articles/%7BarticleId%7D/tags 404 - 1.257 ms - message: -
+[ 2025-04-11 21:56:14 ] [ morgan ] [ error ] : $method /api/articles/%7BarticleId%7D/tags 400 - 11.525 ms - message: Article ID and Tag ID must be valid numbers
+[ 2025-04-11 21:56:43 ] [ morgan ] [ error ] : $method /api/articles/%7BarticleId%7D/tags 400 - 1.919 ms - message: Article ID must be a valid number
+[ 2025-04-11 21:58:42 ] [ morgan ] [ error ] : $method /api/articles/1/tags 400 - 2.920 ms - message: Article ID and Tag ID must be valid numbers
+[ 2025-04-11 21:59:08 ] [ morgan ] [ error ] : $method /api/tags/article/1 404 - 1.252 ms - message: -
+[ 2025-04-11 22:02:57 ] [ morgan ] [ error ] : $method /api/articles/%7BarticleId%7D/tags 400 - 1.287 ms - message: Article ID and Tag ID must be valid numbers
+[ 2025-04-11 22:03:10 ] [ morgan ] [ error ] : $method /api/articles/%7B1%7D/tags 400 - 1.865 ms - message: Article ID and Tag ID must be valid numbers
+[ 2025-04-11 22:04:14 ] [ morgan ] [ error ] : $method /api/articles/1/tags 400 - 5112.774 ms - message: 
+Invalid `prisma.article.findUnique()` invocation in
+C:\Users\nhatn\OneDrive\Desktop\mmm\eee\baoliemkhiet\backend\src\services\article-tag.service.js:6:40
+
+  3 
+  4 async function addTagToArticle(articleId, tagId) {
+  5   // Check if article exists
+→ 6   const article = await prisma.article.findUnique(
+Can't reach database server at `liemkhiet.xyz:5432`
+
+Please make sure your database server is running at `liemkhiet.xyz:5432`.
+[ 2025-04-11 22:05:30 ] [ morgan ] [ error ] : $method /api/articles/1/tags 400 - 129.940 ms - message: Article not found
+[ 2025-04-11 22:05:34 ] [ morgan ] [ error ] : $method /api/articles/1/tags 400 - 11.544 ms - message: Article not found
+[ 2025-04-11 22:08:26 ] [ morgan ] [ error ] : $method /api/articles/1/tags 400 - 33.235 ms - message: Article not found
+[ 2025-04-11 22:26:41 ] [ morgan ] [ error ] : $method /api/users 403 - 10.506 ms - message: -
+[ 2025-04-11 22:27:04 ] [ morgan ] [ error ] : $method /api/users 403 - 2.588 ms - message: -
+[ 2025-04-11 22:27:11 ] [ morgan ] [ error ] : $method /api/users 403 - 1.216 ms - message: -
+[ 2025-04-11 22:28:53 ] [ morgan ] [ info ] : $method /api/users 201 - 412.862 ms
+[ 2025-04-11 22:29:45 ] [ morgan ] [ error ] : $method /api/articles/1/tags 400 - 115.962 ms - message: Article not found
+[ 2025-04-11 22:31:53 ] [ morgan ] [ error ] : $method /api/tags 400 - 100.357 ms - message: Tag already exists
+[ 2025-04-11 22:32:20 ] [ morgan ] [ error ] : $method /api/tags 400 - 35.968 ms - message: Tag already exists
+[ 2025-04-11 22:32:30 ] [ morgan ] [ info ] : $method /api/tags 201 - 39.434 ms
+[ 2025-04-11 22:38:18 ] [ morgan ] [ error ] : $method /api/articles 404 - 18.854 ms - message: -
+[ 2025-04-11 22:38:26 ] [ morgan ] [ error ] : $method /api/articles 404 - 0.519 ms - message: -
