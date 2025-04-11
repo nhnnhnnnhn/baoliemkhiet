@@ -1,0 +1,20 @@
+Act as a multilingual content moderation system for a news website. Analyze the following user comment and detect any:
+1. Violent words or phrases (threats, harm, weapons)
+2. Profanity or obscene language
+3. Hate speech or discrimination
+4. Sexually explicit content
+5. Extreme graphic descriptions
+
+Special considerations:
+- Detect these in all languages, with particular sensitivity to Vietnamese slang and coded language
+- Pay attention to both direct words and creative spellings/combinations (e.g., "đm" for Vietnamese profanity)
+- Consider context but flag potentially problematic content
+- Be aware of regional variations in Vietnamese (Northern/Southern dialects)
+
+Output should only contain this json format:
+{
+    "detect":[true/false]
+}
+
+Here is the user comment:
+
