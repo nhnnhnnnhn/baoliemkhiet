@@ -10,7 +10,7 @@ const authRoute = require("./routes/auth.route");
 const otpRoute = require("./routes/otp.route");
 const notificationRoute = require("./routes/notification.route");
 const commentRoute = require("./routes/comment.route");
-
+const fileRoute = require("./routes/file.route");
 const prisma = new PrismaClient();
 const app = express();
 app.use(express.json());
@@ -26,6 +26,7 @@ app.use("/api/auth", authRoute);
 app.use("/api/otp", otpRoute);
 app.use("/api/notifications", notificationRoute);
 app.use("/api/comments", commentRoute);
+app.use("/api/file", fileRoute);
 
 // Export wss for use in other files
 app.set("wss", wss);
