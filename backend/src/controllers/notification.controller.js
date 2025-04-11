@@ -18,14 +18,14 @@ const getNotifications = controllerHandler(async (req, res) => {
 });
 
 const markNotificationAsRead = controllerHandler(async (req, res) => {
-  const { notification_id } = req.params;
+  const notification_id = Number(req.params.notification_id);
   const notification = await notificationService.markNotificationAsRead(
     notification_id
   );
   res.status(200).json(notification);
 });
 const deleteNotification = controllerHandler(async (req, res) => {
-  const { notification_id } = req.params;
+  const notification_id = Number(req.params.notification_id);
   await notificationService.deleteNotification(notification_id);
   res.status(204).send();
 });
