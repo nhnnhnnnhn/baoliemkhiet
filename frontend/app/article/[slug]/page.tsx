@@ -54,7 +54,7 @@ const getArticleData = (slug: string) => {
       {
         type: "text",
         value:
-          "Theo số liệu thống kê, kim ngạch thương mại giữa Việt Nam và các nước ASEAN đã tăng 15% trong năm 2024, đạt 80 tỷ USD. Với thỏa thuận mới, con số này dự kiến sẽ tăng lên 100 tỷ USD vào năm 2026.",
+          "Theo số liệu thống kê, kim ngạch thương mại giữa Việt Nam và các nước ASEAN đã tăng 15% trong năm 2024, đạt 80 tỷ USD. Với thỏa thuận mới, con số này d��� kiến sẽ tăng lên 100 tỷ USD vào năm 2026.",
       },
       {
         type: "text",

@@ -1,151 +1,251 @@
 import Link from "next/link"
-import { ArrowRightIcon, StarIcon } from "lucide-react"
+import { ArrowRightIcon, StarIcon, TrophyIcon, CalendarIcon, UserIcon, ChevronRightIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import styles from "./page.module.css"
-import { SiteHeader } from "@/components/site-header"
+import { SiteFooter } from "@/components/site-footer"
 import { ChatbotButton } from "@/components/chatbot-button"
 
-// Giữ nguyên nội dung trang Thể thao nhưng thêm SiteHeader
 export default function TheThaoPage() {
   return (
-    <>
-      <SiteHeader />
-      <div className={styles.container}>
-        {/* Header */}
-        {/* <header className={styles.header}>
-          <div className={styles.headerContainer}>
-            <Link href="/" className={styles.logo}>
-              <span className={styles.logoText}>Thể Thao</span>
-            </Link>
-            <nav className={styles.nav}>
-              <Link href="#" className={styles.navLink}>
-                Bóng đá
-              </Link>
-              <Link href="#" className={styles.navLink}>
-                Bóng rổ
-              </Link>
-              <Link href="#" className={styles.navLink}>
-                Quần vợt
-              </Link>
-              <Link href="#" className={styles.navLink}>
-                Đua xe F1
-              </Link>
-              <Link href="#" className={styles.navLink}>
-                Võ thuật
-              </Link>
-              <Link href="#" className={styles.navLink}>
-                Esports
-              </Link>
-            </nav>
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      {/* Athletic-style Header - Đã bỏ SiteHeader */}
+      <div className="bg-athletic-primary text-white">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-6">
+              <h1 className="text-2xl font-bold text-athletic-accent">BÓNG LĂN</h1>
+              <nav className="hidden md:flex space-x-6">
+                <Link href="#" className="text-sm font-medium hover:text-athletic-accent transition-colors">
+                  Bóng đá
+                </Link>
+                <Link href="#" className="text-sm font-medium hover:text-athletic-accent transition-colors">
+                  Bóng rổ
+                </Link>
+                <Link href="#" className="text-sm font-medium hover:text-athletic-accent transition-colors">
+                  Quần vợt
+                </Link>
+                <Link href="#" className="text-sm font-medium hover:text-athletic-accent transition-colors">
+                  Đua xe F1
+                </Link>
+                <Link href="#" className="text-sm font-medium hover:text-athletic-accent transition-colors">
+                  Võ thuật
+                </Link>
+              </nav>
+            </div>
             <div className="flex items-center space-x-4">
-              <Button className="bg-black text-white hover:bg-gray-800">Đăng ký</Button>
+              <Link href="/" className="text-sm font-medium hover:text-athletic-accent transition-colors">
+                Trang chủ
+              </Link>
+              <Button className="bg-athletic-accent text-athletic-primary hover:bg-yellow-400">Đăng ký Premium</Button>
             </div>
           </div>
-        </header> */}
+        </div>
+      </div>
 
-        <main className={styles.mainContent}>
-          {/* Hero Section */}
-          <section className={styles.heroSection}>
-            <div className={styles.heroGrid}>
-              <div className={styles.heroImage}>
-                <img
-                  src="/placeholder.svg?height=600&width=800"
-                  alt="Featured Sports Story"
-                  className="w-full h-full object-cover"
-                />
-                <div className={styles.premiumBadge}>PREMIUM</div>
-              </div>
-              <div className={styles.heroContent}>
-                <div className={styles.categoryTag}>
-                  <span className={styles.categoryName}>BÓNG ĐÁ</span>
-                  <span className={styles.timestamp}>12 giờ trước</span>
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="relative">
+          <div className="absolute inset-0 bg-gradient-to-b from-athletic-primary/80 to-athletic-primary/20 z-10"></div>
+          <div className="relative h-[70vh] overflow-hidden">
+            <img
+              src="/placeholder.svg?height=800&width=1600&text=Hero Image"
+              alt="Hero Image"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="absolute inset-0 flex items-center z-20">
+            <div className="container mx-auto px-4">
+              <div className="max-w-2xl text-white">
+                <div className="flex items-center mb-4">
+                  <span className="bg-athletic-accent text-athletic-primary px-3 py-1 text-sm font-bold rounded-sm mr-3">
+                    PREMIUM
+                  </span>
+                  <span className="text-sm opacity-80">12 giờ trước</span>
                 </div>
-                <h1 className={styles.heroTitle}>Ronaldo ghi bàn quyết định, Al Nassr tiến vào chung kết</h1>
-                <p className={styles.heroDescription}>
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
+                  Ronaldo ghi bàn quyết định, Al Nassr tiến vào chung kết
+                </h1>
+                <p className="text-xl mb-6 opacity-90">
                   Cristiano Ronaldo đã có pha lập công quan trọng ở phút 89, giúp Al Nassr giành chiến thắng 2-1 trước
                   Al Hilal và tiến vào chung kết Saudi Pro League Cup.
                 </p>
-                <div className={styles.authorBox}>
-                  <div className={styles.authorAvatar}></div>
+                <div className="flex items-center mb-6">
+                  <div className="w-12 h-12 rounded-full bg-gray-300 mr-3"></div>
                   <div>
-                    <p className={styles.authorName}>Nguyễn Văn A</p>
-                    <p className={styles.authorTitle}>Phóng viên Bóng đá</p>
+                    <p className="font-medium">Nguyễn Văn A</p>
+                    <p className="text-sm opacity-80">Phóng viên Bóng đá</p>
                   </div>
                 </div>
-                <Button className="self-start flex items-center">
+                <Button className="bg-white text-athletic-primary hover:bg-gray-100">
                   Đọc tiếp <ArrowRightIcon className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* Featured Stories */}
-          <section className={styles.featuredSection}>
-            <h2 className={styles.sectionTitle}>Tin nổi bật</h2>
-            <div className={styles.featuredGrid}>
+        {/* Rest of the content remains the same */}
+        {/* Featured Stories */}
+        <section className="py-12 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-bold border-l-4 border-athletic-accent pl-3">Tin nổi bật</h2>
+              <Link
+                href="#"
+                className="text-athletic-primary hover:text-athletic-accent flex items-center text-sm font-medium"
+              >
+                Xem tất cả <ChevronRightIcon className="ml-1 h-4 w-4" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[1, 2, 3].map((item) => (
-                <div key={item} className={styles.featuredCard}>
-                  <div className={styles.featuredImage}>
+                <div key={item} className="group">
+                  <div className="relative overflow-hidden mb-4">
                     <img
-                      src={`/placeholder.svg?height=300&width=400&text=Sports ${item}`}
-                      alt={`Sports Story ${item}`}
-                      className="w-full h-full object-cover"
+                      src={`/placeholder.svg?height=300&width=500&text=Story ${item}`}
+                      alt={`Story ${item}`}
+                      className="w-full aspect-video object-cover transform group-hover:scale-105 transition-transform duration-500"
                     />
-                    {item === 1 && <div className={styles.premiumBadge}>PREMIUM</div>}
+                    {item === 1 && (
+                      <div className="absolute top-3 left-3 bg-athletic-accent text-athletic-primary px-2 py-1 text-xs font-bold">
+                        PREMIUM
+                      </div>
+                    )}
                   </div>
-                  <div className={styles.featuredCategoryTag}>
-                    <span className={styles.categoryName}>BÓNG RỔ</span>
-                    <span className={styles.timestamp}>8 giờ trước</span>
+                  <div className="flex items-center text-sm mb-2">
+                    <span className="font-bold text-athletic-red mr-2">BÓNG ĐÁ</span>
+                    <span className="text-gray-500">8 giờ trước</span>
                   </div>
-                  <h3 className={styles.featuredTitle}>
-                    Lakers giành chiến thắng kịch tính trước Warriors trong trận đấu overtime
+                  <h3 className="text-xl font-bold mb-2 group-hover:text-athletic-accent transition-colors">
+                    {item === 1
+                      ? "Messi lập hat-trick, Inter Miami thắng đậm"
+                      : item === 2
+                        ? "Man City đối mặt với án phạt nặng từ Premier League"
+                        : "Liverpool bổ nhiệm HLV mới thay thế Jurgen Klopp"}
                   </h3>
-                  <p className={styles.featuredDescription}>
-                    LeBron James ghi 32 điểm, 11 rebounds và 9 assists, dẫn dắt Lakers vượt qua Warriors với tỷ số
-                    124-120 sau hiệp phụ.
+                  <p className="text-gray-600 mb-3">
+                    {item === 1
+                      ? "Lionel Messi đã có màn trình diễn xuất sắc với 3 bàn thắng, giúp Inter Miami đánh bại đối thủ với tỷ số 5-0."
+                      : item === 2
+                        ? "Nhà đương kim vô địch Ngoại hạng Anh đang đối mặt với án phạt nặng sau khi bị cáo buộc vi phạm luật công bằng tài chính."
+                        : "Sau khi Jurgen Klopp thông báo rời đi, Liverpool đã tìm được người kế nhiệm xứng đáng cho vị trí HLV trưởng."}
                   </p>
-                  <div className={styles.featuredAuthor}>
-                    <div className={styles.featuredAuthorAvatar}></div>
-                    <p className={styles.featuredAuthorName}>Trần Văn B</p>
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 rounded-full bg-gray-300 mr-2"></div>
+                    <span className="text-sm text-gray-500">Trần Văn B</span>
                   </div>
                 </div>
               ))}
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* Sports Categories */}
-          <section className={styles.categoriesSection}>
-            <div className={styles.categoriesGrid}>
+        {/* Live Scores */}
+        <section className="py-10 bg-athletic-primary text-white">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold flex items-center">
+                <TrophyIcon className="mr-2 h-6 w-6 text-athletic-accent" />
+                Kết quả trận đấu
+              </h2>
+              <Button variant="outline" className="border-white text-white hover:bg-white hover:text-athletic-primary">
+                Xem tất cả
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                {
+                  league: "Premier League",
+                  team1: "Arsenal",
+                  score1: 3,
+                  team2: "Tottenham",
+                  score2: 1,
+                  status: "Kết thúc",
+                },
+                {
+                  league: "La Liga",
+                  team1: "Barcelona",
+                  score1: 2,
+                  team2: "Real Madrid",
+                  score2: 2,
+                  status: "Kết thúc",
+                },
+                { league: "Serie A", team1: "Inter", score1: 1, team2: "Juventus", score2: 0, status: "Kết thúc" },
+                {
+                  league: "Bundesliga",
+                  team1: "Bayern Munich",
+                  score1: 4,
+                  team2: "Dortmund",
+                  score2: 2,
+                  status: "Kết thúc",
+                },
+                { league: "Ligue 1", team1: "PSG", score1: 3, team2: "Marseille", score2: 0, status: "Kết thúc" },
+                { league: "V-League", team1: "Hà Nội FC", score1: 2, team2: "HAGL", score2: 1, status: "Kết thúc" },
+              ].map((match, index) => (
+                <div key={index} className="bg-athletic-secondary p-4 rounded-lg hover:bg-gray-700 transition-colors">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-400">{match.league}</span>
+                    <span className="text-xs px-2 py-1 bg-gray-700 rounded-full">{match.status}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 bg-gray-700 rounded-full"></div>
+                      <span className="font-medium">{match.team1}</span>
+                    </div>
+                    <span className="text-xl font-bold">{match.score1}</span>
+                  </div>
+                  <div className="flex justify-between items-center mt-2">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 bg-gray-700 rounded-full"></div>
+                      <span className="font-medium">{match.team2}</span>
+                    </div>
+                    <span className="text-xl font-bold">{match.score2}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Categories */}
+        <section className="py-12 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
               {/* Football Section */}
               <div>
-                <div className={styles.categoryHeader}>
-                  <h2 className={styles.categoryTitle}>Bóng đá</h2>
-                  <Link href="#" className={styles.viewAllLink}>
-                    Xem tất cả <ArrowRightIcon className="ml-1 h-3 w-3" />
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold border-l-4 border-athletic-accent pl-3">Bóng đá</h2>
+                  <Link
+                    href="#"
+                    className="text-athletic-primary hover:text-athletic-accent flex items-center text-sm font-medium"
+                  >
+                    Xem tất cả <ChevronRightIcon className="ml-1 h-4 w-4" />
                   </Link>
                 </div>
-                <div className={styles.categoryStories}>
+                <div className="space-y-6">
                   {[1, 2, 3].map((item) => (
-                    <div key={item} className={styles.storyCard}>
-                      <div className={styles.storyImage}>
+                    <div key={item} className="flex gap-4 group">
+                      <div className="w-24 h-24 flex-shrink-0 overflow-hidden">
                         <img
                           src={`/placeholder.svg?height=100&width=100&text=Football ${item}`}
                           alt={`Football Story ${item}`}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
                         />
-                        {item === 2 && (
-                          <div className="absolute top-1 left-1 bg-yellow-400 text-black px-1 py-0.5 text-[10px] font-bold">
-                            PREMIUM
-                          </div>
-                        )}
                       </div>
                       <div>
-                        <h3 className={styles.storyTitle}>
+                        <div className="flex items-center text-xs mb-1">
+                          <CalendarIcon className="h-3 w-3 mr-1 text-gray-500" />
+                          <span className="text-gray-500">6 giờ trước</span>
+                        </div>
+                        <h3 className="font-bold mb-1 group-hover:text-athletic-accent transition-colors">
                           Manchester City thắng áp đảo trước Newcastle với tỷ số 4-0
                         </h3>
-                        <p className={styles.storyTimestamp}>6 giờ trước</p>
-                        <p className={styles.storyAuthor}>Lê Văn C</p>
+                        <div className="flex items-center text-xs text-gray-500">
+                          <UserIcon className="h-3 w-3 mr-1" />
+                          <span>Lê Văn C</span>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -154,230 +254,85 @@ export default function TheThaoPage() {
 
               {/* Basketball Section */}
               <div>
-                <div className={styles.categoryHeader}>
-                  <h2 className={styles.categoryTitle}>Bóng rổ</h2>
-                  <Link href="#" className={styles.viewAllLink}>
-                    Xem tất cả <ArrowRightIcon className="ml-1 h-3 w-3" />
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold border-l-4 border-athletic-accent pl-3">Bóng rổ</h2>
+                  <Link
+                    href="#"
+                    className="text-athletic-primary hover:text-athletic-accent flex items-center text-sm font-medium"
+                  >
+                    Xem tất cả <ChevronRightIcon className="ml-1 h-4 w-4" />
                   </Link>
                 </div>
-                <div className={styles.categoryStories}>
+                <div className="space-y-6">
                   {[1, 2, 3].map((item) => (
-                    <div key={item} className={styles.storyCard}>
-                      <div className={styles.storyImage}>
+                    <div key={item} className="flex gap-4 group">
+                      <div className="w-24 h-24 flex-shrink-0 overflow-hidden">
                         <img
                           src={`/placeholder.svg?height=100&width=100&text=Basketball ${item}`}
                           alt={`Basketball Story ${item}`}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
                         />
-                        {item === 1 && (
-                          <div className="absolute top-1 left-1 bg-yellow-400 text-black px-1 py-0.5 text-[10px] font-bold">
-                            PREMIUM
-                          </div>
-                        )}
                       </div>
                       <div>
-                        <h3 className={styles.storyTitle}>
+                        <div className="flex items-center text-xs mb-1">
+                          <CalendarIcon className="h-3 w-3 mr-1 text-gray-500" />
+                          <span className="text-gray-500">4 giờ trước</span>
+                        </div>
+                        <h3 className="font-bold mb-1 group-hover:text-athletic-accent transition-colors">
                           Boston Celtics tiếp tục duy trì mạch thắng với chiến thắng thứ 8 liên tiếp
                         </h3>
-                        <p className={styles.storyTimestamp}>4 giờ trước</p>
-                        <p className={styles.storyAuthor}>Phạm Thị D</p>
+                        <div className="flex items-center text-xs text-gray-500">
+                          <UserIcon className="h-3 w-3 mr-1" />
+                          <span>Phạm Thị D</span>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* Premium Content Banner */}
-          <section className={styles.premiumBanner}>
-            <div className={styles.premiumBannerContent}>
-              <div className={styles.premiumBannerText}>
-                <div className={styles.premiumBannerTitle}>
-                  <StarIcon className="h-5 w-5 text-yellow-400 mr-2" />
-                  <h2 className={styles.premiumBannerTitleText}>Thể Thao Premium</h2>
+        {/* Premium Banner */}
+        <section className="py-12 bg-athletic-primary text-white">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col md:flex-row items-center justify-between">
+              <div className="mb-6 md:mb-0 md:mr-8">
+                <div className="flex items-center mb-3">
+                  <StarIcon className="h-6 w-6 text-athletic-accent mr-2" />
+                  <h2 className="text-2xl font-bold">Bóng Lăn Premium</h2>
                 </div>
-                <p className={styles.premiumBannerDescription}>
+                <p className="text-gray-300 mb-6 max-w-2xl">
                   Truy cập vào các bài viết chuyên sâu, phân tích chuyên môn và nội dung độc quyền từ các phóng viên
-                  hàng đầu của chúng tôi.
+                  hàng đầu của chúng tôi. Nâng cao trải nghiệm thể thao của bạn với những góc nhìn sâu sắc và độc đáo.
                 </p>
-                <Button className="bg-yellow-400 text-black hover:bg-yellow-300">Đăng ký ngay</Button>
+                <div className="flex flex-wrap gap-4">
+                  <Button className="bg-athletic-accent text-athletic-primary hover:bg-yellow-400">Đăng ký ngay</Button>
+                  <Button
+                    variant="outline"
+                    className="border-white text-white hover:bg-white hover:text-athletic-primary"
+                  >
+                    Tìm hiểu thêm
+                  </Button>
+                </div>
               </div>
-              <div className={styles.premiumBannerImage}>
+              <div className="w-full md:w-1/3 lg:w-1/4">
                 <img
-                  src="/placeholder.svg?height=160&width=160"
+                  src="/placeholder.svg?height=300&width=300&text=Premium"
                   alt="Premium Subscription"
-                  className="w-full h-full object-cover rounded-lg"
+                  className="w-full rounded-lg"
                 />
               </div>
             </div>
-          </section>
-
-          {/* Latest News */}
-          <section className={styles.latestNewsSection}>
-            <h2 className={styles.sectionTitle}>Tin mới nhất</h2>
-            <div className={styles.latestNewsGrid}>
-              {[1, 2, 3, 4].map((item) => (
-                <div key={item} className={styles.latestNewsCard}>
-                  <div className={styles.latestNewsImage}>
-                    <img
-                      src={`/placeholder.svg?height=180&width=320&text=News ${item}`}
-                      alt={`Latest News ${item}`}
-                      className="w-full h-full object-cover"
-                    />
-                    {item === 3 && (
-                      <div className="absolute top-2 left-2 bg-yellow-400 text-black px-2 py-1 text-xs font-bold">
-                        PREMIUM
-                      </div>
-                    )}
-                  </div>
-                  <div className={styles.featuredCategoryTag}>
-                    <span className={styles.categoryName}>TENNIS</span>
-                    <span className={styles.timestamp}>2 giờ trước</span>
-                  </div>
-                  <h3 className={styles.latestNewsTitle}>
-                    Novak Djokovic vào bán kết Roland Garros sau trận đấu kịch tính
-                  </h3>
-                  <p className={styles.storyAuthor}>Hoàng Văn E</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        </main>
-
-        {/* Footer */}
-        <footer className={styles.footer}>
-          <div className={styles.footerContainer}>
-            <div className={styles.footerGrid}>
-              <div>
-                <h3 className={styles.footerLogo}>Thể Thao</h3>
-                <p className={styles.footerDescription}>
-                  Thông tin thể thao chuyên sâu, phân tích chuyên môn và tin tức độc quyền từ các phóng viên hàng đầu.
-                </p>
-              </div>
-              <div>
-                <h4 className={styles.footerSectionTitle}>Môn thể thao</h4>
-                <ul className={styles.footerLinks}>
-                  <li>
-                    <Link href="#" className={styles.footerLink}>
-                      Bóng đá
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className={styles.footerLink}>
-                      Bóng rổ
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className={styles.footerLink}>
-                      Quần vợt
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className={styles.footerLink}>
-                      Đua xe F1
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className={styles.footerLink}>
-                      Võ thuật
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className={styles.footerLink}>
-                      Esports
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h4 className={styles.footerSectionTitle}>Giải đấu</h4>
-                <ul className={styles.footerLinks}>
-                  <li>
-                    <Link href="#" className={styles.footerLink}>
-                      V-League
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className={styles.footerLink}>
-                      Premier League
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className={styles.footerLink}>
-                      Champions League
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className={styles.footerLink}>
-                      NBA
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className={styles.footerLink}>
-                      Grand Slam
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className={styles.footerLink}>
-                      SEA Games
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h4 className={styles.footerSectionTitle}>Tài khoản</h4>
-                <ul className={styles.footerLinks}>
-                  <li>
-                    <Link href="#" className={styles.footerLink}>
-                      Đăng ký
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className={styles.footerLink}>
-                      Đăng nhập
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className={styles.footerLink}>
-                      Quản lý tài khoản
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className={styles.footerLink}>
-                      Gói Premium
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className={styles.footerLink}>
-                      Hỗ trợ
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-            </div>
-            <div className={styles.footerBottom}>
-              <p>© {new Date().getFullYear()} Thể Thao. Tất cả các quyền được bảo lưu.</p>
-              <div className={styles.footerBottomLinks}>
-                <Link href="#" className={styles.footerBottomLink}>
-                  Điều khoản sử dụng
-                </Link>
-                <Link href="#" className={styles.footerBottomLink}>
-                  Chính sách bảo mật
-                </Link>
-                <Link href="#" className={styles.footerBottomLink}>
-                  Cookie
-                </Link>
-                <Link href="#" className={styles.footerBottomLink}>
-                  Liên hệ
-                </Link>
-              </div>
-            </div>
           </div>
-        </footer>
+        </section>
+      </main>
+
+      <SiteFooter />
+      <div className="fixed bottom-6 right-6 z-50">
+        <ChatbotButton />
       </div>
-      {/* Nội dung trang Thể thao */}
-      <ChatbotButton />
-    </>
+    </div>
   )
 }

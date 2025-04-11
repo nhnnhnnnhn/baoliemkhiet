@@ -105,7 +105,7 @@ export default function AddArticlePage() {
                   <Input id="tags" placeholder="Nhập các thẻ, phân cách bằng dấu phẩy" className="mt-1" />
                 </div>
                 <div>
-                  <Label htmlFor="featuredImage">Ảnh đại diện</Label>
+                  <Label htmlFor="featuredImage">Ảnh đ��i diện</Label>
                   <Input id="featuredImage" type="file" className="mt-1" />
                 </div>
                 <div className="pt-4 border-t border-gray-200">

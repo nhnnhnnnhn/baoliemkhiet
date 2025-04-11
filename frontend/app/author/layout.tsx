@@ -1,179 +1,134 @@
-"use client"
-
 import type React from "react"
-
-import { useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import {
-  Bell,
-  ChevronDown,
-  FileText,
-  Home,
-  LogOut,
-  Menu,
-  MessageSquare,
-  PenSquare,
-  Search,
-  Settings,
-  User,
-} from "lucide-react"
+import Image from "next/image"
+import { FileText, Home, LogOut, Menu, MessageSquare, Settings, User, Edit, ChevronDown } from "lucide-react"
 
+import { NotificationDropdown } from "@/components/notification-dropdown"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
-import styles from "../admin/admin.module.css"
+import { Separator } from "@/components/ui/separator"
+
+import styles from "./author.module.css"
 
 export default function AuthorLayout({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const pathname = usePathname()
-
-  const isActive = (path: string) => {
-    if (path === "/author" && pathname === "/author") {
-      return true
-    }
-    if (path !== "/author" && pathname.startsWith(path)) {
-      return true
-    }
-    return false
-  }
-
-  const NavLink = ({ href, icon: Icon, children }: { href: string; icon: any; children: React.ReactNode }) => (
-    <Link href={href} className={`${styles.navLink} ${isActive(href) ? styles.navLinkActive : ""}`}>
-      <Icon className={styles.navIcon} />
-      <span>{children}</span>
-    </Link>
-  )
-
-  const SidebarContent = () => (
-    <div className={styles.sidebarContent}>
-      <div className={styles.sidebarHeader}>
-        <Link href="/author" className={styles.logo}>
-          <svg
-            width="32"
-            height="32"
-            viewBox="0 0 32 32"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className={styles.logoIcon}
-          >
-            <rect width="32" height="32" rx="8" fill="currentColor" />
-            <path
-              d="M22 12.5C22 10.567 20.433 9 18.5 9C16.567 9 15 10.567 15 12.5C15 14.433 16.567 16 18.5 16C20.433 16 22 14.433 22 12.5Z"
-              fill="white"
-            />
-            <path
-              d="M17 19.5C17 17.567 15.433 16 13.5 16C11.567 16 10 17.567 10 19.5C10 21.433 11.567 23 13.5 23C15.433 23 17 21.433 17 19.5Z"
-              fill="white"
-            />
-          </svg>
-          <span className={styles.logoText}>Báo Liêm Khiết</span>
-        </Link>
-      </div>
-
-      <div className={styles.sidebarNav}>
-        <div className={styles.navSection}>
-          <div className={styles.navSectionTitle}>Tác giả</div>
-          <div className={styles.navLinks}>
-            <NavLink href="/author" icon={Home}>
-              Trang chủ
-            </NavLink>
-            <NavLink href="/author/profile" icon={User}>
-              Hồ sơ cá nhân
-            </NavLink>
-            <NavLink href="/author/articles" icon={FileText}>
-              Quản lý bài viết
-            </NavLink>
-            <NavLink href="/author/articles/add" icon={PenSquare}>
-              Viết bài mới
-            </NavLink>
-            <NavLink href="/author/comments" icon={MessageSquare}>
-              Bình luận
-            </NavLink>
-            <NavLink href="/author/settings" icon={Settings}>
-              Cài đặt
-            </NavLink>
-          </div>
-        </div>
-      </div>
-
-      <div className={styles.sidebarFooter}>
-        <div className={styles.userCard}>
-          <div className={styles.userAvatar}>
-            <img src="/placeholder.svg?height=40&width=40" alt="User Avatar" className={styles.userAvatarImg} />
-            <span className={styles.userStatus}></span>
-          </div>
-          <div className={styles.userInfo}>
-            <div className={styles.userName}>Trần Thị B</div>
-            <div className={styles.userRole}>Tác giả</div>
-          </div>
-          <Button variant="ghost" size="icon" className={styles.userAction}>
-            <LogOut className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  )
-
   return (
-    <div className={styles.adminLayout}>
-      {/* Mobile Sidebar */}
-      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="left" className={styles.mobileSidebar}>
-          <SidebarContent />
-        </SheetContent>
-      </Sheet>
+    <div className="min-h-screen flex flex-col md:flex-row">
+      {/* Mobile Header */}
+      <header className="md:hidden bg-white border-b p-4 flex items-center justify-between">
+        <div className="flex items-center">
+          <Button variant="ghost" size="icon" className="mr-2">
+            <Menu className="h-5 w-5" />
+          </Button>
+          <Link href="/author" className="flex items-center">
+            <Image src="/logo.svg" alt="Báo Liêm Khiết" width={120} height={40} priority />
+          </Link>
+        </div>
+        <div className="flex items-center gap-2">
+          <NotificationDropdown />
+          <Avatar className="h-8 w-8">
+            <AvatarImage src="/placeholder.svg?height=32&width=32" alt="Author" />
+            <AvatarFallback>T</AvatarFallback>
+          </Avatar>
+        </div>
+      </header>
 
-      {/* Desktop Sidebar */}
-      <aside className={styles.sidebar}>
-        <SidebarContent />
-      </aside>
-
-      {/* Main Content */}
-      <div className={styles.mainContent}>
-        {/* Header */}
-        <header className={styles.header}>
-          <div className={styles.headerLeft}>
-            <Button variant="ghost" size="icon" className={styles.menuButton} onClick={() => setSidebarOpen(true)}>
-              <Menu className="h-5 w-5" />
-            </Button>
-            <div className={styles.searchContainer}>
-              <Search className={styles.searchIcon} />
-              <Input type="search" placeholder="Tìm kiếm..." className={styles.searchInput} />
-            </div>
+      {/* Sidebar */}
+      <div className={styles.sidebar}>
+        <div className={styles.sidebarContent}>
+          <div className={styles.sidebarHeader}>
+            <Link href="/author" className={styles.logo}>
+              <Image src="/logo.svg" alt="Báo Liêm Khiết Logo" width={120} height={40} priority />
+            </Link>
           </div>
-          <div className={styles.headerRight}>
-            <Button variant="ghost" size="icon" className={styles.headerAction}>
-              <Bell className="h-5 w-5" />
-              <span className={styles.notificationBadge}>2</span>
-            </Button>
-            <div className={styles.userDropdown}>
-              <div className={styles.userDropdownTrigger}>
-                <img src="/placeholder.svg?height=32&width=32" alt="User" className={styles.userDropdownAvatar} />
-                <span className={styles.userDropdownName}>Trần Thị B</span>
-                <ChevronDown className="h-4 w-4 opacity-50" />
-              </div>
-              <div className={styles.userDropdownMenu}>
-                <Link href="/author/profile" className={styles.userDropdownItem}>
-                  <User className="h-4 w-4 mr-2" />
-                  Hồ sơ cá nhân
+          <div className={styles.sidebarNav}>
+            <div className={styles.navSection}>
+              <div className={styles.navSectionTitle}>Tổng quan</div>
+              <div className={styles.navLinks}>
+                <Link href="/author" className={`${styles.navLink} ${styles.navLinkActive}`}>
+                  <Home className={styles.navIcon} />
+                  Trang chủ
                 </Link>
-                <Link href="/author/settings" className={styles.userDropdownItem}>
-                  <Settings className="h-4 w-4 mr-2" />
+              </div>
+            </div>
+            <div className={styles.navSection}>
+              <div className={styles.navSectionTitle}>Quản lý bài viết</div>
+              <div className={styles.navLinks}>
+                <Link href="/author/articles" className={styles.navLink}>
+                  <FileText className={styles.navIcon} />
+                  Bài viết của tôi
+                </Link>
+                <Link href="/author/articles/add" className={styles.navLink}>
+                  <Edit className={styles.navIcon} />
+                  Viết bài mới
+                </Link>
+              </div>
+            </div>
+            <div className={styles.navSection}>
+              <div className={styles.navSectionTitle}>Cài đặt</div>
+              <div className={styles.navLinks}>
+                <Link href="/author/profile" className={styles.navLink}>
+                  <User className={styles.navIcon} />
+                  Hồ sơ
+                </Link>
+                <Link href="/author/settings" className={styles.navLink}>
+                  <Settings className={styles.navIcon} />
                   Cài đặt
                 </Link>
-                <div className={styles.userDropdownDivider}></div>
-                <Link href="/auth/login" className={styles.userDropdownItem}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Đăng xuất
-                </Link>
               </div>
             </div>
+          </div>
+          <div className={styles.sidebarFooter}>
+            <div className={styles.userCard}>
+              <div className={styles.userAvatar}>
+                <Image
+                  src="/placeholder.svg?height=40&width=40"
+                  alt="User Avatar"
+                  width={40}
+                  height={40}
+                  className={styles.userAvatarImg}
+                />
+                <div className={styles.userStatus}></div>
+              </div>
+              <div className={styles.userInfo}>
+                <div className={styles.userName}>Author User</div>
+                <div className={styles.userRole}>Author</div>
+              </div>
+              <div className={styles.userAction}>
+                <ChevronDown size={16} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="md:pl-64 flex flex-col flex-1">
+        {/* Desktop Header */}
+        <header className="hidden md:flex sticky top-0 z-10 bg-white border-b p-4 items-center justify-between">
+          <div className="flex items-center">
+            <Button variant="ghost" size="icon" className="mr-2">
+              <Home className="h-5 w-5" />
+            </Button>
+            <Separator orientation="vertical" className="h-6 mx-2" />
+            <div className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">Tác giả</span> / Trang chủ
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <NotificationDropdown />
+            <Button variant="ghost" size="icon">
+              <MessageSquare className="h-5 w-5" />
+            </Button>
+            <Separator orientation="vertical" className="h-6" />
+            <Button variant="ghost" size="sm" className="gap-2">
+              <LogOut className="h-4 w-4" />
+              Đăng xuất
+            </Button>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className={styles.pageContent}>{children}</main>
+        <main className="flex-1 p-6 bg-gray-50">{children}</main>
       </div>
     </div>
   )

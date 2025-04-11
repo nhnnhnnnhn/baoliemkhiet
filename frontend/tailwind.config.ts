@@ -19,9 +19,6 @@ const config = {
       },
     },
     extend: {
-      fontFamily: {
-        serif: ["Georgia", "Cambria", "Times New Roman", "Times", "serif"],
-      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -55,6 +52,13 @@ const config = {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        // Thêm màu cho trang thể thao (Bóng Lăn)
+        athletic: {
+          primary: "#111827", // gray-900
+          secondary: "#1f2937", // gray-800
+          accent: "#fbbf24", // amber-400
+          red: "#ef4444", // red-500
         },
       },
       borderRadius: {

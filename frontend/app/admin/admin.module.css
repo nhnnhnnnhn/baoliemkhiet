@@ -48,7 +48,7 @@
 }
 
 .logoIcon {
-  color: #206bc4;
+  color: #dc2626; /* Thay đổi từ #206bc4 sang #dc2626 */
 }
 
 .logoText {
@@ -90,13 +90,13 @@
 }
 
 .navLink:hover {
-  color: #206bc4;
-  background-color: rgba(32, 107, 196, 0.04);
+  color: #dc2626; /* Thay đổi từ #206bc4 sang #dc2626 */
+  background-color: rgba(220, 38, 38, 0.04); /* Thay đổi từ rgba(32, 107, 196, 0.04) sang rgba(220, 38, 38, 0.04) */
 }
 
 .navLinkActive {
-  color: #206bc4;
-  background-color: rgba(32, 107, 196, 0.04);
+  color: #dc2626; /* Thay đổi từ #206bc4 sang #dc2626 */
+  background-color: rgba(220, 38, 38, 0.04); /* Thay đổi từ rgba(32, 107, 196, 0.04) sang rgba(220, 38, 38, 0.04) */
 }
 
 .navLinkActive::before {
@@ -106,7 +106,7 @@
   top: 0;
   bottom: 0;
   width: 3px;
-  background-color: #206bc4;
+  background-color: #dc2626; /* Thay đổi từ #206bc4 sang #dc2626 */
 }
 
 .navIcon {
@@ -142,7 +142,7 @@
 }
 
 .submenuLink:hover {
-  color: #206bc4;
+  color: #dc2626; /* Thay đổi từ #206bc4 sang #dc2626 */
 }
 
 .submenuLinkIcon {
@@ -652,12 +652,12 @@
 }
 
 .paginationButtonActive {
-  background-color: #206bc4;
+  background-color: #dc2626; /* Thay đổi từ #206bc4 sang #dc2626 */
   color: #fff;
 }
 
 .paginationButtonActive:hover {
-  background-color: #1a569d;
+  background-color: #b91c1c; /* Thay đổi từ #1a569d sang #b91c1c */
   color: #fff;
 }
 
