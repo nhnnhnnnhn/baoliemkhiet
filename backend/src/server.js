@@ -9,6 +9,7 @@ const { initWebSocket } = require("./websocket");
 const authRoute = require("./routes/auth.route");
 const otpRoute = require("./routes/otp.route");
 const notificationRoute = require("./routes/notification.route");
+const commentRoute = require("./routes/comment.route");
 
 const prisma = new PrismaClient();
 const app = express();
@@ -24,6 +25,7 @@ app.use(morgan.errorHandler);
 app.use("/api/auth", authRoute);
 app.use("/api/otp", otpRoute);
 app.use("/api/notifications", notificationRoute);
+app.use("/api/comments", commentRoute);
 
 // Export wss for use in other files
 app.set("wss", wss);
