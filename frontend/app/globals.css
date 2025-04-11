@@ -33,9 +33,6 @@
     --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
-    
-    /* Font */
-    --font-inter: 'Inter', system-ui, sans-serif;
   }
 
   .dark {
@@ -75,18 +72,5 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-inter);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-inter);
-    font-weight: 600;
-  }
-  
-  input, textarea, select, button {
-    font-family: var(--font-inter);
   }
 }
-

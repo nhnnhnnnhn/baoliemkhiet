@@ -1,14 +1,12 @@
 import Link from "next/link"
-import { CalendarIcon, ChevronRightIcon, TrendingUp, DollarSign, BarChart3 } from "lucide-react"
+import { ChevronRightIcon, TrendingUp, DollarSign, BarChart3 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-// Mock ChatbotButton component
-const ChatbotButton = () => {
-  return <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Chat with AI</button>
-}
+import { ChatbotButton } from "@/components/chatbot-button"
+import { SiteFooter } from "@/components/site-footer"
+import { SiteHeader } from "@/components/site-header"
 
 export default function KinhDoanhPage() {
   const currentDate = new Date().toLocaleDateString("vi-VN", {
@@ -19,27 +17,21 @@ export default function KinhDoanhPage() {
   })
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="border-b border-gray-200 bg-gradient-to-r from-green-900 to-green-700 text-white">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center text-sm mb-4">
-            <Link href="/" className="text-green-100 hover:text-white">
-              Trang chủ
-            </Link>
-            <span className="mx-2">/</span>
-            <span className="font-medium">Kinh doanh</span>
-          </div>
-          <div className="flex items-center">
-            <TrendingUp className="h-8 w-8 mr-3" />
+    <div className="min-h-screen flex flex-col">
+      <SiteHeader />
+
+      {/* Category Header */}
+      <div className="bg-gradient-to-r from-green-900 to-green-700 py-8 text-white">
+        <div className="container mx-auto px-4 flex items-center justify-center">
+          <TrendingUp className="h-10 w-10 mr-4" />
+          <div>
             <h1 className="text-4xl font-serif font-bold">Kinh doanh</h1>
-          </div>
-          <div className="flex items-center mt-2 text-sm text-green-100">
-            <CalendarIcon className="h-4 w-4 mr-1" />
-            {currentDate}
+            <p className="mt-2 max-w-2xl">
+              Thông tin kinh tế, tài chính, chứng khoán, bất động sản và các xu hướng kinh doanh mới nhất
+            </p>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Category Navigation */}
       <div className="border-b border-gray-200 bg-gray-50">
@@ -153,7 +145,7 @@ export default function KinhDoanhPage() {
       </div>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 flex-grow">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content - 2/3 width */}
           <div className="lg:col-span-2">
@@ -167,7 +159,7 @@ export default function KinhDoanhPage() {
                 />
               </div>
               <h2 className="text-3xl font-serif font-bold mb-3 hover:text-green-600">
-                <Link href="#">Việt Nam đặt mục tiêu tăng trưởng GDP 6.5% trong năm 2024</Link>
+                <Link href="/articles/12">Việt Nam đặt mục tiêu tăng trưởng GDP 6.5% trong năm 2024</Link>
               </h2>
               <p className="text-gray-600 mb-4 text-lg">
                 Chính phủ đề ra nhiều giải pháp thúc đẩy tăng trưởng kinh tế, kiểm soát lạm phát và ổn định kinh tế vĩ
@@ -202,7 +194,9 @@ export default function KinhDoanhPage() {
                       </div>
                       <div className="md:w-2/3">
                         <h4 className="text-lg font-bold mb-2 hover:text-green-600">
-                          <Link href="#">Tập đoàn Vingroup công bố kế hoạch mở rộng đầu tư vào lĩnh vực công nghệ</Link>
+                          <Link href="/articles/13">
+                            Tập đoàn Vingroup công bố kế hoạch mở rộng đầu tư vào lĩnh vực công nghệ
+                          </Link>
                         </h4>
                         <p className="text-gray-600 text-sm mb-2">
                           Vingroup dự kiến đầu tư hàng tỷ USD vào các dự án công nghệ cao trong 5 năm tới.
@@ -238,7 +232,9 @@ export default function KinhDoanhPage() {
                     </div>
                     <div className="p-4">
                       <h4 className="font-bold mb-2 hover:text-green-600">
-                        <Link href="#">Thị trường bất động sản phía Nam dự báo phục hồi mạnh vào cuối năm</Link>
+                        <Link href="/articles/14">
+                          Thị trường bất động sản phía Nam dự báo phục hồi mạnh vào cuối năm
+                        </Link>
                       </h4>
                       <p className="text-sm text-gray-600 mb-3">
                         Các chuyên gia nhận định thị trường sẽ sôi động trở lại nhờ các chính sách hỗ trợ mới.
@@ -246,42 +242,6 @@ export default function KinhDoanhPage() {
                       <div className="flex items-center text-xs text-gray-500">
                         <span>6 giờ trước</span>
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Corporate News */}
-            <div>
-              <div className="flex items-center mb-6">
-                <div className="w-1 h-6 bg-green-600 mr-3"></div>
-                <h3 className="text-xl font-bold">Doanh nghiệp</h3>
-              </div>
-
-              <div className="space-y-6">
-                {[1, 2, 3, 4, 5].map((item) => (
-                  <div key={item} className="flex gap-4 pb-6 border-b border-gray-200 last:border-0">
-                    <div className="flex-1">
-                      <div className="flex items-center text-sm text-gray-500 mb-2">
-                        <span className="font-medium text-green-600">Doanh nghiệp</span>
-                        <span className="mx-2">•</span>
-                        <span>8 giờ trước</span>
-                      </div>
-                      <h4 className="text-xl font-bold mb-2 hover:text-green-600">
-                        <Link href="#">FPT Software ký kết hợp tác chiến lược với tập đoàn công nghệ Nhật Bản</Link>
-                      </h4>
-                      <p className="text-gray-600">
-                        Thỏa thuận hợp tác sẽ giúp FPT Software mở rộng thị phần tại Nhật Bản và phát triển các giải
-                        pháp công nghệ mới.
-                      </p>
-                    </div>
-                    <div className="w-32 h-24 bg-gray-100 rounded overflow-hidden shrink-0">
-                      <img
-                        src={`/placeholder.svg?height=200&width=300&text=Corp ${item}`}
-                        alt={`Corporate News ${item}`}
-                        className="w-full h-full object-cover"
-                      />
                     </div>
                   </div>
                 ))}
@@ -373,57 +333,11 @@ export default function KinhDoanhPage() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Business Leaders */}
-            <Card className="mb-8">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold mb-4 pb-2 border-b">Doanh nhân</h3>
-                <div className="space-y-4">
-                  {[1, 2, 3].map((item) => (
-                    <div key={item} className="flex gap-3 pb-4 border-b border-gray-100 last:border-0 last:pb-0">
-                      <div className="w-16 h-16 bg-gray-200 rounded-full overflow-hidden shrink-0">
-                        <img
-                          src={`/placeholder.svg?height=100&width=100&text=Leader ${item}`}
-                          alt={`Business Leader ${item}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div>
-                        <h4 className="font-medium hover:text-green-600">
-                          <Link href="#">
-                            Nguyễn Văn A: "Chuyển đổi số là chìa khóa để doanh nghiệp vượt qua khủng hoảng"
-                          </Link>
-                        </h4>
-                        <p className="text-xs text-gray-500 mt-1">CEO Công ty ABC</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Subscribe */}
-            <Card className="bg-green-50 border-green-100">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold mb-2">Nhận bản tin kinh doanh</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Đăng ký nhận bản tin hàng ngày với những thông tin kinh tế, tài chính quan trọng nhất.
-                </p>
-                <div className="flex gap-2">
-                  <input
-                    type="email"
-                    placeholder="Email của bạn"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-                  />
-                  <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                    Đăng ký
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </main>
+
+      <SiteFooter />
 
       {/* AI Chatbot */}
       <div className="fixed bottom-6 right-6 z-50">
@@ -432,4 +346,3 @@ export default function KinhDoanhPage() {
     </div>
   )
 }
-

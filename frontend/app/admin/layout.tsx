@@ -53,13 +53,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className={styles.sidebarContent}>
       <div className={styles.sidebarHeader}>
         <Link href="/admin" className={styles.logo}>
-          <img 
-            src="/logo.svg" 
-            alt="Báo Liêm Khiết" 
-            className={styles.logoIcon} 
-            width="280" 
-            height="280" 
-          />
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 32 32"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className={styles.logoIcon}
+          >
+            <rect width="32" height="32" rx="8" fill="currentColor" />
+            <path
+              d="M22 12.5C22 10.567 20.433 9 18.5 9C16.567 9 15 10.567 15 12.5C15 14.433 16.567 16 18.5 16C20.433 16 22 14.433 22 12.5Z"
+              fill="white"
+            />
+            <path
+              d="M17 19.5C17 17.567 15.433 16 13.5 16C11.567 16 10 17.567 10 19.5C10 21.433 11.567 23 13.5 23C15.433 23 17 21.433 17 19.5Z"
+              fill="white"
+            />
+          </svg>
+          <span className={styles.logoText}>News Admin</span>
         </Link>
       </div>
 
@@ -213,4 +225,3 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </div>
   )
 }
-

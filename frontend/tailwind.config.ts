@@ -20,8 +20,7 @@ const config = {
     },
     extend: {
       fontFamily: {
-        inter: ["var(--font-inter)"],
-        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        serif: ["Georgia", "Cambria", "Times New Roman", "Times", "serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -83,4 +82,3 @@ const config = {
 } satisfies Config
 
 export default config
-

@@ -1,14 +1,12 @@
 import Link from "next/link"
-import { CalendarIcon, ChevronRightIcon } from "lucide-react"
+import { ChevronRightIcon, FileText } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-// Dummy ChatbotButton component
-const ChatbotButton = () => {
-  return <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Chat with AI</button>
-}
+import { ChatbotButton } from "@/components/chatbot-button"
+import { SiteFooter } from "@/components/site-footer"
+import { SiteHeader } from "@/components/site-header"
 
 export default function ThoiSuPage() {
   const currentDate = new Date().toLocaleDateString("vi-VN", {
@@ -19,27 +17,25 @@ export default function ThoiSuPage() {
   })
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="border-b border-gray-200">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center text-sm text-gray-500 mb-4">
-            <Link href="/" className="hover:text-blue-600">
-              Trang chủ
-            </Link>
-            <span className="mx-2">/</span>
-            <span className="font-medium text-gray-900">Thời sự</span>
-          </div>
-          <h1 className="text-4xl font-serif font-bold">Thời sự</h1>
-          <div className="flex items-center mt-2 text-sm text-gray-500">
-            <CalendarIcon className="h-4 w-4 mr-1" />
-            {currentDate}
+    <div className="min-h-screen flex flex-col">
+      <SiteHeader />
+
+      {/* Category Header */}
+      <div className="bg-gradient-to-r from-blue-800 to-blue-600 py-8 text-white">
+        <div className="container mx-auto px-4 flex items-center justify-center">
+          <FileText className="h-10 w-10 mr-4" />
+          <div>
+            <h1 className="text-4xl font-serif font-bold">Thời sự</h1>
+            <p className="mt-2 max-w-2xl">
+              Cập nhật tin tức mới nhất về tình hình chính trị, xã hội, kinh tế và các vấn đề thời sự nóng hổi trong
+              nước
+            </p>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Category Navigation */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-200 bg-gray-50">
         <div className="container mx-auto px-4">
           <Tabs defaultValue="all" className="py-2">
             <TabsList className="bg-transparent h-auto p-0 border-b border-gray-200 w-full justify-start space-x-8">
@@ -95,7 +91,7 @@ export default function ThoiSuPage() {
       </div>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 flex-grow">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content - 2/3 width */}
           <div className="lg:col-span-2">
@@ -109,7 +105,7 @@ export default function ThoiSuPage() {
                 />
               </div>
               <h2 className="text-3xl font-serif font-bold mb-3 hover:text-blue-600">
-                <Link href="#">Thủ tướng chỉ đạo đẩy nhanh tiến độ các dự án trọng điểm quốc gia</Link>
+                <Link href="/articles/1">Thủ tướng chỉ đạo đẩy nhanh tiến độ các dự án trọng điểm quốc gia</Link>
               </h2>
               <p className="text-gray-600 mb-4 text-lg">
                 Thủ tướng yêu cầu các bộ, ngành và địa phương tập trung nguồn lực, tháo gỡ khó khăn để đẩy nhanh tiến độ
@@ -144,7 +140,9 @@ export default function ThoiSuPage() {
                       </div>
                       <div className="md:w-2/3">
                         <h4 className="text-lg font-bold mb-2 hover:text-blue-600">
-                          <Link href="#">Hội nghị về giải pháp phát triển kinh tế vùng đồng bằng sông Cửu Long</Link>
+                          <Link href="/articles/2">
+                            Hội nghị về giải pháp phát triển kinh tế vùng đồng bằng sông Cửu Long
+                          </Link>
                         </h4>
                         <p className="text-gray-600 text-sm mb-2">
                           Các giải pháp thích ứng với biến đổi khí hậu và phát triển bền vững được thảo luận tại hội
@@ -176,7 +174,9 @@ export default function ThoiSuPage() {
                         <span>6 giờ trước</span>
                       </div>
                       <h4 className="text-xl font-bold mb-2 hover:text-blue-600">
-                        <Link href="#">Tòa án nhân dân tối cao tổ chức hội nghị tổng kết công tác năm 2023</Link>
+                        <Link href="/articles/3">
+                          Tòa án nhân dân tối cao tổ chức hội nghị tổng kết công tác năm 2023
+                        </Link>
                       </h4>
                       <p className="text-gray-600">
                         Hội nghị đánh giá kết quả đạt được và đề ra phương hướng, nhiệm vụ trọng tâm cho năm 2024.
@@ -207,7 +207,7 @@ export default function ThoiSuPage() {
                       <div className="text-2xl font-bold text-gray-300 shrink-0">{item}</div>
                       <div>
                         <h4 className="font-medium hover:text-blue-600">
-                          <Link href="#">Bộ Giáo dục công bố kế hoạch thi tốt nghiệp THPT năm 2024</Link>
+                          <Link href="/articles/4">Bộ Giáo dục công bố kế hoạch thi tốt nghiệp THPT năm 2024</Link>
                         </h4>
                         <div className="flex items-center text-xs text-gray-500 mt-1">
                           <span>8 giờ trước</span>
@@ -234,7 +234,7 @@ export default function ThoiSuPage() {
                         </div>
                       </div>
                       <h4 className="font-medium hover:text-blue-600 mb-1">
-                        <Link href="#">Giải pháp phát triển đô thị thông minh tại Việt Nam</Link>
+                        <Link href="/articles/5">Giải pháp phát triển đô thị thông minh tại Việt Nam</Link>
                       </h4>
                       <p className="text-sm text-gray-600">
                         Các thành phố cần có chiến lược tổng thể và lộ trình cụ thể để xây dựng đô thị thông minh.
@@ -271,6 +271,8 @@ export default function ThoiSuPage() {
         </div>
       </main>
 
+      <SiteFooter />
+
       {/* AI Chatbot */}
       <div className="fixed bottom-6 right-6 z-50">
         <ChatbotButton />
@@ -278,4 +280,3 @@ export default function ThoiSuPage() {
     </div>
   )
 }
-

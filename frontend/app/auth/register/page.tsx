@@ -12,22 +12,16 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useAuth } from "@/lib/auth-context"
-import { useToast } from "@/components/ui/use-toast"
 
 export default function RegisterPage() {
   const router = useRouter()
-  const { register, error, resetError } = useAuth()
-  const { toast } = useToast()
-  
   const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
-    accountType: "USER",
+    accountType: "reader",
     agreeTerms: false,
   })
 
@@ -53,55 +47,24 @@ export default function RegisterPage() {
     }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    resetError()
-    
+
     if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Lỗi đăng ký",
-        description: "Mật khẩu xác nhận không khớp!",
-        variant: "destructive",
-      })
+      alert("Mật khẩu không khớp!")
       return
     }
 
     if (!formData.agreeTerms) {
-      toast({
-        title: "Lỗi đăng ký",
-        description: "Bạn cần đồng ý với điều khoản dịch vụ!",
-        variant: "destructive",
-      })
+      alert("Bạn cần đồng ý với điều khoản dịch vụ!")
       return
     }
 
-    setIsLoading(true)
-    
-    try {
-      await register({
-        email: formData.email,
-        password: formData.password,
-        fullname: formData.fullName,
-        role: formData.accountType,
-      })
-      
-      toast({
-        title: "Đăng ký thành công",
-        description: "Vui lòng đăng nhập để tiếp tục.",
-        variant: "default",
-      })
-      
-      // Redirect to login page
-      router.push("/auth/login")
-    } catch (err) {
-      toast({
-        title: "Đăng ký thất bại",
-        description: error || "Vui lòng kiểm tra lại thông tin đăng ký",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
+    // Simulate registration - in a real app, this would be an API call
+    console.log("Registration data:", formData)
+
+    // Redirect to login page
+    router.push("/auth/login")
   }
 
   return (
@@ -109,7 +72,24 @@ export default function RegisterPage() {
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
         <div className="text-center">
           <Link href="/" className="inline-block">
-            <img src="/logo.svg" alt="Báo Liêm Khiết" className="mx-auto h-12 w-auto" />
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 32 32"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="mx-auto h-12 w-12 text-blue-600"
+            >
+              <rect width="32" height="32" rx="8" fill="currentColor" />
+              <path
+                d="M22 12.5C22 10.567 20.433 9 18.5 9C16.567 9 15 10.567 15 12.5C15 14.433 16.567 16 18.5 16C20.433 16 22 14.433 22 12.5Z"
+                fill="white"
+              />
+              <path
+                d="M17 19.5C17 17.567 15.433 16 13.5 16C11.567 16 10 17.567 10 19.5C10 21.433 11.567 23 13.5 23C15.433 23 17 21.433 17 19.5Z"
+                fill="white"
+              />
+            </svg>
           </Link>
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Đăng ký tài khoản</h2>
           <p className="mt-2 text-sm text-gray-600">
@@ -138,7 +118,6 @@ export default function RegisterPage() {
                   placeholder="Nguyễn Văn A"
                   value={formData.fullName}
                   onChange={handleChange}
-                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -159,7 +138,6 @@ export default function RegisterPage() {
                   placeholder="you@example.com"
                   value={formData.email}
                   onChange={handleChange}
-                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -180,14 +158,12 @@ export default function RegisterPage() {
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={handleChange}
-                  disabled={isLoading}
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="text-gray-400 hover:text-gray-500 focus:outline-none"
-                    disabled={isLoading}
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -214,40 +190,29 @@ export default function RegisterPage() {
                   placeholder="••••••••"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  disabled={isLoading}
                 />
               </div>
             </div>
 
             <div>
               <Label htmlFor="accountType">Loại tài khoản</Label>
-              <Select 
-                value={formData.accountType} 
-                onValueChange={(value) => handleSelectChange("accountType", value)}
-                disabled={isLoading}
-              >
+              <Select value={formData.accountType} onValueChange={(value) => handleSelectChange("accountType", value)}>
                 <SelectTrigger id="accountType" className="mt-1">
                   <SelectValue placeholder="Chọn loại tài khoản" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="USER">Độc giả</SelectItem>
-                  <SelectItem value="JOURNALIST">Nhà báo</SelectItem>
+                  <SelectItem value="reader">Độc giả</SelectItem>
+                  <SelectItem value="author">Tác giả</SelectItem>
                 </SelectContent>
               </Select>
               <p className="mt-1 text-xs text-gray-500">
-                Tài khoản nhà báo sẽ được xét duyệt trước khi có thể đăng bài
+                Tài khoản tác giả sẽ được xét duyệt trước khi có thể đăng bài
               </p>
             </div>
           </div>
 
           <div className="flex items-center">
-            <Checkbox 
-              id="agree-terms" 
-              checked={formData.agreeTerms} 
-              onCheckedChange={handleCheckboxChange} 
-              required
-              disabled={isLoading}
-            />
+            <Checkbox id="agree-terms" checked={formData.agreeTerms} onCheckedChange={handleCheckboxChange} required />
             <Label htmlFor="agree-terms" className="ml-2 block text-sm text-gray-900">
               Tôi đồng ý với{" "}
               <Link href="/terms" className="font-medium text-blue-600 hover:text-blue-500">
@@ -261,8 +226,8 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Đang xử lý..." : "Đăng ký"}
+            <Button type="submit" className="w-full">
+              Đăng ký
             </Button>
           </div>
         </form>
@@ -278,13 +243,13 @@ export default function RegisterPage() {
           </div>
 
           <div className="mt-6 grid grid-cols-2 gap-3">
-            <Button variant="outline" className="w-full" disabled={isLoading}>
+            <Button variant="outline" className="w-full">
               <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
               </svg>
               Google
             </Button>
-            <Button variant="outline" className="w-full" disabled={isLoading}>
+            <Button variant="outline" className="w-full">
               <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M22,12c0-5.52-4.48-10-10-10S2,6.48,2,12c0,4.84,3.44,8.87,8,9.8V15H8v-3h2V9.5C10,7.57,11.57,6,13.5,6H16v3h-2c-0.55,0-1,0.45-1,1v2h3v3h-3v6.95C18.05,21.45,22,17.19,22,12z" />
               </svg>
@@ -296,4 +261,3 @@ export default function RegisterPage() {
     </div>
   )
 }
-

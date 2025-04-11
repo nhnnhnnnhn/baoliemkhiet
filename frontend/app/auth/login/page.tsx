@@ -11,18 +11,13 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useAuth } from "@/lib/auth-context"
-import { useToast } from "@/components/ui/use-toast"
 
 export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get("redirectTo") || "/"
-  const { login, error, resetError } = useAuth()
-  const { toast } = useToast()
 
   const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -44,47 +39,28 @@ export default function LoginPage() {
     }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    resetError()
 
-    try {
-      await login(formData.email, formData.password, formData.rememberMe)
-      
-      // Show success toast
-      toast({
-        title: "Đăng nhập thành công",
-        description: "Chào mừng bạn quay trở lại!",
-        variant: "default",
-      })
+    // Simulate login - in a real app, this would be an API call
+    console.log("Login data:", formData)
 
-      // Determine redirect path based on user role
-      // Xử lý sau khi biết vai trò người dùng từ API
-      const role = formData.email.includes("admin") ? "admin" : formData.email.includes("journalist") ? "journalist" : "user"
+    // Redirect based on role (simulated)
+    // In a real app, this would be determined by the API response
+    const role = formData.email.includes("admin") ? "admin" : formData.email.includes("author") ? "author" : "user"
 
-      if (role === "admin") {
-        router.push("/admin")
-      } else if (role === "journalist") {
-        router.push("/journalist")
+    if (role === "admin") {
+      router.push("/admin")
+    } else if (role === "author") {
+      router.push("/author")
+    } else {
+      // If redirectTo is provided and not a dashboard, redirect there
+      // Otherwise go to user dashboard
+      if (redirectTo && !redirectTo.includes("/admin") && !redirectTo.includes("/author")) {
+        router.push(redirectTo)
       } else {
-        // If redirectTo is provided and not a dashboard, redirect there
-        // Otherwise go to user dashboard
-        if (redirectTo && !redirectTo.includes("/admin") && !redirectTo.includes("/journalist")) {
-          router.push(redirectTo)
-        } else {
-          router.push("/")
-        }
+        router.push("/user")
       }
-    } catch (err) {
-      // Toast error  
-      toast({
-        title: "Đăng nhập thất bại",
-        description: error || "Vui lòng kiểm tra lại email và mật khẩu",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -93,7 +69,24 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
         <div className="text-center">
           <Link href="/" className="inline-block">
-            <img src="/logo.svg" alt="Báo Liêm Khiết" className="mx-auto h-12 w-auto" />
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 32 32"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="mx-auto h-12 w-12 text-blue-600"
+            >
+              <rect width="32" height="32" rx="8" fill="currentColor" />
+              <path
+                d="M22 12.5C22 10.567 20.433 9 18.5 9C16.567 9 15 10.567 15 12.5C15 14.433 16.567 16 18.5 16C20.433 16 22 14.433 22 12.5Z"
+                fill="white"
+              />
+              <path
+                d="M17 19.5C17 17.567 15.433 16 13.5 16C11.567 16 10 17.567 10 19.5C10 21.433 11.567 23 13.5 23C15.433 23 17 21.433 17 19.5Z"
+                fill="white"
+              />
+            </svg>
           </Link>
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Đăng nhập</h2>
           <p className="mt-2 text-sm text-gray-600">
@@ -122,7 +115,6 @@ export default function LoginPage() {
                   placeholder="you@example.com"
                   value={formData.email}
                   onChange={handleChange}
-                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -143,14 +135,12 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={handleChange}
-                  disabled={isLoading}
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="text-gray-400 hover:text-gray-500 focus:outline-none"
-                    disabled={isLoading}
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -161,12 +151,7 @@ export default function LoginPage() {
 
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <Checkbox 
-                id="remember-me" 
-                checked={formData.rememberMe} 
-                onCheckedChange={handleCheckboxChange}
-                disabled={isLoading}
-              />
+              <Checkbox id="remember-me" checked={formData.rememberMe} onCheckedChange={handleCheckboxChange} />
               <Label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
                 Ghi nhớ đăng nhập
               </Label>
@@ -180,8 +165,8 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Đang xử lý..." : "Đăng nhập"}
+            <Button type="submit" className="w-full">
+              Đăng nhập
             </Button>
           </div>
         </form>
@@ -197,13 +182,13 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-6 grid grid-cols-2 gap-3">
-            <Button variant="outline" className="w-full" disabled={isLoading}>
+            <Button variant="outline" className="w-full">
               <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
               </svg>
               Google
             </Button>
-            <Button variant="outline" className="w-full" disabled={isLoading}>
+            <Button variant="outline" className="w-full">
               <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M22,12c0-5.52-4.48-10-10-10S2,6.48,2,12c0,4.84,3.44,8.87,8,9.8V15H8v-3h2V9.5C10,7.57,11.57,6,13.5,6H16v3h-2c-0.55,0-1,0.45-1,1v2h3v3h-3v6.95C18.05,21.45,22,17.19,22,12z" />
               </svg>
@@ -215,4 +200,3 @@ export default function LoginPage() {
     </div>
   )
 }
-

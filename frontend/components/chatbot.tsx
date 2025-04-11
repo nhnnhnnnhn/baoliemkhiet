@@ -23,7 +23,7 @@ export function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
-      content: "Xin chào! Tôi là trợ lý AI của Báo Liêm Khiết. Tôi có thể giúp gì cho bạn?",
+      content: "Xin chào! Tôi là trợ lý AI của The News Times. Tôi có thể giúp gì cho bạn?",
       sender: "bot",
       timestamp: new Date(),
     },
@@ -203,4 +203,3 @@ export function ChatbotButton() {
     </div>
   )
 }
-

@@ -14,7 +14,7 @@ export default function SuccessPage() {
         <h1 className="text-2xl font-bold mb-4">Đăng ký thành công!</h1>
 
         <p className="text-gray-600 mb-6">
-          Cảm ơn bạn đã đăng ký Báo Liêm Khiết. Chúng tôi đã gửi email xác nhận đến địa chỉ email của bạn với thông tin
+          Cảm ơn bạn đã đăng ký The News Times. Chúng tôi đã gửi email xác nhận đến địa chỉ email của bạn với thông tin
           chi tiết về tài khoản.
         </p>
 
@@ -28,7 +28,7 @@ export default function SuccessPage() {
           <p className="text-sm text-gray-500">
             Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi qua{" "}
             <Link href="#" className="text-blue-700 hover:underline">
-              baoliemkhiet.project@gmail.com
+              support@newstimes.com
             </Link>
           </p>
         </div>
@@ -36,4 +36,3 @@ export default function SuccessPage() {
     </div>
   )
 }
-

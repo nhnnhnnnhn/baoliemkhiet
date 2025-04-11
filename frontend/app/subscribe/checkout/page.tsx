@@ -92,7 +92,7 @@ export default function CheckoutPage() {
       <header className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 py-6 flex justify-between items-center">
           <Link href="/" className="text-2xl font-serif font-bold">
-            <img src="/logo.svg" alt="Báo Liêm Khiết" className="h-10" />
+            The News Times
           </Link>
           <div className="flex items-center space-x-4">
             <Link href="/subscribe" className="text-sm text-gray-600 hover:text-gray-900">
@@ -448,4 +448,3 @@ export default function CheckoutPage() {
     </div>
   )
 }
-

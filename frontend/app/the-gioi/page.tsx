@@ -1,16 +1,12 @@
 import Link from "next/link"
-import { CalendarIcon, ChevronRightIcon, Globe } from "lucide-react"
+import { ChevronRightIcon, Globe } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-// Mock ChatbotButton component
-const ChatbotButton = () => {
-  return (
-    <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Chat with AI</button>
-  )
-}
+import { ChatbotButton } from "@/components/chatbot-button"
+import { SiteFooter } from "@/components/site-footer"
+import { SiteHeader } from "@/components/site-header"
 
 export default function TheGioiPage() {
   const currentDate = new Date().toLocaleDateString("vi-VN", {
@@ -21,27 +17,21 @@ export default function TheGioiPage() {
   })
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="border-b border-gray-200 bg-gradient-to-r from-blue-900 to-blue-700 text-white">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center text-sm mb-4">
-            <Link href="/" className="text-blue-100 hover:text-white">
-              Trang chủ
-            </Link>
-            <span className="mx-2">/</span>
-            <span className="font-medium">Thế giới</span>
-          </div>
-          <div className="flex items-center">
-            <Globe className="h-8 w-8 mr-3" />
+    <div className="min-h-screen flex flex-col">
+      <SiteHeader />
+
+      {/* Category Header */}
+      <div className="bg-gradient-to-r from-blue-800 to-blue-600 py-8 text-white">
+        <div className="container mx-auto px-4 flex items-center justify-center">
+          <Globe className="h-10 w-10 mr-4" />
+          <div>
             <h1 className="text-4xl font-serif font-bold">Thế giới</h1>
-          </div>
-          <div className="flex items-center mt-2 text-sm text-blue-100">
-            <CalendarIcon className="h-4 w-4 mr-1" />
-            {currentDate}
+            <p className="mt-2 max-w-2xl">
+              Tin tức quốc tế, phân tích chuyên sâu và góc nhìn đa chiều về các sự kiện toàn cầu
+            </p>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Category Navigation */}
       <div className="border-b border-gray-200 bg-gray-50">
@@ -90,7 +80,7 @@ export default function TheGioiPage() {
       </div>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 flex-grow">
         {/* World Map Section */}
         <div className="mb-12 bg-gray-50 p-6 rounded-lg">
           <h2 className="text-2xl font-bold mb-6 flex items-center">
@@ -132,7 +122,7 @@ export default function TheGioiPage() {
                     <span>2 giờ trước</span>
                   </div>
                   <h4 className="text-xl font-bold mb-2 hover:text-blue-600">
-                    <Link href="#">Liên minh Châu Âu thông qua gói viện trợ mới cho Ukraine</Link>
+                    <Link href="/articles/6">Liên minh Châu Âu thông qua gói viện trợ mới cho Ukraine</Link>
                   </h4>
                   <p className="text-gray-600">
                     Các nước thành viên EU đã nhất trí thông qua gói viện trợ trị giá 50 tỷ euro để hỗ trợ Ukraine trong
@@ -154,7 +144,7 @@ export default function TheGioiPage() {
                     <span>3 giờ trước</span>
                   </div>
                   <h4 className="text-xl font-bold mb-2 hover:text-blue-600">
-                    <Link href="#">Nhật Bản và Hàn Quốc tăng cường hợp tác an ninh khu vực</Link>
+                    <Link href="/articles/7">Nhật Bản và Hàn Quốc tăng cường hợp tác an ninh khu vực</Link>
                   </h4>
                   <p className="text-gray-600">
                     Lãnh đạo hai nước đã đồng ý mở rộng hợp tác trong lĩnh vực an ninh và quốc phòng nhằm đối phó với
@@ -179,7 +169,7 @@ export default function TheGioiPage() {
                       <span>5 giờ trước</span>
                     </div>
                     <h5 className="font-bold hover:text-blue-600">
-                      <Link href="#">Mỹ công bố chiến lược mới về hợp tác kinh tế với khu vực Mỹ Latinh</Link>
+                      <Link href="/articles/8">Mỹ công bố chiến lược mới về hợp tác kinh tế với khu vực Mỹ Latinh</Link>
                     </h5>
                   </div>
                 ))}
@@ -205,7 +195,9 @@ export default function TheGioiPage() {
                         <span>8 giờ trước</span>
                       </div>
                       <h4 className="text-xl font-bold mb-2 hover:text-blue-600">
-                        <Link href="#">Liên Hợp Quốc kêu gọi tăng cường viện trợ nhân đạo cho các nước Đông Phi</Link>
+                        <Link href="/articles/9">
+                          Liên Hợp Quốc kêu gọi tăng cường viện trợ nhân đạo cho các nước Đông Phi
+                        </Link>
                       </h4>
                       <p className="text-gray-600">
                         Tình trạng hạn hán kéo dài đã gây ra khủng hoảng lương thực nghiêm trọng tại nhiều quốc gia
@@ -241,7 +233,7 @@ export default function TheGioiPage() {
                         {item === 1 ? "Vừa cập nhật" : `${item} giờ trước`}
                       </span>
                       <h4 className="font-medium hover:text-red-600">
-                        <Link href="#">Động đất mạnh 6.2 độ richter xảy ra tại khu vực Thái Bình Dương</Link>
+                        <Link href="/articles/10">Động đất mạnh 6.2 độ richter xảy ra tại khu vực Thái Bình Dương</Link>
                       </h4>
                     </div>
                   ))}
@@ -265,7 +257,7 @@ export default function TheGioiPage() {
                       </div>
                       <div>
                         <h4 className="font-medium hover:text-blue-600">
-                          <Link href="#">
+                          <Link href="/articles/11">
                             Ngân hàng Thế giới dự báo tăng trưởng kinh tế toàn cầu đạt 3.1% trong năm 2024
                           </Link>
                         </h4>
@@ -321,6 +313,8 @@ export default function TheGioiPage() {
         </div>
       </main>
 
+      <SiteFooter />
+
       {/* AI Chatbot */}
       <div className="fixed bottom-6 right-6 z-50">
         <ChatbotButton />
@@ -328,4 +322,3 @@ export default function TheGioiPage() {
     </div>
   )
 }
-

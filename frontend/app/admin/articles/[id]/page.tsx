@@ -191,4 +191,3 @@ export default function ArticleDetailPage({ params }: { params: { id: string } }
     </div>
   )
 }
-
