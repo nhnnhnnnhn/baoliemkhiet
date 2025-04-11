@@ -5,6 +5,8 @@ const { PrismaClient } = require("@prisma/client");
 const http = require("http");
 const morgan = require("./configs/morgan.config");
 const { initWebSocket } = require("./websocket");
+const swaggerUi = require("swagger-ui-express");
+const swaggerJsDoc = require("./swagger-output.json");
 
 const authRoute = require("./routes/auth.route");
 const otpRoute = require("./routes/otp.route");
@@ -18,6 +20,9 @@ const server = http.createServer(app);
 
 // Initialize WebSocket
 const wss = initWebSocket(server);
+
+// Swagger configuration
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerJsDoc));
 
 app.use(morgan.successHandler);
 app.use(morgan.errorHandler);
