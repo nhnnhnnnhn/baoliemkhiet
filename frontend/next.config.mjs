@@ -21,12 +21,15 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    domains: ['localhost', 'vercel.app'],
   },
   distDir: '.next',
-  output: 'standalone',
   experimental: {
-    webpackBuildWorker: true,
+    // Disabled to avoid symlink errors on Windows
+    webpackBuildWorker: false,
   },
+  // Disable unnecessary features for Vercel
+  swcMinify: true
 }
 
 if (userConfig) {
