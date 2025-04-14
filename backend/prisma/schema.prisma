@@ -36,18 +36,18 @@ model User {
 }
 
 model Article {
-  id          Int       @id @default(autoincrement())
+  id          Int           @id @default(autoincrement())
   title       String
   content     String
   thumbnail   String?
   authorId    Int
   categoryId  Int
-  status      String    @default("draft")
+  status      ArticleStatus
   publishedAt DateTime?
   isPublish   Boolean
   view        Int
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @default(now()) @updatedAt @map("updated_at")
 
   author       User          @relation("AuthorArticles", fields: [authorId], references: [id])
   category     Category      @relation(fields: [categoryId], references: [id])
@@ -194,4 +194,11 @@ enum NotificationType {
   LIKE
   FOLLOW
   ARTICLE_STATUS
+}
+
+enum ArticleStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
 }

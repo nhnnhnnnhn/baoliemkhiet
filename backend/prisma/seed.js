@@ -10,7 +10,7 @@ async function main() {
       password: hashedPassword,
     },
     create: {
-      email: "admind@gmail.com",
+      email: "admin@gmail.com",
       fullname: "Admin",
       password: hashedPassword,
       role: "ADMIN",
