@@ -23,8 +23,8 @@ const nextConfig = {
     unoptimized: true,
     domains: ['localhost', 'vercel.app'],
   },
-  // Đảm bảo distDir không có dấu chấm đầu để Vercel dễ tìm thấy
-  distDir: 'out',
+  // Sửa đổi để sử dụng thư mục mặc định của Next.js
+  distDir: '.next',
   // Disable experimental features to avoid issues
   experimental: {
     webpackBuildWorker: false,
