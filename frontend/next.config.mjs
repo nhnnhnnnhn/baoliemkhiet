@@ -22,10 +22,10 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  distDir: '.next',
+  output: 'standalone',
   experimental: {
     webpackBuildWorker: true,
-    parallelServerBuildTraces: true,
-    parallelServerCompiles: true,
   },
 }
 
