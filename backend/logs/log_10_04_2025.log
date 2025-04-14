@@ -1,0 +1,80 @@
+[ 2025-04-10 16:18:08 ] [ morgan ] [ error ] : $method /api/articles/create/ 404 - 4.891 ms - message: -
+[ 2025-04-10 16:19:47 ] [ morgan ] [ error ] : $method /api/articles/create/ 401 - 1.752 ms - message: -
+[ 2025-04-10 16:20:06 ] [ morgan ] [ error ] : $method /api/articles/create/ 400 - 3.715 ms - message: Cannot destructure property 'title' of 'req.body' as it is undefined.
+[ 2025-04-10 16:21:14 ] [ morgan ] [ error ] : $method /api/articles/create/ 400 - 0.659 ms - message: -
+[ 2025-04-10 16:21:34 ] [ morgan ] [ error ] : $method /api/articles/create/ 400 - 0.974 ms - message: -
+[ 2025-04-10 16:23:46 ] [ morgan ] [ error ] : $method /api/articles/create/ 400 - 177.295 ms - message: Error creating article: 
+Invalid `prisma.article.create()` invocation in
+D:\baoliemkhiet\backend\src\services\article.service.js:7:46
+
+  4 // Create a new article
+  5 module.exports.createArticle = async (title, content, thumbnail, authorId, categoryId, status, publishedAt) => {
+  6     try {
+→ 7         const article = await prisma.article.create({
+              data: {
+                title: "Tiêu đề bài báo",
+                content: "Nội dung bài báo",
+                thumbnail: "http://example.com/thumbnail.jpg",
+                authorId: 1,
+                categoryId: 1,
+                status: "draft",
+                publishedAt: "18-04-2025",
+                view: 0,
+            +   isPublish: Boolean
+              }
+            })
+
+Argument `isPublish` is missing.
+[ 2025-04-10 16:29:55 ] [ morgan ] [ error ] : $method /api/articles/create/ 400 - 10.842 ms - message: Error creating article: 
+Invalid `prisma.article.create()` invocation in
+D:\baoliemkhiet\backend\src\services\article.service.js:8:46
+
+  5 module.exports.createArticle = async (title, content, thumbnail, authorId, categoryId, status, publishedAt) => {
+  6     try {
+  7         const publishedDate = new Date(publishedAt);
+→ 8         const article = await prisma.article.create({
+              data: {
+                title: "Tiêu đề bài báo",
+                content: "Nội dung bài báo",
+                thumbnail: "http://example.com/thumbnail.jpg",
+                authorId: 1,
+                categoryId: 1,
+                status: "draft",
+                publishedAt: new Date("Invalid Date"),
+                             ~~~~~~~~~~~~~~~~~~~~~~~~
+                isPublish: false,
+                view: 0
+              }
+            })
+
+Invalid value for argument `publishedAt`: Provided Date object is invalid. Expected Date.
+[ 2025-04-10 16:30:57 ] [ morgan ] [ error ] : $method /api/articles/create/ 400 - 208.084 ms - message: Error creating article: 
+Invalid `prisma.article.create()` invocation in
+D:\baoliemkhiet\backend\src\services\article.service.js:8:46
+
+  5 module.exports.createArticle = async (title, content, thumbnail, authorId, categoryId, status, publishedAt) => {
+  6     try {
+  7         const publishedDate = new Date(publishedAt);
+→ 8         const article = await prisma.article.create(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "22P02", message: "invalid input value for enum \"ArticleStatus\": \"draft\"", severity: "ERROR", detail: None, column: None, hint: None }), transient: false })
+[ 2025-04-10 16:32:08 ] [ morgan ] [ error ] : $method /api/articles/create/ 400 - 28.775 ms - message: Error creating article: 
+Invalid `prisma.article.create()` invocation in
+D:\baoliemkhiet\backend\src\services\article.service.js:8:46
+
+  5 module.exports.createArticle = async (title, content, thumbnail, authorId, categoryId, status, publishedAt) => {
+  6     try {
+  7         const publishedDate = new Date(publishedAt);
+→ 8         const article = await prisma.article.create(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "22P02", message: "invalid input value for enum \"ArticleStatus\": \"draft\"", severity: "ERROR", detail: None, column: None, hint: None }), transient: false })
+[ 2025-04-10 16:34:22 ] [ morgan ] [ error ] : $method /api/articles/create/ 400 - 120.246 ms - message: Error creating article: 
+Invalid `prisma.article.create()` invocation in
+D:\baoliemkhiet\backend\src\services\article.service.js:8:46
+
+  5 module.exports.createArticle = async (title, content, thumbnail, authorId, categoryId, status, publishedAt) => {
+  6     try {
+  7         const publishedDate = new Date(publishedAt);
+→ 8         const article = await prisma.article.create(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "22P02", message: "invalid input value for enum \"ArticleStatus\": \"draft\"", severity: "ERROR", detail: None, column: None, hint: None }), transient: false })

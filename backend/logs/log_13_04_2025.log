@@ -1,0 +1,56 @@
+[ 2025-04-13 14:07:51 ] [ morgan ] [ error ] : $method /api/articles/delete/1 400 - 194.092 ms - message: Error deleting article: Article not found
+[ 2025-04-13 14:10:12 ] [ morgan ] [ error ] : $method /api/articles/delete-multiple 400 - 4.879 ms - message: Cannot destructure property 'ids' of 'req.body' as it is undefined.
+[ 2025-04-13 14:12:25 ] [ morgan ] [ error ] : $method /api/categories/create/ 400 - 3.899 ms - message: Cannot destructure property 'name' of 'req.body' as it is undefined.
+[ 2025-04-13 14:13:29 ] [ morgan ] [ info ] : $method /api/categories/create/ 201 - 125.361 ms
+[ 2025-04-13 14:13:45 ] [ morgan ] [ info ] : $method /api/articles/create/ 201 - 82.368 ms
+[ 2025-04-13 14:14:08 ] [ morgan ] [ info ] : $method /api/articles/get/ 200 - 27.650 ms
+[ 2025-04-13 14:14:13 ] [ morgan ] [ info ] : $method /api/articles/get/ 200 - 9.656 ms
+[ 2025-04-13 14:17:08 ] [ morgan ] [ error ] : $method /api/articles/get-posted/ 400 - 3.114 ms - message: service.getAllPostedArticles is not a function
+[ 2025-04-13 14:17:24 ] [ morgan ] [ info ] : $method /api/articles/get-posted/ 200 - 76.910 ms
+[ 2025-04-13 14:17:48 ] [ morgan ] [ info ] : $method /api/articles/get/ 200 - 59.983 ms
+[ 2025-04-13 14:17:58 ] [ morgan ] [ error ] : $method /api/articles/get/1 404 - 27.564 ms - message: -
+[ 2025-04-13 14:18:14 ] [ morgan ] [ info ] : $method /api/articles/get/ 200 - 33.774 ms
+[ 2025-04-13 14:18:25 ] [ morgan ] [ error ] : $method /api/articles/get/1 404 - 8.673 ms - message: -
+[ 2025-04-13 14:40:56 ] [ morgan ] [ info ] : $method /api/categories/get 200 - 89.616 ms
+[ 2025-04-13 14:41:24 ] [ morgan ] [ info ] : $method /api/categories/get/1 200 - 40.722 ms
+[ 2025-04-13 14:42:10 ] [ morgan ] [ error ] : $method /api/categories/edit/1 400 - 0.855 ms - message: Cannot destructure property 'name' of 'req.body' as it is undefined.
+[ 2025-04-13 14:42:32 ] [ morgan ] [ error ] : $method /api/categories/edit/1 400 - 0.372 ms - message: -
+[ 2025-04-13 14:42:46 ] [ morgan ] [ info ] : $method /api/categories/edit/1 200 - 47.185 ms
+[ 2025-04-13 14:43:54 ] [ morgan ] [ error ] : $method /api/categories/delete-multiple/ 400 - 0.732 ms - message: Cannot destructure property 'ids' of 'req.body' as it is undefined.
+[ 2025-04-13 14:46:03 ] [ morgan ] [ info ] : $method /api/categories/articles-count/ 200 - 189.370 ms
+[ 2025-04-13 19:14:21 ] [ morgan ] [ error ] : $method /api/reports/create/ 401 - 3.047 ms - message: -
+[ 2025-04-13 19:14:41 ] [ morgan ] [ info ] : $method /api/reports/create/ 201 - 153.464 ms
+[ 2025-04-13 19:16:20 ] [ morgan ] [ error ] : $method /api/reports/get/ 500 - 16.369 ms - message: -
+[ 2025-04-13 19:16:23 ] [ morgan ] [ error ] : $method /api/reports/get/ 500 - 3.853 ms - message: -
+[ 2025-04-13 19:16:36 ] [ morgan ] [ error ] : $method /api/reports/get 500 - 9.268 ms - message: -
+[ 2025-04-13 19:18:22 ] [ morgan ] [ error ] : $method /api/reports/get 500 - 72.125 ms - message: -
+[ 2025-04-13 19:18:38 ] [ morgan ] [ error ] : $method /api/reports/get 500 - 72.468 ms - message: -
+[ 2025-04-13 19:19:10 ] [ morgan ] [ info ] : $method /api/reports/get 200 - 107.192 ms
+[ 2025-04-13 19:20:14 ] [ morgan ] [ info ] : $method /api/reports/get/1 200 - 118.581 ms
+[ 2025-04-13 19:20:19 ] [ morgan ] [ error ] : $method /api/reports/get/2 404 - 10.191 ms - message: -
+[ 2025-04-13 19:23:22 ] [ morgan ] [ error ] : $method /api/reports/get-article/1 400 - 3.753 ms - message: -
+[ 2025-04-13 19:23:33 ] [ morgan ] [ error ] : $method /api/reports/get-article/1 400 - 2.834 ms - message: -
+[ 2025-04-13 19:24:23 ] [ morgan ] [ error ] : $method /api/reports/get-article/1 400 - 2.898 ms - message: -
+[ 2025-04-13 19:24:33 ] [ morgan ] [ error ] : $method /api/reports/get-article/1 400 - 1.475 ms - message: -
+[ 2025-04-13 19:24:49 ] [ morgan ] [ error ] : $method /api/reports/get-article/1 400 - 2.927 ms - message: -
+[ 2025-04-13 19:24:50 ] [ morgan ] [ error ] : $method /api/reports/get-article/1 400 - 1.095 ms - message: -
+[ 2025-04-13 19:25:01 ] [ morgan ] [ error ] : $method /api/reports/get-article/1 400 - 0.296 ms - message: -
+[ 2025-04-13 19:25:17 ] [ morgan ] [ info ] : $method /api/reports/get-article/1 200 - 112.980 ms
+[ 2025-04-13 19:25:54 ] [ morgan ] [ error ] : $method /api/reports/get-comment/1 404 - 79.049 ms - message: -
+[ 2025-04-13 19:31:46 ] [ morgan ] [ info ] : $method /api/reports/edit/1 200 - 107.150 ms
+[ 2025-04-13 19:32:58 ] [ morgan ] [ error ] : $method /api/reports/delete/2 500 - 90.852 ms - message: -
+[ 2025-04-13 19:33:04 ] [ morgan ] [ error ] : $method /api/reports/delete/2 500 - 80.514 ms - message: -
+[ 2025-04-13 19:34:18 ] [ morgan ] [ error ] : $method /api/reports/delete/2 500 - 80.676 ms - message: -
+[ 2025-04-13 19:34:25 ] [ morgan ] [ error ] : $method /api/reports/delete/2 500 - 11.038 ms - message: -
+[ 2025-04-13 19:36:11 ] [ morgan ] [ info ] : $method /api/reports/delete/2 200 - 72.693 ms
+[ 2025-04-13 19:38:34 ] [ morgan ] [ error ] : $method /api/reports/delete/2 404 - 72.230 ms - message: -
+[ 2025-04-13 19:38:36 ] [ morgan ] [ error ] : $method /api/reports/delete/2 404 - 12.059 ms - message: -
+[ 2025-04-13 19:41:53 ] [ morgan ] [ error ] : $method /api/reports/delete-multiple 400 - 3.354 ms - message: -
+[ 2025-04-13 19:42:04 ] [ morgan ] [ error ] : $method /api/reports/delete-multiple 400 - 0.462 ms - message: -
+[ 2025-04-13 19:42:49 ] [ morgan ] [ error ] : $method /api/reports/delete-multiple 400 - 3.093 ms - message: -
+[ 2025-04-13 19:43:17 ] [ morgan ] [ error ] : $method /api/reports/delete-multiple 400 - 1.608 ms - message: -
+[ 2025-04-13 19:44:26 ] [ morgan ] [ error ] : $method /api/reports/delete-multiple/ 400 - 2.719 ms - message: -
+[ 2025-04-13 19:44:28 ] [ morgan ] [ error ] : $method /api/reports/delete-multiple/ 400 - 1.230 ms - message: -
+[ 2025-04-13 19:44:29 ] [ morgan ] [ error ] : $method /api/reports/delete-multiple/ 400 - 0.996 ms - message: -
+[ 2025-04-13 19:44:39 ] [ morgan ] [ error ] : $method /api/reports/delete-multiple/ 400 - 4.191 ms - message: -
+[ 2025-04-13 19:46:42 ] [ morgan ] [ info ] : $method /api/reports/delete-multiple/ 200 - 76.843 ms
