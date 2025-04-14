@@ -23,13 +23,15 @@ const nextConfig = {
     unoptimized: true,
     domains: ['localhost', 'vercel.app'],
   },
-  distDir: '.next',
+  // Đảm bảo distDir không có dấu chấm đầu để Vercel dễ tìm thấy
+  distDir: 'out',
+  // Disable experimental features to avoid issues
   experimental: {
-    // Disabled to avoid symlink errors on Windows
     webpackBuildWorker: false,
   },
-  // Disable unnecessary features for Vercel
-  swcMinify: true
+  swcMinify: true,
+  // Đảm bảo output ổn định
+  trailingSlash: false,
 }
 
 if (userConfig) {

@@ -1,11 +1,3 @@
 {
-  "version": 2,
-  "framework": "nextjs",
-  "outputDirectory": "frontend/.next",
-  "buildCommand": "pnpm install && pnpm run build",
-  "installCommand": "pnpm install",
-  "regions": ["iad1"],
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/frontend/$1" }
-  ]
+  "version": 2
 }
