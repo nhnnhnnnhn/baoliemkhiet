@@ -16,6 +16,10 @@ const fileRoute = require("./routes/file.route");
 const articleRoute = require("./routes/article.route");
 const categoryRoute = require("./routes/category.route");
 const reportRoute = require("./routes/report.route");
+const followRoute = require("./routes/follow.route");
+const tagRoute = require("./routes/tag.route");
+const articleTagRoute = require("./routes/article-tag.route");
+const userRoute = require("./routes/user.route");
 
 const prisma = new PrismaClient();
 
@@ -40,6 +44,10 @@ app.use("/api/file", fileRoute);
 app.use("/api/articles", articleRoute);
 app.use("/api/categories", categoryRoute);
 app.use("/api/reports", reportRoute);
+app.use("/api/follows", followRoute);
+app.use("/api/tags", tagRoute);
+app.use("/api", articleTagRoute);
+app.use("/api/users", userRoute);
 
 // Export wss for use in other files
 app.set("wss", wss);
