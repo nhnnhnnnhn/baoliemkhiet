@@ -88,13 +88,13 @@ model Category {
 }
 
 model Comment {
-  id        Int      @id @default(autoincrement())
+  id        Int           @id @default(autoincrement())
   articleId Int
   userId    Int
   content   String
-  status    String   @default("pending")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  status    CommentStatus
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @default(now()) @updatedAt @map("updated_at")
 
   article Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -201,4 +201,11 @@ enum ArticleStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum CommentStatus {
+  PENDING
+  APPROVED
+  REJECTED_BY_AI
+  REJECTED_BY_REPORT
 }

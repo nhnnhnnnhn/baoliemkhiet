@@ -1,15 +1,7 @@
 const { PrismaClient, CommentStatus } = require("@prisma/client");
 const prisma = new PrismaClient();
-const { PythonShell } = require("python-shell");
 const extractJSON = require("../utils/extractJson.util");
-
-const options = {
-  mode: "json",
-  pythonPath: "/home/nhaatj/myenv/bin/python",
-  scriptPath: "./deepseek",
-};
-
-const shell = new PythonShell("deepseek.py", options);
+const deepseek = require("../deepseek/deepseek.js").deepseek;
 
 async function createComment(user_id, article_id, content) {
   const user = await prisma.user.findUnique({
@@ -19,7 +11,7 @@ async function createComment(user_id, article_id, content) {
     throw new Error("User not found");
   }
 
-  const article = await prisma.post.findUnique({
+  const article = await prisma.article.findUnique({
     where: { id: article_id },
   });
   if (!article) {
@@ -35,33 +27,29 @@ async function createComment(user_id, article_id, content) {
     },
   });
 
-  shell.send({ content: content });
+  const response = await deepseek(content);
 
-  shell.on("message", async function (message) {
-    const response = message.response;
-    if (!response) {
-      throw new Error("No response from Python script");
-    }
-    const jsonResponse = extractJSON(response);
-    let status = CommentStatus.PENDING;
-    if (jsonResponse.data.detect) status = CommentStatus.APPROVED;
-    else if (jsonResponse.data.detect === false)
-      status = CommentStatus.REJECTED_BY_AI;
-    const commentId = comment.id;
+  if (!response) {
+    throw new Error("No response from Python script");
+  }
+  const jsonResponse = await extractJSON(response);
+  console.log(jsonResponse.data.detect);
 
-    await prisma.comment.update({
-      where: { id: commentId },
-      data: {
-        status: status,
-      },
-    });
-    console.log(`Comment status updated to: ${status}`);
+  let status = CommentStatus.PENDING;
+  if (!jsonResponse.data.detect) {
+    status = CommentStatus.APPROVED;
+  } else if (jsonResponse.data.detect == true) {
+    status = CommentStatus.REJECTED_BY_AI;
+  }
+  const commentId = comment.id;
+
+  const updateComment = await prisma.comment.update({
+    where: { id: commentId },
+    data: {
+      status: status,
+    },
   });
-  shell.end(function (err, code, signal) {
-    if (err) throw err;
-    console.log(`Script finished with code ${code}`);
-  });
-  return comment;
+  return updateComment;
 }
 
 async function getComments(article_id) {
