@@ -2,8 +2,8 @@
   "version": 2,
   "framework": "nextjs",
   "outputDirectory": "frontend/.next",
-  "buildCommand": "cd frontend && npm install && npm run build",
-  "installCommand": "cd frontend && npm install",
+  "buildCommand": "pnpm install && pnpm run build",
+  "installCommand": "pnpm install",
   "regions": ["iad1"],
   "rewrites": [
     { "source": "/(.*)", "destination": "/frontend/$1" }
