@@ -1,12 +1,11 @@
 {
   "version": 2,
   "framework": "nextjs",
-  "outputDirectory": ".next",
+  "outputDirectory": "frontend/.next",
   "buildCommand": "cd frontend && npm install && npm run build",
   "installCommand": "cd frontend && npm install",
   "regions": ["iad1"],
   "rewrites": [
     { "source": "/(.*)", "destination": "/frontend/$1" }
-  ],
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./frontend"
+  ]
 }
