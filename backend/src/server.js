@@ -19,13 +19,6 @@ const reportRoute = require("./routes/report.route");
 
 const prisma = new PrismaClient();
 
-async function connect() {
-  await prisma.$connect();
-  console.log("Connected to the database");
-}
-
-connect();
-
 const app = express();
 app.use(express.json());
 const server = http.createServer(app);
