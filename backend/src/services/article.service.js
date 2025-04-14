@@ -1,6 +1,7 @@
 const { PrismaClient, ArticleStatus } = require("@prisma/client");
 const cron = require("node-cron");
 const prisma = new PrismaClient();
+const sendNotification = require("../websocket").sendNotification;
 
 // Create a new article
 module.exports.createArticle = async (
@@ -27,6 +28,25 @@ module.exports.createArticle = async (
         view: 0,
       },
     });
+    if (status === ArticleStatus.PENDING) {
+      const user = await prisma.user.findUnique({
+        where: { id: authorId },
+      });
+      if (user) {
+        const notification = {
+          receiver_id: 1,
+          content: `An article "${title}" of "${user.fullname}" is pending for review.`,
+          type: "ARTICLE_STATUS",
+          article_id: article.id,
+        };
+        await sendNotification(
+          notification.receiver_id,
+          notification.content,
+          notification.type,
+          notification.article_id
+        );
+      }
+    }
     return article;
   } catch (error) {
     throw new Error("Error creating article: " + error.message);
@@ -488,6 +508,40 @@ module.exports.approveArticle = async (id) => {
       },
     });
     autoPublish(article);
+    const user = await prisma.user.findUnique({
+      where: { id: article.authorId },
+    });
+    if (user) {
+      const notification = {
+        receiver_id: article.authorId,
+        content: `Your article "${article.title}" has been approved.`,
+        type: "ARTICLE_STATUS",
+        article_id: article.id,
+      };
+      await sendNotification(
+        notification.receiver_id,
+        notification.content,
+        notification.type,
+        notification.article_id
+      );
+    }
+    const admin = await prisma.user.findUnique({
+      where: { id: 1 },
+    });
+    if (admin) {
+      const notification = {
+        receiver_id: admin.id,
+        content: `The article "${article.title}" has been approved.`,
+        type: "ARTICLE_STATUS",
+        article_id: article.id,
+      };
+      await sendNotification(
+        notification.receiver_id,
+        notification.content,
+        notification.type,
+        notification.article_id
+      );
+    }
     return article;
   } catch (error) {
     throw new Error("Error approving article: " + error.message);
@@ -503,7 +557,7 @@ module.exports.rejectArticle = async (id) => {
     if (!existingArticle) {
       throw new Error("Article not found");
     }
-    if (existingArticle.status === "rejected") {
+    if (existingArticle.status === ArticleStatus.REJECTED) {
       throw new Error("Article already rejected");
     }
     const article = await prisma.article.update({
@@ -512,6 +566,40 @@ module.exports.rejectArticle = async (id) => {
         status: ArticleStatus.REJECTED,
       },
     });
+    const user = await prisma.user.findUnique({
+      where: { id: article.authorId },
+    });
+    if (user) {
+      const notification = {
+        receiver_id: article.authorId,
+        content: `Your article "${article.title}" has been rejected.`,
+        type: "ARTICLE_STATUS",
+        article_id: article.id,
+      };
+      await sendNotification(
+        notification.receiver_id,
+        notification.content,
+        notification.type,
+        notification.article_id
+      );
+    }
+    const admin = await prisma.user.findUnique({
+      where: { id: 1 },
+    });
+    if (admin) {
+      const notification = {
+        receiver_id: admin.id,
+        content: `The article "${article.title}" has been rejected.`,
+        type: "ARTICLE_STATUS",
+        article_id: article.id,
+      };
+      await sendNotification(
+        notification.receiver_id,
+        notification.content,
+        notification.type,
+        notification.article_id
+      );
+    }
     return article;
   } catch (error) {
     throw new Error("Error rejecting article: " + error.message);

@@ -25,6 +25,7 @@ function initWebSocket(server) {
       // Handle user login and store in onlineUser map
       socket.on("login", (payload) => {
         const { jwt_token } = payload;
+
         let user_id = null;
         try {
           const decoded = jwt.verify(
@@ -37,7 +38,8 @@ function initWebSocket(server) {
           socket.emit("error", { message: "Invalid token" });
         }
         // Check if user_id is valid
-        if (user_id && !onlineUser.has(user_id)) {
+
+        if (user_id != null && !onlineUser.has(user_id)) {
           // Check if user is already online
           onlineUser.set(user_id, clientId); // Store user_id and clientId in onlineUser map
           console.log(`User ${user_id} logged in`);
