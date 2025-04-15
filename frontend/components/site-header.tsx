@@ -62,42 +62,42 @@ export function SiteHeader() {
         </div>
       </div>
 
-      {/* Main Navigation - Đã thay đổi màu sang đỏ */}
-      <div className="bg-gradient-to-r from-red-900 via-red-700 to-red-900 sticky top-0 z-10 shadow-md">
+      {/* Main Navigation - Đã thay đổi màu sang trắng */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-3">
             <div className="flex items-center space-x-1 md:space-x-4 overflow-x-auto scrollbar-hide">
               <Link
                 href="/thoi-su"
-                className="flex items-center px-3 py-2 text-sm font-medium text-white hover:bg-red-600 rounded-md transition-colors whitespace-nowrap"
+                className="flex items-center px-3 py-2 text-sm font-medium text-gray-800 hover:text-red-600 rounded-md transition-colors whitespace-nowrap"
               >
                 <TrendingUpIcon className="h-4 w-4 mr-1.5" />
                 Thời sự
               </Link>
               <Link
                 href="/the-gioi"
-                className="flex items-center px-3 py-2 text-sm font-medium text-white hover:bg-red-600 rounded-md transition-colors whitespace-nowrap"
+                className="flex items-center px-3 py-2 text-sm font-medium text-gray-800 hover:text-red-600 rounded-md transition-colors whitespace-nowrap"
               >
                 <GlobeIcon className="h-4 w-4 mr-1.5" />
                 Thế giới
               </Link>
               <Link
                 href="/kinh-doanh"
-                className="flex items-center px-3 py-2 text-sm font-medium text-white hover:bg-red-600 rounded-md transition-colors whitespace-nowrap"
+                className="flex items-center px-3 py-2 text-sm font-medium text-gray-800 hover:text-red-600 rounded-md transition-colors whitespace-nowrap"
               >
                 <DollarSignIcon className="h-4 w-4 mr-1.5" />
                 Kinh doanh
               </Link>
               <Link
                 href="/cong-nghe"
-                className="flex items-center px-3 py-2 text-sm font-medium text-white hover:bg-red-600 rounded-md transition-colors whitespace-nowrap"
+                className="flex items-center px-3 py-2 text-sm font-medium text-gray-800 hover:text-red-600 rounded-md transition-colors whitespace-nowrap"
               >
                 <MonitorIcon className="h-4 w-4 mr-1.5" />
                 Công nghệ
               </Link>
               <Link
                 href="/the-thao"
-                className="flex items-center px-3 py-2 text-sm font-medium text-white hover:bg-red-600 rounded-md transition-colors whitespace-nowrap"
+                className="flex items-center px-3 py-2 text-sm font-medium text-gray-800 hover:text-red-600 rounded-md transition-colors whitespace-nowrap"
               >
                 <ActivityIcon className="h-4 w-4 mr-1.5" />
                 Thể thao
@@ -105,7 +105,7 @@ export function SiteHeader() {
             </div>
 
             <div className="hidden md:flex items-center">
-              <Button variant="ghost" className="text-white hover:bg-red-600 flex items-center">
+              <Button variant="ghost" className="text-gray-800 hover:text-red-600 flex items-center">
                 Xem thêm <ChevronDownIcon className="h-4 w-4 ml-1" />
               </Button>
             </div>

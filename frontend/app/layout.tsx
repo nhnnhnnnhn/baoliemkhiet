@@ -1,36 +1,39 @@
 import type React from "react"
-import "@/app/globals.css"
-import { Noto_Serif, Roboto } from "next/font/google"
+import type { Metadata } from "next"
+import { Inter, Montserrat } from "next/font/google"
 import { Suspense } from "react"
+
+import "./globals.css"
 import Loading from "./loading"
 
-// Sử dụng Noto Serif cho font serif - hỗ trợ tiếng Việt tốt
-const notoSerif = Noto_Serif({
+// Sử dụng font Inter cho nội dung - font sans-serif hiện đại
+const inter = Inter({
   subsets: ["latin", "vietnamese"],
-  weight: ["400", "700"],
-  variable: "--font-serif",
-})
-
-// Sử dụng Roboto cho font sans-serif - hỗ trợ tiếng Việt tốt
-const roboto = Roboto({
-  subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "700"],
   variable: "--font-sans",
+  display: "swap",
 })
 
-export const metadata = {
-  title: "Báo Liêm Khiết",
-  description: "Trang tin tức Báo Liêm Khiết - Thông tin chính xác, khách quan và đa chiều",
+// Sử dụng font Montserrat cho tiêu đề - font hiện đại và bắt mắt
+const montserrat = Montserrat({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-montserrat",
+  display: "swap",
+  weight: ["400", "500", "600", "700", "800"],
+})
+
+export const metadata: Metadata = {
+  title: "Báo Liêm Khiết - Tin tức nhanh chóng và chính xác",
+  description: "Trang tin tức cập nhật nhanh chóng và chính xác nhất Việt Nam",
 }
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
-    <html lang="vi">
-      <body className={`${notoSerif.variable} ${roboto.variable} font-sans`}>
+    <html lang="vi" className={`${inter.variable} ${montserrat.variable}`}>
+      <body className={inter.className}>
         <Suspense fallback={<Loading />}>{children}</Suspense>
       </body>
     </html>

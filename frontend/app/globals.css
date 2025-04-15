@@ -74,6 +74,19 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-montserrat font-bold;
+  }
+
+  .category-title {
+    @apply font-montserrat font-bold;
+  }
 }
 
 /* Hiệu ứng bôi đen văn bản với màu xám nhạt */
@@ -131,4 +144,21 @@
 
 .duration-300 {
   animation-duration: 300ms;
+}
+
+/* Thiết kế mới cho phần giới thiệu danh mục */
+.category-header {
+  @apply py-6 border-b border-gray-200;
+}
+
+.category-header-content {
+  @apply container mx-auto px-4 flex items-center;
+}
+
+.category-icon {
+  @apply h-8 w-8 mr-4 text-gray-800;
+}
+
+.category-description {
+  @apply mt-1 text-gray-600 text-sm md:text-base max-w-2xl;
 }

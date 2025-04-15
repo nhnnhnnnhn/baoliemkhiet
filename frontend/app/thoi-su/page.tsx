@@ -20,13 +20,15 @@ export default function ThoiSuPage() {
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
 
-      {/* Category Header */}
-      <div className="bg-gradient-to-r from-blue-800 to-blue-600 py-8 text-white">
-        <div className="container mx-auto px-4 flex items-center justify-center">
-          <FileText className="h-10 w-10 mr-4" />
-          <div>
-            <h1 className="text-4xl font-serif font-bold">Thời sự</h1>
-            <p className="mt-2 max-w-2xl">
+      {/* Category Header - Thiết kế mới */}
+      <div className="category-header">
+        <div className="category-header-content">
+          <div className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+            <FileText className="category-icon" />
+          </div>
+          <div className="ml-4">
+            <h1 className="category-title text-3xl">Thời sự</h1>
+            <p className="category-description">
               Cập nhật tin tức mới nhất về tình hình chính trị, xã hội, kinh tế và các vấn đề thời sự nóng hổi trong
               nước
             </p>
@@ -41,31 +43,31 @@ export default function ThoiSuPage() {
             <TabsList className="bg-transparent h-auto p-0 border-b border-gray-200 w-full justify-start space-x-8">
               <TabsTrigger
                 value="all"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none pb-3 px-1"
+                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none pb-3 px-1"
               >
                 Tất cả
               </TabsTrigger>
               <TabsTrigger
                 value="chinh-tri"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none pb-3 px-1"
+                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none pb-3 px-1"
               >
                 Chính trị
               </TabsTrigger>
               <TabsTrigger
                 value="xa-hoi"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none pb-3 px-1"
+                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none pb-3 px-1"
               >
                 Xã hội
               </TabsTrigger>
               <TabsTrigger
                 value="phap-luat"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none pb-3 px-1"
+                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none pb-3 px-1"
               >
                 Pháp luật
               </TabsTrigger>
               <TabsTrigger
                 value="giao-thong"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none pb-3 px-1"
+                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none pb-3 px-1"
               >
                 Giao thông
               </TabsTrigger>
@@ -104,7 +106,7 @@ export default function ThoiSuPage() {
                   className="w-full h-full object-cover rounded-lg"
                 />
               </div>
-              <h2 className="text-3xl font-serif font-bold mb-3 hover:text-blue-600">
+              <h2 className="text-3xl font-bold mb-3 hover:text-red-600">
                 <Link href="/articles/1">Thủ tướng chỉ đạo đẩy nhanh tiến độ các dự án trọng điểm quốc gia</Link>
               </h2>
               <p className="text-gray-600 mb-4 text-lg">
@@ -139,7 +141,7 @@ export default function ThoiSuPage() {
                         />
                       </div>
                       <div className="md:w-2/3">
-                        <h4 className="text-lg font-bold mb-2 hover:text-blue-600">
+                        <h4 className="text-lg font-bold mb-2 hover:text-red-600">
                           <Link href="/articles/2">
                             Hội nghị về giải pháp phát triển kinh tế vùng đồng bằng sông Cửu Long
                           </Link>
@@ -169,11 +171,11 @@ export default function ThoiSuPage() {
                   <div key={item} className="flex gap-4 pb-6 border-b border-gray-200 last:border-0">
                     <div className="flex-1">
                       <div className="flex items-center text-sm text-gray-500 mb-2">
-                        <span className="font-medium text-blue-600">Pháp luật</span>
+                        <span className="font-medium text-red-600">Pháp luật</span>
                         <span className="mx-2">•</span>
                         <span>6 giờ trước</span>
                       </div>
-                      <h4 className="text-xl font-bold mb-2 hover:text-blue-600">
+                      <h4 className="text-xl font-bold mb-2 hover:text-red-600">
                         <Link href="/articles/3">
                           Tòa án nhân dân tối cao tổ chức hội nghị tổng kết công tác năm 2023
                         </Link>
@@ -206,7 +208,7 @@ export default function ThoiSuPage() {
                     <div key={item} className="flex gap-3 pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                       <div className="text-2xl font-bold text-gray-300 shrink-0">{item}</div>
                       <div>
-                        <h4 className="font-medium hover:text-blue-600">
+                        <h4 className="font-medium hover:text-red-600">
                           <Link href="/articles/4">Bộ Giáo dục công bố kế hoạch thi tốt nghiệp THPT năm 2024</Link>
                         </h4>
                         <div className="flex items-center text-xs text-gray-500 mt-1">
@@ -233,7 +235,7 @@ export default function ThoiSuPage() {
                           <p className="text-xs text-gray-500">Viện Nghiên cứu Chiến lược</p>
                         </div>
                       </div>
-                      <h4 className="font-medium hover:text-blue-600 mb-1">
+                      <h4 className="font-medium hover:text-red-600 mb-1">
                         <Link href="/articles/5">Giải pháp phát triển đô thị thông minh tại Việt Nam</Link>
                       </h4>
                       <p className="text-sm text-gray-600">

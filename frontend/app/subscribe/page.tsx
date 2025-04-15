@@ -11,7 +11,7 @@ export default function SubscribePage() {
       <header className="border-b border-gray-200">
         <div className="container mx-auto px-4 py-6 flex justify-between items-center">
           <Link href="/" className="text-2xl font-serif font-bold">
-            The News Times
+            Báo Liêm Khiết
           </Link>
           <div className="flex items-center space-x-4">
             <Link href="/auth/login" className="text-sm text-gray-600 hover:text-gray-900">
@@ -26,7 +26,7 @@ export default function SubscribePage() {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-serif font-bold mb-6">
-              Truy cập không giới hạn vào The News Times
+              Truy cập không giới hạn vào Báo Liêm Khiết
             </h1>
             <p className="text-xl text-gray-600 mb-8">
               Đọc tin tức chất lượng cao, phân tích chuyên sâu và nội dung độc quyền từ các nhà báo hàng đầu của chúng
@@ -70,7 +70,7 @@ export default function SubscribePage() {
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
-                    <span>Ứng dụng The News Times trên điện thoại và máy tính bảng</span>
+                    <span>Ứng dụng Báo Liêm Khiết trên điện thoại và máy tính bảng</span>
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
@@ -172,7 +172,7 @@ export default function SubscribePage() {
       {/* Why Subscribe */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-serif font-bold text-center mb-12">Tại sao nên đăng ký The News Times?</h2>
+          <h2 className="text-3xl font-serif font-bold text-center mb-12">Tại sao nên đăng ký Báo Liêm Khiết?</h2>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <div className="text-center">
@@ -260,7 +260,7 @@ export default function SubscribePage() {
                 </div>
               </div>
               <p className="text-gray-700 italic">
-                "The News Times đã trở thành nguồn thông tin đáng tin cậy của tôi. Tôi đặc biệt yêu thích các bài phân
+                "Báo Liêm Khiết đã trở thành nguồn thông tin đáng tin cậy của tôi. Tôi đặc biệt yêu thích các bài phân
                 tích chuyên sâu về kinh tế và chính trị."
               </p>
             </div>
@@ -315,8 +315,7 @@ export default function SubscribePage() {
             <div>
               <h3 className="text-xl font-bold mb-2">Làm thế nào để nhận hỗ trợ kỹ thuật?</h3>
               <p className="text-gray-600">
-                Bạn có thể liên hệ với đội ngũ hỗ trợ của chúng tôi qua email support@newstimes.com hoặc hotline
-                1900-xxxx.
+                Bạn có thể liên hệ với đội ngũ hỗ trợ của chúng tôi qua email baoliemkhiet.project@gmail.com
               </p>
             </div>
           </div>
@@ -326,7 +325,7 @@ export default function SubscribePage() {
       {/* CTA */}
       <section className="py-16 bg-blue-700 text-white">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-serif font-bold mb-6">Sẵn sàng trải nghiệm The News Times?</h2>
+          <h2 className="text-3xl font-serif font-bold mb-6">Sẵn sàng trải nghiệm Báo Liêm Khiết?</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
             Đăng ký ngay hôm nay để không bỏ lỡ những tin tức quan trọng và phân tích chuyên sâu.
           </p>
@@ -343,7 +342,7 @@ export default function SubscribePage() {
         <div className="container mx-auto px-4">
           <div className="text-center">
             <p className="text-sm text-gray-500 mb-4">
-              © {new Date().getFullYear()} The News Times. Tất cả các quyền được bảo lưu.
+              © {new Date().getFullYear()} Báo Liêm Khiết. Tất cả các quyền được bảo lưu.
             </p>
             <div className="flex justify-center space-x-4">
               <Link href="#" className="text-sm text-gray-500 hover:text-gray-900">

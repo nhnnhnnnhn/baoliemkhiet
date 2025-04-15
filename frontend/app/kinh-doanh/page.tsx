@@ -20,13 +20,15 @@ export default function KinhDoanhPage() {
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
 
-      {/* Category Header */}
-      <div className="bg-gradient-to-r from-green-900 to-green-700 py-8 text-white">
-        <div className="container mx-auto px-4 flex items-center justify-center">
-          <TrendingUp className="h-10 w-10 mr-4" />
+      {/* Category Header - Thiết kế mới */}
+      <div className="category-header bg-white">
+        <div className="category-header-content">
+          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-50 mr-4">
+            <TrendingUp className="h-6 w-6 text-green-600" />
+          </div>
           <div>
-            <h1 className="text-4xl font-serif font-bold">Kinh doanh</h1>
-            <p className="mt-2 max-w-2xl">
+            <h1 className="text-3xl font-playfair font-bold text-gray-900">Kinh doanh</h1>
+            <p className="category-description">
               Thông tin kinh tế, tài chính, chứng khoán, bất động sản và các xu hướng kinh doanh mới nhất
             </p>
           </div>
@@ -34,7 +36,7 @@ export default function KinhDoanhPage() {
       </div>
 
       {/* Category Navigation */}
-      <div className="border-b border-gray-200 bg-gray-50">
+      <div className="border-b border-gray-200 bg-white">
         <div className="container mx-auto px-4">
           <Tabs defaultValue="all" className="py-2">
             <TabsList className="bg-transparent h-auto p-0 w-full justify-start space-x-8 overflow-x-auto flex-nowrap">
@@ -158,7 +160,7 @@ export default function KinhDoanhPage() {
                   className="w-full h-full object-cover rounded-lg"
                 />
               </div>
-              <h2 className="text-3xl font-serif font-bold mb-3 hover:text-green-600">
+              <h2 className="text-3xl font-playfair font-bold mb-3 hover:text-green-600">
                 <Link href="/articles/12">Việt Nam đặt mục tiêu tăng trưởng GDP 6.5% trong năm 2024</Link>
               </h2>
               <p className="text-gray-600 mb-4 text-lg">

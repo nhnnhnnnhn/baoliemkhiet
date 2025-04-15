@@ -19,6 +19,10 @@ const config = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["var(--font-sans)"],
+        montserrat: ["var(--font-montserrat)"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -53,7 +57,14 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Thêm màu cho trang thể thao (Bóng Lăn)
+        brand: {
+          red: "#E50914",
+          darkred: "#B81D24",
+          gray: "#221F1F",
+          black: "#000000",
+          white: "#FFFFFF",
+        },
+        // Giữ nguyên màu cho trang thể thao
         athletic: {
           primary: "#111827", // gray-900
           secondary: "#1f2937", // gray-800

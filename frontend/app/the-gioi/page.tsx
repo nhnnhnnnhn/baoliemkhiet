@@ -20,13 +20,15 @@ export default function TheGioiPage() {
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
 
-      {/* Category Header */}
-      <div className="bg-gradient-to-r from-blue-800 to-blue-600 py-8 text-white">
-        <div className="container mx-auto px-4 flex items-center justify-center">
-          <Globe className="h-10 w-10 mr-4" />
-          <div>
-            <h1 className="text-4xl font-serif font-bold">Thế giới</h1>
-            <p className="mt-2 max-w-2xl">
+      {/* Category Header - Thiết kế mới */}
+      <div className="category-header">
+        <div className="category-header-content">
+          <div className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+            <Globe className="category-icon" />
+          </div>
+          <div className="ml-4">
+            <h1 className="category-title text-3xl">Thế giới</h1>
+            <p className="category-description">
               Tin tức quốc tế, phân tích chuyên sâu và góc nhìn đa chiều về các sự kiện toàn cầu
             </p>
           </div>
@@ -40,37 +42,37 @@ export default function TheGioiPage() {
             <TabsList className="bg-transparent h-auto p-0 w-full justify-start space-x-8 overflow-x-auto flex-nowrap">
               <TabsTrigger
                 value="all"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none pb-3 px-1"
+                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none pb-3 px-1"
               >
                 Tất cả
               </TabsTrigger>
               <TabsTrigger
                 value="chau-a"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none pb-3 px-1"
+                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none pb-3 px-1"
               >
                 Châu Á
               </TabsTrigger>
               <TabsTrigger
                 value="chau-au"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none pb-3 px-1"
+                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none pb-3 px-1"
               >
                 Châu Âu
               </TabsTrigger>
               <TabsTrigger
                 value="chau-my"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none pb-3 px-1"
+                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none pb-3 px-1"
               >
                 Châu Mỹ
               </TabsTrigger>
               <TabsTrigger
                 value="chau-phi"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none pb-3 px-1"
+                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none pb-3 px-1"
               >
                 Châu Phi
               </TabsTrigger>
               <TabsTrigger
                 value="chau-dai-duong"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none pb-3 px-1"
+                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none pb-3 px-1"
               >
                 Châu Đại Dương
               </TabsTrigger>
@@ -79,12 +81,12 @@ export default function TheGioiPage() {
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Phần nội dung chính giữ nguyên */}
       <main className="container mx-auto px-4 py-8 flex-grow">
         {/* World Map Section */}
         <div className="mb-12 bg-gray-50 p-6 rounded-lg">
           <h2 className="text-2xl font-bold mb-6 flex items-center">
-            <Globe className="h-6 w-6 mr-2 text-blue-600" />
+            <Globe className="h-6 w-6 mr-2 text-red-600" />
             Tin tức theo khu vực
           </h2>
           <div className="aspect-[16/9] bg-blue-50 rounded-lg relative overflow-hidden">
@@ -117,11 +119,11 @@ export default function TheGioiPage() {
                     />
                   </div>
                   <div className="flex items-center text-sm text-gray-500 mb-2">
-                    <span className="font-medium text-blue-600">Châu Âu</span>
+                    <span className="font-medium text-red-600">Châu Âu</span>
                     <span className="mx-2">•</span>
                     <span>2 giờ trước</span>
                   </div>
-                  <h4 className="text-xl font-bold mb-2 hover:text-blue-600">
+                  <h4 className="text-xl font-bold mb-2 hover:text-red-600">
                     <Link href="/articles/6">Liên minh Châu Âu thông qua gói viện trợ mới cho Ukraine</Link>
                   </h4>
                   <p className="text-gray-600">
@@ -139,11 +141,11 @@ export default function TheGioiPage() {
                     />
                   </div>
                   <div className="flex items-center text-sm text-gray-500 mb-2">
-                    <span className="font-medium text-blue-600">Châu Á</span>
+                    <span className="font-medium text-red-600">Châu Á</span>
                     <span className="mx-2">•</span>
                     <span>3 giờ trước</span>
                   </div>
-                  <h4 className="text-xl font-bold mb-2 hover:text-blue-600">
+                  <h4 className="text-xl font-bold mb-2 hover:text-red-600">
                     <Link href="/articles/7">Nhật Bản và Hàn Quốc tăng cường hợp tác an ninh khu vực</Link>
                   </h4>
                   <p className="text-gray-600">
@@ -164,11 +166,11 @@ export default function TheGioiPage() {
                       />
                     </div>
                     <div className="flex items-center text-xs text-gray-500 mb-1">
-                      <span className="font-medium text-blue-600">Châu Mỹ</span>
+                      <span className="font-medium text-red-600">Châu Mỹ</span>
                       <span className="mx-2">•</span>
                       <span>5 giờ trước</span>
                     </div>
-                    <h5 className="font-bold hover:text-blue-600">
+                    <h5 className="font-bold hover:text-red-600">
                       <Link href="/articles/8">Mỹ công bố chiến lược mới về hợp tác kinh tế với khu vực Mỹ Latinh</Link>
                     </h5>
                   </div>
@@ -190,11 +192,11 @@ export default function TheGioiPage() {
                   <div key={item} className="flex gap-4 pb-6 border-b border-gray-200 last:border-0">
                     <div className="flex-1">
                       <div className="flex items-center text-sm text-gray-500 mb-2">
-                        <span className="font-medium text-blue-600">Châu Phi</span>
+                        <span className="font-medium text-red-600">Châu Phi</span>
                         <span className="mx-2">•</span>
                         <span>8 giờ trước</span>
                       </div>
-                      <h4 className="text-xl font-bold mb-2 hover:text-blue-600">
+                      <h4 className="text-xl font-bold mb-2 hover:text-red-600">
                         <Link href="/articles/9">
                           Liên Hợp Quốc kêu gọi tăng cường viện trợ nhân đạo cho các nước Đông Phi
                         </Link>
@@ -256,7 +258,7 @@ export default function TheGioiPage() {
                         />
                       </div>
                       <div>
-                        <h4 className="font-medium hover:text-blue-600">
+                        <h4 className="font-medium hover:text-red-600">
                           <Link href="/articles/11">
                             Ngân hàng Thế giới dự báo tăng trưởng kinh tế toàn cầu đạt 3.1% trong năm 2024
                           </Link>
@@ -278,7 +280,7 @@ export default function TheGioiPage() {
                 <div className="space-y-4">
                   {["Biến đổi khí hậu", "An ninh mạng", "Di cư", "Dịch bệnh", "Khủng bố"].map((issue, index) => (
                     <div key={index} className="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
-                      <h4 className="font-medium hover:text-blue-600 mb-2">
+                      <h4 className="font-medium hover:text-red-600 mb-2">
                         <Link href="#">{issue}</Link>
                       </h4>
                       <p className="text-sm text-gray-600">
@@ -291,7 +293,7 @@ export default function TheGioiPage() {
             </Card>
 
             {/* Subscribe */}
-            <Card className="bg-blue-50 border-blue-100">
+            <Card className="bg-gray-50 border-gray-200">
               <CardContent className="p-6">
                 <h3 className="text-lg font-bold mb-2">Nhận tin thế giới hàng ngày</h3>
                 <p className="text-sm text-gray-600 mb-4">
@@ -303,7 +305,7 @@ export default function TheGioiPage() {
                     placeholder="Email của bạn"
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
                   />
-                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                  <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">
                     Đăng ký
                   </Button>
                 </div>

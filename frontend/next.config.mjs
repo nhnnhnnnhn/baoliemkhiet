@@ -1,14 +1,14 @@
 let userConfig = undefined
 try {
-  // try to import ESM first
-  userConfig = await import('./v0-user-next.config.mjs')
-} catch (e) {
+  // File v0-user-next.config.mjs có thể không tồn tại, nên chúng ta bỏ qua lỗi
   try {
-    // fallback to CJS import
-    userConfig = await import("./v0-user-next.config");
-  } catch (innerError) {
-    // ignore error
+    userConfig = await import('./v0-user-next.config.mjs')
+  } catch (e) {
+    // Bỏ qua lỗi import
+    console.log('No user ESM config found, using default config')
   }
+} catch (e) {
+  // Bỏ qua lỗi
 }
 
 /** @type {import('next').NextConfig} */
@@ -29,7 +29,6 @@ const nextConfig = {
   experimental: {
     webpackBuildWorker: false,
   },
-  swcMinify: true,
   // Đảm bảo output ổn định
   trailingSlash: false,
 }
@@ -38,17 +37,20 @@ if (userConfig) {
   // ESM imports will have a "default" property
   const config = userConfig.default || userConfig
 
-  for (const key in config) {
-    if (
-      typeof nextConfig[key] === 'object' &&
-      !Array.isArray(nextConfig[key])
-    ) {
-      nextConfig[key] = {
-        ...nextConfig[key],
-        ...config[key],
+  // Kiểm tra config tồn tại trước khi tiếp tục
+  if (config) {
+    for (const key in config) {
+      if (
+        typeof nextConfig[key] === 'object' &&
+        !Array.isArray(nextConfig[key])
+      ) {
+        nextConfig[key] = {
+          ...nextConfig[key],
+          ...config[key],
+        }
+      } else {
+        nextConfig[key] = config[key]
       }
-    } else {
-      nextConfig[key] = config[key]
     }
   }
 }
