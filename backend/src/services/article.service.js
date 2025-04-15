@@ -78,7 +78,7 @@ module.exports.getAllArticles = async () => {
 // Get all posted articles
 module.exports.getAllPostedArticles = async (author_id) => {
   const user = await prisma.user.findUnique({
-    where: { id: receiver_id },
+    where: { id: author_id },
   });
   if (!user) {
     throw new Error("User not found");
