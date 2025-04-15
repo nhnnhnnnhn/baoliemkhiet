@@ -190,7 +190,7 @@ module.exports.getMostLikedArticles = async () => {
 
   const articlesWithLikes = await Promise.all(
     topLiked.map(async (item) => {
-      const article = await prisma.article.findUnique({
+      const article = await prisma.article.findFirst({
         where: {
           isPublish: true,
           id: item.articleId,
