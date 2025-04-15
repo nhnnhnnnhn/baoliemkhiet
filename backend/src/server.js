@@ -20,6 +20,7 @@ const followRoute = require("./routes/follow.route");
 const tagRoute = require("./routes/tag.route");
 const articleTagRoute = require("./routes/article-tag.route");
 const userRoute = require("./routes/user.route");
+const configurationRoute = require("./routes/configuration.route");
 
 const prisma = new PrismaClient();
 
@@ -48,6 +49,7 @@ app.use("/api/follows", followRoute);
 app.use("/api/tags", tagRoute);
 app.use("/api", articleTagRoute);
 app.use("/api/users", userRoute);
+app.use("/api/configuration", configurationRoute);
 
 // Export wss for use in other files
 app.set("wss", wss);
