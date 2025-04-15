@@ -53,7 +53,7 @@ async function createComment(user_id, article_id, content) {
 }
 
 async function getComments(article_id) {
-  const article = await prisma.post.findUnique({
+  const article = await prisma.article.findUnique({
     where: { id: article_id },
   });
   if (!article) {

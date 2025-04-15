@@ -13,12 +13,20 @@ async function loginUser(email, password) {
   if (!isPasswordValid) {
     throw new Error("Invalid password");
   }
-  accessToken = jwt.sign({ id: user.id }, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: "1h",
-  });
-  refreshToken = jwt.sign({ id: user.id }, process.env.REFRESH_TOKEN_SECRET, {
-    expiresIn: "30d",
-  });
+  accessToken = jwt.sign(
+    { id: user.id, role: user.role },
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: "1h",
+    }
+  );
+  refreshToken = jwt.sign(
+    { id: user.id, role: user.role },
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: "30d",
+    }
+  );
   await prisma.jwtToken.create({
     data: {
       token: refreshToken,
