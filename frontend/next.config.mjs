@@ -24,10 +24,10 @@ const nextConfig = {
     domains: ['localhost', 'vercel.app'],
   },
   // Sửa đổi để sử dụng thư mục mặc định của Next.js
-  distDir: '.next',
+  //distDir: '.next',
   // Disable experimental features to avoid issues
   experimental: {
-    webpackBuildWorker: false,
+    //webpackBuildWorker: false,
   },
   // Đảm bảo output ổn định
   trailingSlash: false,
