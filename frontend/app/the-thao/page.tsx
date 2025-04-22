@@ -1,51 +1,37 @@
 import Link from "next/link"
-import { ArrowRightIcon, StarIcon, TrophyIcon, CalendarIcon, UserIcon, ChevronRightIcon } from "lucide-react"
+import { ArrowRightIcon, StarIcon, TrophyIcon, CalendarIcon, UserIcon, ChevronRightIcon, Activity } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { SiteFooter } from "@/components/site-footer"
 import { ChatbotButton } from "@/components/chatbot-button"
+import { SiteHeader } from "@/components/site-header"
+import { CategoryHeader } from "@/components/category-header"
 
 export default function TheThaoPage() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* Athletic-style Header - Đã bỏ SiteHeader */}
-      <div className="bg-athletic-primary text-white">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <h1 className="text-2xl font-bold text-athletic-accent">BÓNG LĂN</h1>
-              <nav className="hidden md:flex space-x-6">
-                <Link href="#" className="text-sm font-medium hover:text-athletic-accent transition-colors">
-                  Bóng đá
-                </Link>
-                <Link href="#" className="text-sm font-medium hover:text-athletic-accent transition-colors">
-                  Bóng rổ
-                </Link>
-                <Link href="#" className="text-sm font-medium hover:text-athletic-accent transition-colors">
-                  Quần vợt
-                </Link>
-                <Link href="#" className="text-sm font-medium hover:text-athletic-accent transition-colors">
-                  Đua xe F1
-                </Link>
-                <Link href="#" className="text-sm font-medium hover:text-athletic-accent transition-colors">
-                  Võ thuật
-                </Link>
-              </nav>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="text-sm font-medium hover:text-athletic-accent transition-colors">
-                Trang chủ
-              </Link>
-              <Button className="bg-athletic-accent text-athletic-primary hover:bg-yellow-400">Đăng ký Premium</Button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <SiteHeader />
+
+      <CategoryHeader
+        title="Thể thao"
+        description="Tin tức thể thao, bóng đá, tennis, bóng rổ và các sự kiện thể thao lớn trong nước và quốc tế"
+        icon={<Activity className="h-6 w-6 text-white" />}
+        color="bg-gradient-to-r from-red-800 to-red-600"
+        textColor="text-red-600"
+        tabs={[
+          { value: "all", label: "Tất cả" },
+          { value: "bong-da", label: "Bóng đá" },
+          { value: "bong-ro", label: "Bóng rổ" },
+          { value: "quan-vot", label: "Quần vợt" },
+          { value: "dua-xe", label: "Đua xe F1" },
+          { value: "vo-thuat", label: "Võ thuật" },
+        ]}
+      />
 
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative">
-          <div className="absolute inset-0 bg-gradient-to-b from-athletic-primary/80 to-athletic-primary/20 z-10"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/80 to-black/20 z-10"></div>
           <div className="relative h-[70vh] overflow-hidden">
             <img
               src="/placeholder.svg?height=800&width=1600&text=Hero Image"
@@ -57,9 +43,7 @@ export default function TheThaoPage() {
             <div className="container mx-auto px-4">
               <div className="max-w-2xl text-white">
                 <div className="flex items-center mb-4">
-                  <span className="bg-athletic-accent text-athletic-primary px-3 py-1 text-sm font-bold rounded-sm mr-3">
-                    PREMIUM
-                  </span>
+                  <span className="bg-red-600 text-white px-3 py-1 text-sm font-bold rounded-sm mr-3">HOT</span>
                   <span className="text-sm opacity-80">12 giờ trước</span>
                 </div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
@@ -76,7 +60,7 @@ export default function TheThaoPage() {
                     <p className="text-sm opacity-80">Phóng viên Bóng đá</p>
                   </div>
                 </div>
-                <Button className="bg-white text-athletic-primary hover:bg-gray-100">
+                <Button className="bg-white text-red-600 hover:bg-gray-100">
                   Đọc tiếp <ArrowRightIcon className="ml-2 h-4 w-4" />
                 </Button>
               </div>
@@ -84,16 +68,12 @@ export default function TheThaoPage() {
           </div>
         </section>
 
-        {/* Rest of the content remains the same */}
         {/* Featured Stories */}
         <section className="py-12 bg-white">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-bold border-l-4 border-athletic-accent pl-3">Tin nổi bật</h2>
-              <Link
-                href="#"
-                className="text-athletic-primary hover:text-athletic-accent flex items-center text-sm font-medium"
-              >
+              <h2 className="text-2xl font-bold border-l-4 border-red-600 pl-3">Tin nổi bật</h2>
+              <Link href="#" className="text-red-600 hover:text-red-700 flex items-center text-sm font-medium">
                 Xem tất cả <ChevronRightIcon className="ml-1 h-4 w-4" />
               </Link>
             </div>
@@ -108,16 +88,14 @@ export default function TheThaoPage() {
                       className="w-full aspect-video object-cover transform group-hover:scale-105 transition-transform duration-500"
                     />
                     {item === 1 && (
-                      <div className="absolute top-3 left-3 bg-athletic-accent text-athletic-primary px-2 py-1 text-xs font-bold">
-                        PREMIUM
-                      </div>
+                      <div className="absolute top-3 left-3 bg-red-600 text-white px-2 py-1 text-xs font-bold">HOT</div>
                     )}
                   </div>
                   <div className="flex items-center text-sm mb-2">
-                    <span className="font-bold text-athletic-red mr-2">BÓNG ĐÁ</span>
+                    <span className="font-bold text-red-600 mr-2">BÓNG ĐÁ</span>
                     <span className="text-gray-500">8 giờ trước</span>
                   </div>
-                  <h3 className="text-xl font-bold mb-2 group-hover:text-athletic-accent transition-colors">
+                  <h3 className="text-xl font-bold mb-2 group-hover:text-red-600 transition-colors">
                     {item === 1
                       ? "Messi lập hat-trick, Inter Miami thắng đậm"
                       : item === 2
@@ -142,14 +120,14 @@ export default function TheThaoPage() {
         </section>
 
         {/* Live Scores */}
-        <section className="py-10 bg-athletic-primary text-white">
+        <section className="py-10 bg-gray-900 text-white">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold flex items-center">
-                <TrophyIcon className="mr-2 h-6 w-6 text-athletic-accent" />
+                <TrophyIcon className="mr-2 h-6 w-6 text-yellow-400" />
                 Kết quả trận đấu
               </h2>
-              <Button variant="outline" className="border-white text-white hover:bg-white hover:text-athletic-primary">
+              <Button variant="outline" className="border-white text-white hover:bg-white hover:text-gray-900">
                 Xem tất cả
               </Button>
             </div>
@@ -184,7 +162,7 @@ export default function TheThaoPage() {
                 { league: "Ligue 1", team1: "PSG", score1: 3, team2: "Marseille", score2: 0, status: "Kết thúc" },
                 { league: "V-League", team1: "Hà Nội FC", score1: 2, team2: "HAGL", score2: 1, status: "Kết thúc" },
               ].map((match, index) => (
-                <div key={index} className="bg-athletic-secondary p-4 rounded-lg hover:bg-gray-700 transition-colors">
+                <div key={index} className="bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-gray-400">{match.league}</span>
                     <span className="text-xs px-2 py-1 bg-gray-700 rounded-full">{match.status}</span>
@@ -216,11 +194,8 @@ export default function TheThaoPage() {
               {/* Football Section */}
               <div>
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold border-l-4 border-athletic-accent pl-3">Bóng đá</h2>
-                  <Link
-                    href="#"
-                    className="text-athletic-primary hover:text-athletic-accent flex items-center text-sm font-medium"
-                  >
+                  <h2 className="text-xl font-bold border-l-4 border-red-600 pl-3">Bóng đá</h2>
+                  <Link href="#" className="text-red-600 hover:text-red-700 flex items-center text-sm font-medium">
                     Xem tất cả <ChevronRightIcon className="ml-1 h-4 w-4" />
                   </Link>
                 </div>
@@ -239,7 +214,7 @@ export default function TheThaoPage() {
                           <CalendarIcon className="h-3 w-3 mr-1 text-gray-500" />
                           <span className="text-gray-500">6 giờ trước</span>
                         </div>
-                        <h3 className="font-bold mb-1 group-hover:text-athletic-accent transition-colors">
+                        <h3 className="font-bold mb-1 group-hover:text-red-600 transition-colors">
                           Manchester City thắng áp đảo trước Newcastle với tỷ số 4-0
                         </h3>
                         <div className="flex items-center text-xs text-gray-500">
@@ -255,11 +230,8 @@ export default function TheThaoPage() {
               {/* Basketball Section */}
               <div>
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold border-l-4 border-athletic-accent pl-3">Bóng rổ</h2>
-                  <Link
-                    href="#"
-                    className="text-athletic-primary hover:text-athletic-accent flex items-center text-sm font-medium"
-                  >
+                  <h2 className="text-xl font-bold border-l-4 border-red-600 pl-3">Bóng rổ</h2>
+                  <Link href="#" className="text-red-600 hover:text-red-700 flex items-center text-sm font-medium">
                     Xem tất cả <ChevronRightIcon className="ml-1 h-4 w-4" />
                   </Link>
                 </div>
@@ -278,7 +250,7 @@ export default function TheThaoPage() {
                           <CalendarIcon className="h-3 w-3 mr-1 text-gray-500" />
                           <span className="text-gray-500">4 giờ trước</span>
                         </div>
-                        <h3 className="font-bold mb-1 group-hover:text-athletic-accent transition-colors">
+                        <h3 className="font-bold mb-1 group-hover:text-red-600 transition-colors">
                           Boston Celtics tiếp tục duy trì mạch thắng với chiến thắng thứ 8 liên tiếp
                         </h3>
                         <div className="flex items-center text-xs text-gray-500">
@@ -295,24 +267,21 @@ export default function TheThaoPage() {
         </section>
 
         {/* Premium Banner */}
-        <section className="py-12 bg-athletic-primary text-white">
+        <section className="py-12 bg-gray-900 text-white">
           <div className="container mx-auto px-4">
             <div className="flex flex-col md:flex-row items-center justify-between">
               <div className="mb-6 md:mb-0 md:mr-8">
                 <div className="flex items-center mb-3">
-                  <StarIcon className="h-6 w-6 text-athletic-accent mr-2" />
-                  <h2 className="text-2xl font-bold">Bóng Lăn Premium</h2>
+                  <StarIcon className="h-6 w-6 text-yellow-400 mr-2" />
+                  <h2 className="text-2xl font-bold">Thể Thao Premium</h2>
                 </div>
                 <p className="text-gray-300 mb-6 max-w-2xl">
                   Truy cập vào các bài viết chuyên sâu, phân tích chuyên môn và nội dung độc quyền từ các phóng viên
                   hàng đầu của chúng tôi. Nâng cao trải nghiệm thể thao của bạn với những góc nhìn sâu sắc và độc đáo.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <Button className="bg-athletic-accent text-athletic-primary hover:bg-yellow-400">Đăng ký ngay</Button>
-                  <Button
-                    variant="outline"
-                    className="border-white text-white hover:bg-white hover:text-athletic-primary"
-                  >
+                  <Button className="bg-red-600 hover:bg-red-700 text-white">Đăng ký ngay</Button>
+                  <Button variant="outline" className="border-white text-white hover:bg-white hover:text-gray-900">
                     Tìm hiểu thêm
                   </Button>
                 </div>

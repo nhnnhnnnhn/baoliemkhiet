@@ -3,10 +3,10 @@ import { ChevronRightIcon, FileText } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ChatbotButton } from "@/components/chatbot-button"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
+import { CategoryHeader } from "@/components/category-header"
 
 export default function ThoiSuPage() {
   const currentDate = new Date().toLocaleDateString("vi-VN", {
@@ -20,77 +20,20 @@ export default function ThoiSuPage() {
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
 
-      {/* Category Header - Thiết kế mới */}
-      <div className="category-header">
-        <div className="category-header-content">
-          <div className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-            <FileText className="category-icon" />
-          </div>
-          <div className="ml-4">
-            <h1 className="category-title text-3xl">Thời sự</h1>
-            <p className="category-description">
-              Cập nhật tin tức mới nhất về tình hình chính trị, xã hội, kinh tế và các vấn đề thời sự nóng hổi trong
-              nước
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Category Navigation */}
-      <div className="border-b border-gray-200 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <Tabs defaultValue="all" className="py-2">
-            <TabsList className="bg-transparent h-auto p-0 border-b border-gray-200 w-full justify-start space-x-8">
-              <TabsTrigger
-                value="all"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none pb-3 px-1"
-              >
-                Tất cả
-              </TabsTrigger>
-              <TabsTrigger
-                value="chinh-tri"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none pb-3 px-1"
-              >
-                Chính trị
-              </TabsTrigger>
-              <TabsTrigger
-                value="xa-hoi"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none pb-3 px-1"
-              >
-                Xã hội
-              </TabsTrigger>
-              <TabsTrigger
-                value="phap-luat"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none pb-3 px-1"
-              >
-                Pháp luật
-              </TabsTrigger>
-              <TabsTrigger
-                value="giao-thong"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none pb-3 px-1"
-              >
-                Giao thông
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="all" className="mt-0">
-              {/* Content for All tab */}
-            </TabsContent>
-            <TabsContent value="chinh-tri" className="mt-0">
-              {/* Content for Chính trị tab */}
-            </TabsContent>
-            <TabsContent value="xa-hoi" className="mt-0">
-              {/* Content for Xã hội tab */}
-            </TabsContent>
-            <TabsContent value="phap-luat" className="mt-0">
-              {/* Content for Pháp luật tab */}
-            </TabsContent>
-            <TabsContent value="giao-thong" className="mt-0">
-              {/* Content for Giao thông tab */}
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
+      <CategoryHeader
+        title="Thời sự"
+        description="Cập nhật tin tức mới nhất về tình hình chính trị, xã hội, kinh tế và các vấn đề thời sự nóng hổi trong nước"
+        icon={<FileText className="h-6 w-6 text-white" />}
+        color="bg-gradient-to-r from-red-700 to-red-500"
+        textColor="text-red-600"
+        tabs={[
+          { value: "all", label: "Tất cả" },
+          { value: "chinh-tri", label: "Chính trị" },
+          { value: "xa-hoi", label: "Xã hội" },
+          { value: "phap-luat", label: "Pháp luật" },
+          { value: "giao-thong", label: "Giao thông" },
+        ]}
+      />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 flex-grow">
@@ -135,7 +78,7 @@ export default function ThoiSuPage() {
                     <div className="flex flex-col md:flex-row gap-4">
                       <div className="md:w-1/3 aspect-[4/3]">
                         <img
-                          src={`/placeholder.svg?height=200&width=300&text=News ${item}`}
+                          src={`/news-banner.png?height=200&width=300&text=News ${item}`}
                           alt={`News ${item}`}
                           className="w-full h-full object-cover rounded"
                         />
@@ -186,7 +129,7 @@ export default function ThoiSuPage() {
                     </div>
                     <div className="w-32 h-24 bg-gray-100 rounded overflow-hidden shrink-0">
                       <img
-                        src={`/placeholder.svg?height=200&width=300&text=News ${item}`}
+                        src={`/news-banner.png?height=200&width=300&text=News ${item}`}
                         alt={`News ${item}`}
                         className="w-full h-full object-cover"
                       />

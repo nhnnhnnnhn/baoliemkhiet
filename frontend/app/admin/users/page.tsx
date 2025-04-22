@@ -139,7 +139,7 @@ export default function UsersPage() {
                   <td className={styles.tableCell}>{user.id}</td>
                   <td className={styles.tableCell}>
                     <div className="flex items-center">
-                      <div className="h-8 w-8 rounded-full bg-gray-200 mr-2 flex items-center justify-center text-gray-600 font-medium">
+                      <div className="h-8 w-8 rounded-full bg-gray-200 mr-2 flex items-center justify-center text-gray-600 font-medium overflow-hidden">
                         {user.name.charAt(0)}
                       </div>
                       {user.name}

@@ -90,7 +90,7 @@ export function NotificationDropdown() {
             <DropdownMenuItem key={notification.id} className={notification.read ? "" : "bg-muted/50"}>
               <div className="flex items-start gap-2 py-1">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={notification.avatar} alt="" />
+                  {notification.avatar ? <AvatarImage src={notification.avatar || "/placeholder.svg"} alt="" /> : null}
                   <AvatarFallback>{notification.avatarFallback}</AvatarFallback>
                 </Avatar>
                 <div className="grid gap-1">

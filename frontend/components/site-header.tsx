@@ -1,117 +1,142 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import {
   SearchIcon,
-  MenuIcon,
-  ChevronDownIcon,
   TrendingUpIcon,
   GlobeIcon,
   DollarSignIcon,
   MonitorIcon,
   ActivityIcon,
+  NewspaperIcon,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { SafeLink } from "@/components/safe-link"
 
 export function SiteHeader() {
-  const currentDate = new Date().toLocaleDateString("vi-VN", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })
+  const [isScrolled, setIsScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 50) {
+        setIsScrolled(true)
+      } else {
+        setIsScrolled(false)
+      }
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+    }
+  }, [])
 
   return (
-    <>
-      {/* Top Navigation - Đã cập nhật với logo thay thế cho "Đăng ký chỉ 25K/tuần" */}
-      <div className="border-b border-gray-200">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link href="/search">
-              <Button variant="ghost" size="sm">
-                <SearchIcon className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="/chuyen-muc">
-              <Button variant="ghost" size="sm" className="flex items-center">
-                <MenuIcon className="h-4 w-4 mr-1" />
-                CHUYÊN MỤC
-              </Button>
-            </Link>
-          </div>
-
-          {/* Logo thay thế cho "Đăng ký chỉ 25K/tuần" */}
-          <div className="hidden md:block">
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled ? "bg-white shadow-md" : "bg-transparent"
+      }`}
+    >
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          {/* Nửa bên trái: Logo và Danh mục */}
+          <div className="flex items-center space-x-6">
+            {/* Logo */}
             <Link href="/" className="flex items-center">
-              <Image src="/logo.svg" alt="Báo Liêm Khiết" width={120} height={40} priority />
+              <div className={`flex items-center font-bold text-xl ${isScrolled ? "text-gray-800" : "text-white"}`}>
+                <NewspaperIcon className="h-6 w-6 mr-2" />
+                <span className="hidden sm:inline">BÁO LIÊM KHIẾT</span>
+              </div>
             </Link>
-          </div>
 
-          <div className="flex items-center space-x-4">
-            <Link href="/auth/login">
-              <Button variant="ghost" size="sm">
-                ĐĂNG NHẬP
-              </Button>
-            </Link>
-            <Link href="/subscribe">
-              <Button size="sm" className="bg-black text-white hover:bg-gray-800">
-                ĐĂNG KÝ
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Navigation - Đã thay đổi màu sang trắng */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between py-3">
-            <div className="flex items-center space-x-1 md:space-x-4 overflow-x-auto scrollbar-hide">
-              <Link
+            {/* Danh mục */}
+            <nav className="hidden md:flex items-center space-x-1">
+              <SafeLink
                 href="/thoi-su"
-                className="flex items-center px-3 py-2 text-sm font-medium text-gray-800 hover:text-red-600 rounded-md transition-colors whitespace-nowrap"
+                className={`flex items-center px-3 py-2 text-sm font-medium ${
+                  isScrolled ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"
+                } rounded-md transition-colors whitespace-nowrap`}
               >
                 <TrendingUpIcon className="h-4 w-4 mr-1.5" />
                 Thời sự
-              </Link>
-              <Link
+              </SafeLink>
+              <SafeLink
                 href="/the-gioi"
-                className="flex items-center px-3 py-2 text-sm font-medium text-gray-800 hover:text-red-600 rounded-md transition-colors whitespace-nowrap"
+                className={`flex items-center px-3 py-2 text-sm font-medium ${
+                  isScrolled ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"
+                } rounded-md transition-colors whitespace-nowrap`}
               >
                 <GlobeIcon className="h-4 w-4 mr-1.5" />
                 Thế giới
-              </Link>
-              <Link
+              </SafeLink>
+              <SafeLink
                 href="/kinh-doanh"
-                className="flex items-center px-3 py-2 text-sm font-medium text-gray-800 hover:text-red-600 rounded-md transition-colors whitespace-nowrap"
+                className={`flex items-center px-3 py-2 text-sm font-medium ${
+                  isScrolled ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"
+                } rounded-md transition-colors whitespace-nowrap`}
               >
                 <DollarSignIcon className="h-4 w-4 mr-1.5" />
                 Kinh doanh
-              </Link>
-              <Link
+              </SafeLink>
+              <SafeLink
                 href="/cong-nghe"
-                className="flex items-center px-3 py-2 text-sm font-medium text-gray-800 hover:text-red-600 rounded-md transition-colors whitespace-nowrap"
+                className={`flex items-center px-3 py-2 text-sm font-medium ${
+                  isScrolled ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"
+                } rounded-md transition-colors whitespace-nowrap`}
               >
                 <MonitorIcon className="h-4 w-4 mr-1.5" />
                 Công nghệ
-              </Link>
-              <Link
+              </SafeLink>
+              <SafeLink
                 href="/the-thao"
-                className="flex items-center px-3 py-2 text-sm font-medium text-gray-800 hover:text-red-600 rounded-md transition-colors whitespace-nowrap"
+                className={`flex items-center px-3 py-2 text-sm font-medium ${
+                  isScrolled ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"
+                } rounded-md transition-colors whitespace-nowrap`}
               >
                 <ActivityIcon className="h-4 w-4 mr-1.5" />
                 Thể thao
-              </Link>
-            </div>
+              </SafeLink>
+            </nav>
+          </div>
 
-            <div className="hidden md:flex items-center">
-              <Button variant="ghost" className="text-gray-800 hover:text-red-600 flex items-center">
-                Xem thêm <ChevronDownIcon className="h-4 w-4 ml-1" />
+          {/* Nửa bên phải: Tìm kiếm, Đăng nhập, Đăng ký */}
+          <div className="flex items-center space-x-2 md:space-x-4">
+            <SafeLink href="/search">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`px-2 ${isScrolled ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"}`}
+              >
+                <SearchIcon className="h-5 w-5" />
+                <span className="sr-only">Tìm kiếm</span>
               </Button>
-            </div>
+            </SafeLink>
+            <SafeLink href="/auth/login">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`hidden sm:flex ${
+                  isScrolled ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"
+                }`}
+              >
+                ĐĂNG NHẬP
+              </Button>
+            </SafeLink>
+            <SafeLink href="/subscribe">
+              <Button
+                size="sm"
+                className={
+                  isScrolled ? "bg-black text-white hover:bg-gray-800" : "bg-white text-black hover:bg-gray-100"
+                }
+              >
+                ĐĂNG KÝ
+              </Button>
+            </SafeLink>
           </div>
         </div>
       </div>
-    </>
+    </header>
   )
 }

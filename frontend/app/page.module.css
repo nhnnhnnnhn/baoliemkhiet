@@ -1,109 +1,113 @@
 .container {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
-  background-color: white;
 }
 
 /* Hero Section */
 .heroSection {
   position: relative;
-  height: 70vh;
-  background-image: url("/placeholder.svg?height=1080&width=1920&text=Hot News");
+  height: 100vh;
+  width: 100%;
+  background-image: url("/placeholder.svg?height=1080&width=1920&text=ASEAN Summit");
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
+  margin-top: 0;
 }
 
+/* Update the heroOverlay class to align content to the bottom left */
 .heroOverlay {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.7));
   display: flex;
-  align-items: flex-end;
+  align-items: flex-end; /* Change from center to flex-end to align to bottom */
+  justify-content: flex-start; /* Change from center to flex-start to align to left */
+  padding: 0 1rem;
 }
 
+/* Update the heroContent class for bottom left positioning */
 .heroContent {
+  max-width: 600px; /* Reduced from 800px for a more compact look */
   color: white;
-  padding: 2rem;
-  max-width: 800px;
-  margin-bottom: 2rem;
+  text-align: left; /* Change from center to left */
+  padding: 2rem; /* Add consistent padding */
+  margin-bottom: 2rem; /* Add margin at the bottom */
 }
 
 .heroCategory {
   display: inline-block;
-  background-color: #e11d48;
+  background-color: #e53e3e;
   color: white;
   padding: 0.25rem 0.75rem;
+  border-radius: 4px;
   font-size: 0.875rem;
   font-weight: 600;
   margin-bottom: 1rem;
-  text-transform: uppercase;
 }
 
 .heroTitle {
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 1rem;
+  line-height: 1.2;
 }
 
 .heroDescription {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   margin-bottom: 1.5rem;
+  line-height: 1.5;
+  opacity: 0.9;
 }
 
 .heroButton {
-  background-color: #e11d48;
+  background-color: #e53e3e;
   color: white;
   display: inline-flex;
   align-items: center;
-  border: none;
+  padding: 0.5rem 1.25rem;
+  border-radius: 4px;
+  font-weight: 600;
+  transition: background-color 0.3s;
 }
 
 .heroButton:hover {
-  background-color: #be123c;
-}
-
-@media (max-width: 768px) {
-  .heroSection {
-    height: 60vh;
-  }
-
-  .heroTitle {
-    font-size: 1.75rem;
-  }
-
-  .heroDescription {
-    font-size: 1rem;
-  }
+  background-color: #c53030;
 }
 
 /* Main Content */
 .mainContent {
-  max-width: 1400px;
+  padding: 2rem 1rem;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 1.5rem 1rem;
+  width: 100%;
 }
 
 /* Breaking News */
 .breakingNews {
   display: flex;
   align-items: center;
-  background-color: #f9fafb;
-  padding: 0.75rem 1rem;
+  background-color: #f7f7f7;
+  border-radius: 4px;
   margin-bottom: 2rem;
-  border-left: 4px solid #e11d48;
+  overflow: hidden;
 }
 
 .breakingNewsLabel {
-  font-weight: 700;
-  color: #e11d48;
-  margin-right: 1rem;
+  background-color: #e53e3e;
+  color: white;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
   white-space: nowrap;
 }
 
 .breakingNewsContent {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -115,36 +119,26 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 1.5rem;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 0.75rem;
 }
 
 .sectionTitle {
   font-size: 1.5rem;
   font-weight: 700;
-  position: relative;
-  padding-bottom: 0.5rem;
-}
-
-.sectionTitle::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 3rem;
-  height: 3px;
-  background-color: #e11d48;
+  color: #333;
 }
 
 .viewAllLink {
   display: flex;
   align-items: center;
   font-size: 0.875rem;
-  font-weight: 500;
-  color: #6b7280;
-  text-decoration: none;
+  color: #666;
+  transition: color 0.3s;
 }
 
 .viewAllLink:hover {
-  color: #e11d48;
+  color: #e53e3e;
 }
 
 /* Latest News Section */
@@ -171,54 +165,63 @@
 }
 
 .newsCard {
-  display: flex;
-  flex-direction: column;
-  background-color: #fff;
-  border: 1px solid #e5e7eb;
-  transition: transform 0.2s;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  background-color: white;
+  transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .newsCard:hover {
-  transform: translateY(-4px);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
 }
 
 .newsImage {
-  aspect-ratio: 16 / 9;
+  height: 180px;
   overflow: hidden;
 }
 
 .newsContent {
   padding: 1rem;
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
 }
 
 .newsCategory {
+  display: inline-block;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #e11d48;
-  text-transform: uppercase;
+  color: #e53e3e;
   margin-bottom: 0.5rem;
 }
 
 .newsTitle {
+  font-size: 1rem;
   font-weight: 700;
-  font-size: 1.125rem;
   margin-bottom: 0.5rem;
   line-height: 1.4;
 }
 
+.newsTitle a {
+  color: #333;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.newsTitle a:hover {
+  color: #e53e3e;
+}
+
 .newsExcerpt {
   font-size: 0.875rem;
-  color: #6b7280;
-  margin-bottom: 0.75rem;
-  flex-grow: 1;
+  color: #666;
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
 }
 
 .newsTime {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: #999;
+  display: block;
 }
 
 /* Category Sections */
@@ -230,6 +233,8 @@
   display: flex;
   align-items: center;
   margin-bottom: 1.5rem;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 0.75rem;
 }
 
 .categoryIcon {
@@ -238,16 +243,17 @@
   justify-content: center;
   width: 2rem;
   height: 2rem;
-  background-color: #e11d48;
+  background-color: #e53e3e;
   color: white;
-  border-radius: 4px;
+  border-radius: 50%;
   margin-right: 0.75rem;
 }
 
 .categoryTitle {
   font-size: 1.25rem;
   font-weight: 700;
-  flex-grow: 1;
+  color: #333;
+  margin-right: auto;
 }
 
 .categoryGrid {
@@ -258,7 +264,7 @@
 
 @media (min-width: 768px) {
   .categoryGrid {
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -268,21 +274,33 @@
 }
 
 .categoryMainImage {
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
+  height: 240px;
   margin-bottom: 1rem;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .categoryMainTitle {
   font-size: 1.25rem;
   font-weight: 700;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
   line-height: 1.4;
+}
+
+.categoryMainTitle a {
+  color: #333;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.categoryMainTitle a:hover {
+  color: #e53e3e;
 }
 
 .categoryMainExcerpt {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #666;
+  line-height: 1.5;
 }
 
 .categorySubNews {
@@ -293,18 +311,24 @@
 
 .categorySubItem {
   padding-bottom: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.categorySubItem:last-child {
-  border-bottom: none;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .categorySubTitle {
   font-size: 1rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   line-height: 1.4;
+}
+
+.categorySubTitle a {
+  color: #333;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.categorySubTitle a:hover {
+  color: #e53e3e;
 }
 
 /* Two Column Layout */
@@ -327,7 +351,6 @@
   flex-direction: column;
 }
 
-/* Small Category Grid */
 .smallCategoryGrid {
   display: grid;
   grid-template-columns: 1fr;
@@ -343,11 +366,12 @@
 .smallNewsCard {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
 }
 
 .smallNewsImage {
-  aspect-ratio: 16 / 9;
+  height: 120px;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
   overflow: hidden;
 }
 
@@ -357,6 +381,16 @@
   line-height: 1.4;
 }
 
+.smallNewsTitle a {
+  color: #333;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.smallNewsTitle a:hover {
+  color: #e53e3e;
+}
+
 /* Sports Section */
 .sportsGrid {
   display: grid;
@@ -364,7 +398,13 @@
   gap: 1.5rem;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 640px) {
+  .sportsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
   .sportsGrid {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -373,23 +413,44 @@
 .sportsCard {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.sportsCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
 }
 
 .sportsImage {
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
+  height: 180px;
 }
 
 .sportsTitle {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 700;
+  margin: 1rem;
   line-height: 1.4;
+}
+
+.sportsTitle a {
+  color: #333;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.sportsTitle a:hover {
+  color: #e53e3e;
 }
 
 .sportsExcerpt {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #666;
+  margin: 0 1rem 1rem;
+  line-height: 1.5;
 }
 
 /* Opinion Section */
@@ -403,16 +464,28 @@
   gap: 1.5rem;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 640px) {
+  .opinionGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
   .opinionGrid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
 .opinionCard {
+  background-color: #f9f9f9;
+  border-radius: 8px;
   padding: 1.5rem;
-  background-color: #f9fafb;
-  border-top: 3px solid #e11d48;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.opinionCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
 }
 
 .authorBox {
@@ -422,20 +495,22 @@
 }
 
 .authorAvatar {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 9999px;
-  background-color: #d1d5db;
-  margin-right: 0.75rem;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #e2e8f0;
+  margin-right: 1rem;
 }
 
 .authorName {
+  font-size: 1rem;
   font-weight: 600;
+  margin-bottom: 0.25rem;
 }
 
 .authorTitle {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: #666;
 }
 
 .opinionTitle {
@@ -447,7 +522,8 @@
 
 .opinionExcerpt {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #666;
+  line-height: 1.5;
 }
 
 /* Trending Section */
@@ -456,53 +532,91 @@
 }
 
 .trendingGrid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 1rem;
-}
-
-.trendingItem {
-  display: flex;
-  align-items: flex-start;
-  padding: 0.75rem;
-  background-color: #f9fafb;
-}
-
-.trendingNumber {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #e11d48;
-  margin-right: 1rem;
-  min-width: 1.5rem;
-  text-align: center;
-}
-
-.trendingContent {
-  flex-grow: 1;
-}
-
-.trendingTitle {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-  line-height: 1.4;
-}
-
-.trendingViews {
-  font-size: 0.75rem;
-  color: #9ca3af;
 }
 
 @media (min-width: 768px) {
   .trendingGrid {
-    display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
   }
 }
 
 @media (min-width: 1024px) {
   .trendingGrid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+.trendingItem {
+  display: flex;
+  align-items: flex-start;
+  padding: 1rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  transition: background-color 0.3s;
+}
+
+.trendingItem:hover {
+  background-color: #f0f0f0;
+}
+
+.trendingNumber {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #e53e3e;
+  margin-right: 0.75rem;
+  line-height: 1;
+}
+
+.trendingTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
+}
+
+.trendingTitle a {
+  color: #333;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.trendingTitle a:hover {
+  color: #e53e3e;
+}
+
+.trendingViews {
+  font-size: 0.75rem;
+  color: #999;
+}
+
+/* Media Queries for Responsive Design */
+@media (min-width: 640px) {
+  .heroContent {
+    padding: 2rem;
+  }
+
+  .heroTitle {
+    font-size: 3rem;
+  }
+
+  .heroDescription {
+    font-size: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mainContent {
+    padding: 3rem;
+  }
+
+  .heroContent {
+    padding: 3rem;
+  }
+
+  .heroTitle {
+    font-size: 3.5rem;
   }
 }

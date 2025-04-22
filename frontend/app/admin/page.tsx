@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowDownIcon, ArrowUpIcon, BarChart3, Eye, MessageSquare, PenSquare } from "lucide-react"
+import { ArrowDownIcon, ArrowUpIcon, Eye, MessageSquare, PenSquare } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import styles from "./admin.module.css"
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
           <div className={styles.chartContent}>
             {/* Placeholder for daily views chart */}
             <div className="flex items-center justify-center h-full">
-              <BarChart3 className="h-32 w-32 text-gray-300" />
+              <img src="/business-growth-chart.png" alt="Chart Placeholder" />
             </div>
           </div>
         </div>

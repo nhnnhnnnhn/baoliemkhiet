@@ -20,7 +20,10 @@ export default function Home() {
       <SiteHeader />
 
       {/* Hero Section */}
-      <div className={styles.heroSection}>
+      <div
+        className={styles.heroSection}
+        style={{ backgroundImage: 'url("/placeholder.svg?height=1080&width=1920&text=ASEAN%20Summit")' }}
+      >
         <div className={styles.heroOverlay}>
           <div className={styles.heroContent}>
             <span className={styles.heroCategory}>TIN NỔI BẬT</span>
@@ -60,7 +63,7 @@ export default function Home() {
               <div key={item} className={styles.newsCard}>
                 <div className={styles.newsImage}>
                   <img
-                    src={`/placeholder.svg?height=200&width=300&text=Tin ${item}`}
+                    src={`/placeholder-tin.png?key=u8cfr&height=200&width=300&text=Tin ${item}`}
                     alt={`Tin ${item}`}
                     className="w-full h-full object-cover"
                   />
@@ -179,7 +182,7 @@ export default function Home() {
                   <div key={item} className={styles.smallNewsCard}>
                     <div className={styles.smallNewsImage}>
                       <img
-                        src={`/placeholder.svg?height=120&width=180&text=Kinh doanh ${item}`}
+                        src={`/kinh-doanh-concept.png?height=120&width=180&text=Kinh doanh ${item}`}
                         alt={`Tin kinh doanh ${item}`}
                         className="w-full h-full object-cover"
                       />
@@ -210,7 +213,7 @@ export default function Home() {
                   <div key={item} className={styles.smallNewsCard}>
                     <div className={styles.smallNewsImage}>
                       <img
-                        src={`/placeholder.svg?height=120&width=180&text=Công nghệ ${item}`}
+                        src={`/placeholder-technology.png?height=120&width=180&text=Công nghệ ${item}`}
                         alt={`Tin công nghệ ${item}`}
                         className="w-full h-full object-cover"
                       />
@@ -241,7 +244,7 @@ export default function Home() {
               <div key={item} className={styles.sportsCard}>
                 <div className={styles.sportsImage}>
                   <img
-                    src={`/placeholder.svg?height=250&width=400&text=Thể thao ${item}`}
+                    src={`/the-thao-collage.png?height=250&width=400&text=Thể thao ${item}`}
                     alt={`Tin thể thao ${item}`}
                     className="w-full h-full object-cover"
                   />

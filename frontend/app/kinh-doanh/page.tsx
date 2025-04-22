@@ -3,83 +3,31 @@ import { ChevronRightIcon, TrendingUp, DollarSign, BarChart3 } from "lucide-reac
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ChatbotButton } from "@/components/chatbot-button"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
+import { CategoryHeader } from "@/components/category-header"
 
 export default function KinhDoanhPage() {
-  const currentDate = new Date().toLocaleDateString("vi-VN", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })
-
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
 
-      {/* Category Header - Thiết kế mới */}
-      <div className="category-header bg-white">
-        <div className="category-header-content">
-          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-50 mr-4">
-            <TrendingUp className="h-6 w-6 text-green-600" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-playfair font-bold text-gray-900">Kinh doanh</h1>
-            <p className="category-description">
-              Thông tin kinh tế, tài chính, chứng khoán, bất động sản và các xu hướng kinh doanh mới nhất
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Category Navigation */}
-      <div className="border-b border-gray-200 bg-white">
-        <div className="container mx-auto px-4">
-          <Tabs defaultValue="all" className="py-2">
-            <TabsList className="bg-transparent h-auto p-0 w-full justify-start space-x-8 overflow-x-auto flex-nowrap">
-              <TabsTrigger
-                value="all"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-green-600 data-[state=active]:text-green-600 rounded-none pb-3 px-1"
-              >
-                Tất cả
-              </TabsTrigger>
-              <TabsTrigger
-                value="doanh-nghiep"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-green-600 data-[state=active]:text-green-600 rounded-none pb-3 px-1"
-              >
-                Doanh nghiệp
-              </TabsTrigger>
-              <TabsTrigger
-                value="chung-khoan"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-green-600 data-[state=active]:text-green-600 rounded-none pb-3 px-1"
-              >
-                Chứng khoán
-              </TabsTrigger>
-              <TabsTrigger
-                value="bat-dong-san"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-green-600 data-[state=active]:text-green-600 rounded-none pb-3 px-1"
-              >
-                Bất động sản
-              </TabsTrigger>
-              <TabsTrigger
-                value="quoc-te"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-green-600 data-[state=active]:text-green-600 rounded-none pb-3 px-1"
-              >
-                Quốc tế
-              </TabsTrigger>
-              <TabsTrigger
-                value="tai-chinh"
-                className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-green-600 data-[state=active]:text-green-600 rounded-none pb-3 px-1"
-              >
-                Tài chính
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-      </div>
+      <CategoryHeader
+        title="Kinh doanh"
+        description="Thông tin kinh tế, tài chính, chứng khoán, bất động sản và các xu hướng kinh doanh mới nhất"
+        icon={<DollarSign className="h-6 w-6 text-white" />}
+        color="bg-gradient-to-r from-amber-700 to-amber-500"
+        textColor="text-amber-600"
+        tabs={[
+          { value: "all", label: "Tất cả" },
+          { value: "doanh-nghiep", label: "Doanh nghiệp" },
+          { value: "chung-khoan", label: "Chứng khoán" },
+          { value: "bat-dong-san", label: "Bất động sản" },
+          { value: "quoc-te", label: "Quốc tế" },
+          { value: "tai-chinh", label: "Tài chính" },
+        ]}
+      />
 
       {/* Market Overview */}
       <div className="bg-gray-50 border-b border-gray-200">
@@ -160,7 +108,7 @@ export default function KinhDoanhPage() {
                   className="w-full h-full object-cover rounded-lg"
                 />
               </div>
-              <h2 className="text-3xl font-playfair font-bold mb-3 hover:text-green-600">
+              <h2 className="text-3xl font-bold mb-3 hover:text-amber-600">
                 <Link href="/articles/12">Việt Nam đặt mục tiêu tăng trưởng GDP 6.5% trong năm 2024</Link>
               </h2>
               <p className="text-gray-600 mb-4 text-lg">
@@ -168,7 +116,7 @@ export default function KinhDoanhPage() {
                 mô trong bối cảnh kinh tế toàn cầu còn nhiều thách thức.
               </p>
               <div className="flex items-center text-sm text-gray-500">
-                <span className="font-medium text-green-600">Kinh tế vĩ mô</span>
+                <span className="font-medium text-amber-600">Kinh tế vĩ mô</span>
                 <span className="mx-2">•</span>
                 <span>2 giờ trước</span>
               </div>
@@ -189,13 +137,13 @@ export default function KinhDoanhPage() {
                     <div className="flex flex-col md:flex-row gap-4">
                       <div className="md:w-1/3 aspect-[4/3]">
                         <img
-                          src={`/placeholder.svg?height=200&width=300&text=Business ${item}`}
+                          src={`/business-placeholder.png?height=200&width=300&text=Business ${item}`}
                           alt={`Business News ${item}`}
                           className="w-full h-full object-cover rounded"
                         />
                       </div>
                       <div className="md:w-2/3">
-                        <h4 className="text-lg font-bold mb-2 hover:text-green-600">
+                        <h4 className="text-lg font-bold mb-2 hover:text-amber-600">
                           <Link href="/articles/13">
                             Tập đoàn Vingroup công bố kế hoạch mở rộng đầu tư vào lĩnh vực công nghệ
                           </Link>
@@ -204,7 +152,7 @@ export default function KinhDoanhPage() {
                           Vingroup dự kiến đầu tư hàng tỷ USD vào các dự án công nghệ cao trong 5 năm tới.
                         </p>
                         <div className="flex items-center text-xs text-gray-500">
-                          <span className="font-medium text-green-600">Doanh nghiệp</span>
+                          <span className="font-medium text-amber-600">Doanh nghiệp</span>
                           <span className="mx-2">•</span>
                           <span>4 giờ trước</span>
                         </div>
@@ -218,7 +166,7 @@ export default function KinhDoanhPage() {
             {/* Real Estate Section */}
             <div className="mb-12">
               <div className="flex items-center mb-6">
-                <div className="w-1 h-6 bg-green-600 mr-3"></div>
+                <div className="w-1 h-6 bg-amber-600 mr-3"></div>
                 <h3 className="text-xl font-bold">Bất động sản</h3>
               </div>
 
@@ -233,7 +181,7 @@ export default function KinhDoanhPage() {
                       />
                     </div>
                     <div className="p-4">
-                      <h4 className="font-bold mb-2 hover:text-green-600">
+                      <h4 className="font-bold mb-2 hover:text-amber-600">
                         <Link href="/articles/14">
                           Thị trường bất động sản phía Nam dự báo phục hồi mạnh vào cuối năm
                         </Link>
@@ -258,7 +206,7 @@ export default function KinhDoanhPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-bold flex items-center">
-                    <BarChart3 className="h-5 w-5 mr-2 text-green-600" />
+                    <BarChart3 className="h-5 w-5 mr-2 text-amber-600" />
                     Cổ phiếu nổi bật
                   </h3>
                   <Button variant="outline" size="sm" className="text-xs">
@@ -298,7 +246,7 @@ export default function KinhDoanhPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-bold flex items-center">
-                    <DollarSign className="h-5 w-5 mr-2 text-green-600" />
+                    <DollarSign className="h-5 w-5 mr-2 text-amber-600" />
                     Tỷ giá ngoại tệ
                   </h3>
                 </div>

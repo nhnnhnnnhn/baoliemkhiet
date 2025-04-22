@@ -3,88 +3,33 @@ import { CalendarIcon, ChevronRightIcon, Cpu, Smartphone, Laptop, Wifi } from "l
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { SiteHeader } from "@/components/site-header"
 import { ChatbotButton } from "@/components/chatbot-button"
+import { SiteFooter } from "@/components/site-footer"
+import { CategoryHeader } from "@/components/category-header"
 
-// Giữ nguyên nội dung trang Công nghệ nhưng thêm SiteHeader
 export default function CongNghePage() {
   return (
     <>
       <SiteHeader />
+
+      <CategoryHeader
+        title="Công nghệ"
+        description="Tin tức công nghệ, sản phẩm mới, đánh giá thiết bị và xu hướng công nghệ mới nhất"
+        icon={<Cpu className="h-6 w-6 text-white" />}
+        color="bg-gradient-to-r from-purple-900 to-purple-700"
+        textColor="text-purple-600"
+        tabs={[
+          { value: "all", label: "Tất cả" },
+          { value: "mobile", label: "Di động" },
+          { value: "ai", label: "Trí tuệ nhân tạo" },
+          { value: "software", label: "Phần mềm" },
+          { value: "hardware", label: "Phần cứng" },
+          { value: "internet", label: "Internet" },
+        ]}
+      />
+
       <div className="min-h-screen bg-white">
-        {/* Header */}
-        <header className="border-b border-gray-200 bg-gradient-to-r from-purple-900 to-purple-700 text-white">
-          <div className="container mx-auto px-4 py-8">
-            <div className="flex items-center text-sm mb-4">
-              <Link href="/" className="text-purple-100 hover:text-white">
-                Trang chủ
-              </Link>
-              <span className="mx-2">/</span>
-              <span className="font-medium">Công nghệ</span>
-            </div>
-            <div className="flex items-center">
-              <Cpu className="h-8 w-8 mr-3" />
-              <h1 className="text-4xl font-serif font-bold">Công nghệ</h1>
-            </div>
-            <div className="flex items-center mt-2 text-sm text-purple-100">
-              <CalendarIcon className="h-4 w-4 mr-1" />
-              {new Date().toLocaleDateString("vi-VN", {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })}
-            </div>
-          </div>
-        </header>
-
-        {/* Category Navigation */}
-        <div className="border-b border-gray-200 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <Tabs defaultValue="all" className="py-2">
-              <TabsList className="bg-transparent h-auto p-0 w-full justify-start space-x-8 overflow-x-auto flex-nowrap">
-                <TabsTrigger
-                  value="all"
-                  className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-purple-600 data-[state=active]:text-purple-600 rounded-none pb-3 px-1"
-                >
-                  Tất cả
-                </TabsTrigger>
-                <TabsTrigger
-                  value="mobile"
-                  className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-purple-600 data-[state=active]:text-purple-600 rounded-none pb-3 px-1"
-                >
-                  Di động
-                </TabsTrigger>
-                <TabsTrigger
-                  value="ai"
-                  className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-purple-600 data-[state=active]:text-purple-600 rounded-none pb-3 px-1"
-                >
-                  Trí tuệ nhân tạo
-                </TabsTrigger>
-                <TabsTrigger
-                  value="software"
-                  className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-purple-600 data-[state=active]:text-purple-600 rounded-none pb-3 px-1"
-                >
-                  Phần mềm
-                </TabsTrigger>
-                <TabsTrigger
-                  value="hardware"
-                  className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-purple-600 data-[state=active]:text-purple-600 rounded-none pb-3 px-1"
-                >
-                  Phần cứng
-                </TabsTrigger>
-                <TabsTrigger
-                  value="internet"
-                  className="text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-purple-600 data-[state=active]:text-purple-600 rounded-none pb-3 px-1"
-                >
-                  Internet
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-        </div>
-
         {/* Tech Highlights */}
         <div className="bg-gray-50 border-b border-gray-200">
           <div className="container mx-auto px-4 py-6">
@@ -376,6 +321,8 @@ export default function CongNghePage() {
           <ChatbotButton />
         </div>
       </div>
+
+      <SiteFooter />
     </>
   )
 }
