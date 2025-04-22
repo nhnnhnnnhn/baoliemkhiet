@@ -37,8 +37,10 @@ async function loginUser(email, password) {
   };
 }
 
-async function registerUser(email, password, fullname, bio, avatar, role, otp) {
-  await this.verifyOtp(email, otp, action);
+async function registerUser(email, password, fullname, bio, avatar, role, otp, action) {
+  const verify = await verifyOtp(email, otp, action);
+  
+  
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
     throw new Error("Email already exists");

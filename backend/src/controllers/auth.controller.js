@@ -20,13 +20,15 @@ const login = controllerHandler(async (req, res) => {
 });
 
 const register = controllerHandler(async (req, res) => {
-  const { email, password, fullname } = req.body;
-  const user = await authService.registerUser(email, password, fullname);
+  const { email, password, fullname,bio, avatar, role, otp, action } = req.body;
+  const user = await authService.registerUser(email, password, fullname, bio, avatar, role, otp, action);
   res.status(201).json({
     id: user.id,
     email: user.email,
     name: user.name,
     role: user.role,
+    bio: user.bio,
+    avatar: user.avatar,    
   });
 });
 

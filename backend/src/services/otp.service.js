@@ -39,14 +39,15 @@ async function sendOtp(email, action) {
   return otp;
 }
 
-async function verifyOtp(email, code, action) {
-  const otp = await this.prisma.otp.findFirst({
+async function verifyOtp(email, code, action) {    
+  const otp = await prisma.otp.findFirst({
     where: {
-      email,
-      code,
-      action,
-    },
+      email: email,
+      code: code,
+      action: action,
+    } 
   });
+  
   if (!otp) {
     throw new Error("Invalid OTP");
   }
