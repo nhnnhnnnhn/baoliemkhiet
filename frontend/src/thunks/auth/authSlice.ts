@@ -1,5 +1,5 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
-import { handleLogin, handleLogout, handleGetProfile } from './authThunk';
+import { handleLogin, handleLogout, handleGetProfile, handleSendOtp, handleVerifyOtp } from './authThunk';
 import type { RootState } from '../../store';
 
 export interface User {
@@ -15,6 +15,11 @@ interface AuthState {
   logging: boolean;
   user: User | null;
   accessToken: string | null;
+  otpSending: boolean;
+  otpVerifying: boolean;
+  otpSent: boolean;
+  otpVerified: boolean;
+  otpError: string | null;
 }
 
 const initialState: AuthState = {
@@ -22,6 +27,11 @@ const initialState: AuthState = {
   logging: false,
   user: null,
   accessToken: typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null,
+  otpSending: false,
+  otpVerifying: false,
+  otpSent: false,
+  otpVerified: false,
+  otpError: null,
 };
 
 const authSlice = createSlice({
@@ -34,6 +44,36 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Send OTP
+      .addCase(handleSendOtp.pending, (state) => {
+        state.otpSending = true;
+        state.otpError = null;
+      })
+      .addCase(handleSendOtp.fulfilled, (state) => {
+        state.otpSending = false;
+        state.otpSent = true;
+        state.otpError = null;
+      })
+      .addCase(handleSendOtp.rejected, (state, action: any) => {
+        state.otpSending = false;
+        state.otpSent = false;
+        state.otpError = action.payload || 'Failed to send OTP';
+      })
+      // Verify OTP
+      .addCase(handleVerifyOtp.pending, (state) => {
+        state.otpVerifying = true;
+        state.otpError = null;
+      })
+      .addCase(handleVerifyOtp.fulfilled, (state) => {
+        state.otpVerifying = false;
+        state.otpVerified = true;
+        state.otpError = null;
+      })
+      .addCase(handleVerifyOtp.rejected, (state, action: any) => {
+        state.otpVerifying = false;
+        state.otpVerified = false;
+        state.otpError = action.payload || 'Failed to verify OTP';
+      })
       // Login
       .addCase(handleLogin.pending, (state) => {
         state.logging = true;
@@ -74,3 +114,8 @@ export const selectIsLoggedIn = (state: RootState) => state.auth.isLoggedIn;
 export const selectIsLogging = (state: RootState) => state.auth.logging;
 export const selectCurrentUser = (state: RootState) => state.auth.user;
 export const selectAccessToken = (state: RootState) => state.auth.accessToken;
+export const selectOtpSending = (state: RootState) => state.auth.otpSending;
+export const selectOtpVerifying = (state: RootState) => state.auth.otpVerifying;
+export const selectOtpSent = (state: RootState) => state.auth.otpSent;
+export const selectOtpVerified = (state: RootState) => state.auth.otpVerified;
+export const selectOtpError = (state: RootState) => state.auth.otpError;

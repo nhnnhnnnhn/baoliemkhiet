@@ -1,12 +1,24 @@
 import axios, { AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
 
 const axiosClient = axios.create({
-  baseURL: 'http://localhost:3000/api', // Backend server running on port 3000
+  baseURL: 'http://localhost:3000/api',
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Important for handling cookies & CORS
+  withCredentials: true,
+  timeout: 10000, // Set timeout to 10 seconds
 });
+
+// Add a request interceptor to handle errors
+axiosClient.interceptors.request.use(
+  (config) => {
+    // Reset error message on new request
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Add a request interceptor
 axiosClient.interceptors.request.use(
@@ -53,15 +65,17 @@ axiosClient.interceptors.response.use(
       }
     }
     
-    // Return error message from response if available
-    // Format error message based on response
-    const errorMessage = error.response?.data?.message || error.message || 'Có lỗi xảy ra, vui lòng thử lại';
+    let errorMessage = 'Có lỗi xảy ra, vui lòng thử lại';
     
-    // If network error
     if (!error.response) {
-      return Promise.reject('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.');
+      errorMessage = 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.';
+    } else if (error.response.data && error.response.data.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.message) {
+      errorMessage = error.message;
     }
     
+    console.error('API Error:', errorMessage);
     return Promise.reject(errorMessage);
   }
 );
