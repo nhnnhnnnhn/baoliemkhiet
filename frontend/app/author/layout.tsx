@@ -4,6 +4,7 @@ import type React from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { FileText, Home, LogOut, Menu, MessageSquare, Settings, User, Edit, ChevronDown } from "lucide-react"
+import { useLogout } from "@/hooks/use-logout"
 import { usePathname } from "next/navigation"
 import { Suspense } from "react"
 
@@ -105,6 +106,7 @@ function AuthorHeaderBreadcrumb() {
 }
 
 export default function AuthorLayout({ children }: { children: React.ReactNode }) {
+  const logout = useLogout();
   // Define fallback image sources
   const avatarFallbackSrc = "/abstract-user-icon.png"
 
@@ -187,7 +189,12 @@ export default function AuthorLayout({ children }: { children: React.ReactNode }
               <MessageSquare className="h-5 w-5" />
             </Button>
             <Separator orientation="vertical" className="h-6" />
-            <Button variant="ghost" size="sm" className="gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2"
+              onClick={logout}
+            >
               <LogOut className="h-4 w-4" />
               Đăng xuất
             </Button>

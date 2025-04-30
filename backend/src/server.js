@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const jwt = require("jsonwebtoken");
+const cors = require('cors');
 const { PrismaClient } = require("@prisma/client");
 const http = require("http");
 const morgan = require("./configs/morgan.config");
@@ -25,6 +26,13 @@ const configurationRoute = require("./routes/configuration.route");
 const prisma = new PrismaClient();
 
 const app = express();
+
+// CORS configuration
+app.use(cors({
+  origin: 'http://localhost:3001', // Allow frontend from port 3001
+  credentials: true, // Allow credentials (cookies)
+}));
+
 app.use(express.json());
 const server = http.createServer(app);
 

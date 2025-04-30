@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   SearchIcon,
   TrendingUpIcon,
@@ -10,13 +11,44 @@ import {
   MonitorIcon,
   ActivityIcon,
   NewspaperIcon,
+  User,
+  LogOut,
+  Settings,
 } from "lucide-react"
+import { useAppDispatch, useAppSelector } from "@/src/store"
+import { handleLogout, handleGetProfile } from "@/src/thunks/auth/authThunk"
 
 import { Button } from "@/components/ui/button"
 import { SafeLink } from "@/components/safe-link"
+import { UserAvatar } from "@/components/user-avatar"
+import { UserMenu } from "@/components/user-menu"
+import styles from "@/app/admin/admin.module.css"
 
 export function SiteHeader() {
   const [isScrolled, setIsScrolled] = useState(false)
+  const dispatch = useAppDispatch()
+  const auth = useAppSelector((state) => state.auth)
+
+  // Debug log
+  useEffect(() => {
+    console.log("Auth state:", auth)
+  }, [auth])
+  const router = useRouter()
+
+  // Fetch user profile when component mounts if we have an access token
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken')
+    if (accessToken && !auth.user) {
+      dispatch(handleGetProfile())
+        .unwrap()
+        .catch(() => {
+          // If getting profile fails, clear tokens and redirect to login
+          localStorage.removeItem('accessToken')
+          localStorage.removeItem('refreshToken')
+          router.push('/auth/login')
+        })
+    }
+  }, [dispatch, auth.user, router])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -101,7 +133,7 @@ export function SiteHeader() {
             </nav>
           </div>
 
-          {/* Nửa bên phải: Tìm kiếm, Đăng nhập, Đăng ký */}
+          {/* Nửa bên phải: Tìm kiếm và User Menu */}
           <div className="flex items-center space-x-2 md:space-x-4">
             <SafeLink href="/search">
               <Button
@@ -113,27 +145,35 @@ export function SiteHeader() {
                 <span className="sr-only">Tìm kiếm</span>
               </Button>
             </SafeLink>
-            <SafeLink href="/auth/login">
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`hidden sm:flex ${
-                  isScrolled ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"
-                }`}
-              >
-                ĐĂNG NHẬP
-              </Button>
-            </SafeLink>
-            <SafeLink href="/subscribe">
-              <Button
-                size="sm"
-                className={
-                  isScrolled ? "bg-black text-white hover:bg-gray-800" : "bg-white text-black hover:bg-gray-100"
-                }
-              >
-                ĐĂNG KÝ
-              </Button>
-            </SafeLink>
+            
+            {/* User Menu */}
+            {auth?.user ? (
+              <UserMenu user={auth.user} isScrolled={isScrolled} />
+            ) : (
+              <>
+                <SafeLink href="/auth/login">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`hidden sm:flex ${
+                      isScrolled ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"
+                    }`}
+                  >
+                    ĐĂNG NHẬP
+                  </Button>
+                </SafeLink>
+                <SafeLink href="/subscribe">
+                  <Button
+                    size="sm"
+                    className={
+                      isScrolled ? "bg-black text-white hover:bg-gray-800" : "bg-white text-black hover:bg-gray-100"
+                    }
+                  >
+                    ĐĂNG KÝ
+                  </Button>
+                </SafeLink>
+              </>
+            )}
           </div>
         </div>
       </div>

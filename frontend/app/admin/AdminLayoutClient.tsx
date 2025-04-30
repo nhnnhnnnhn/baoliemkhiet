@@ -3,8 +3,9 @@
 import type React from "react"
 import Link from "next/link"
 import { Home, Users, FileText, BarChart2, Settings, Menu, Search, ChevronDown, LogOut, User, Mail } from "lucide-react"
+import { useLogout } from "@/hooks/use-logout"
 import Image from "next/image"
-import { Suspense } from "react"
+import { Suspense, useState } from "react"
 import { usePathname } from "next/navigation"
 
 import { NotificationDropdown } from "@/components/notification-dropdown"
@@ -114,6 +115,7 @@ export default function AdminLayoutClient({
 }: {
   children: React.ReactNode
 }) {
+  const logout = useLogout()
   // Define fallback image sources
   const avatarFallbackSrc = "/abstract-user-icon.png"
   const smallAvatarFallbackSrc = "/abstract-user-icon.png"
@@ -176,7 +178,28 @@ export default function AdminLayoutClient({
               <NotificationDropdown />
             </div>
             <div className={styles.userDropdown}>
-              <div className={styles.userDropdownTrigger}>
+              <button
+                className={styles.userDropdownTrigger}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const dropdown = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (dropdown) {
+                    const isOpen = dropdown.style.display === 'block';
+                    dropdown.style.display = isOpen ? 'none' : 'block';
+                    
+                    // Click outside to close
+                    const closeDropdown = (e: MouseEvent) => {
+                      if (!dropdown.contains(e.target as Node)) {
+                        dropdown.style.display = 'none';
+                        document.removeEventListener('click', closeDropdown);
+                      }
+                    };
+                    if (!isOpen) {
+                      document.addEventListener('click', closeDropdown);
+                    }
+                  }
+                }}
+              >
                 <ImageWithFallback
                   src="/secure-admin-panel.png"
                   fallbackSrc={smallAvatarFallbackSrc}
@@ -187,8 +210,8 @@ export default function AdminLayoutClient({
                 />
                 <span className={styles.userDropdownName}>Admin User</span>
                 <ChevronDown size={16} />
-              </div>
-              <div className={styles.userDropdownMenu}>
+              </button>
+              <div className={styles.userDropdownMenu} style={{ display: 'none' }}>
                 <Link href="/admin/profile" className={styles.userDropdownItem}>
                   <User size={16} className="mr-2" />
                   Hồ sơ
@@ -198,10 +221,13 @@ export default function AdminLayoutClient({
                   Tin nhắn
                 </div>
                 <div className={styles.userDropdownDivider}></div>
-                <Link href="/auth/login" className={styles.userDropdownItem}>
+                <button
+                  onClick={logout}
+                  className={styles.userDropdownItem}
+                >
                   <LogOut size={16} className="mr-2" />
                   Đăng xuất
-                </Link>
+                </button>
               </div>
             </div>
           </div>
