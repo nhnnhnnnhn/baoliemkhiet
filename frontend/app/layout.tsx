@@ -5,6 +5,7 @@ import { Suspense } from "react"
 
 import "./globals.css"
 import Loading from "./loading"
+import Providers from "@/components/providers"
 
 // Sử dụng font Inter cho nội dung - font sans-serif hiện đại
 const inter = Inter({
@@ -34,7 +35,9 @@ export default function RootLayout({
   return (
     <html lang="vi" className={`${inter.variable} ${montserrat.variable}`}>
       <body className={inter.className}>
-        <Suspense fallback={<Loading />}>{children}</Suspense>
+        <Providers>
+          <Suspense fallback={<Loading />}>{children}</Suspense>
+        </Providers>
       </body>
     </html>
   )

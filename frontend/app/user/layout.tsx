@@ -6,6 +6,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Bell, ChevronDown, CreditCard, Home, LogOut, Menu, Search, Settings, User } from "lucide-react"
+import { useLogout } from "@/hooks/use-logout"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,7 +15,9 @@ import styles from "../admin/admin.module.css"
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
   const pathname = usePathname()
+  const logout = useLogout()
 
   const isActive = (path: string) => {
     if (path === "/user" && pathname === "/user") {
@@ -89,7 +92,12 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
             <div className={styles.userName}>Nguyễn Văn A</div>
             <div className={styles.userRole}>Độc giả</div>
           </div>
-          <Button variant="ghost" size="icon" className={styles.userAction}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={styles.userAction}
+            onClick={logout}
+          >
             <LogOut className="h-4 w-4" />
           </Button>
         </div>
@@ -130,12 +138,15 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
               <span className={styles.notificationBadge}>2</span>
             </Button>
             <div className={styles.userDropdown}>
-              <div className={styles.userDropdownTrigger}>
+              <div
+                className={styles.userDropdownTrigger}
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+              >
                 <img src="/placeholder.svg?height=32&width=32" alt="User" className={styles.userDropdownAvatar} />
                 <span className={styles.userDropdownName}>Nguyễn Văn A</span>
                 <ChevronDown className="h-4 w-4 opacity-50" />
               </div>
-              <div className={styles.userDropdownMenu}>
+              <div className={styles.userDropdownMenu} style={{ display: dropdownOpen ? 'block' : 'none' }}>
                 <Link href="/user/profile" className={styles.userDropdownItem}>
                   <User className="h-4 w-4 mr-2" />
                   Hồ sơ cá nhân
@@ -145,10 +156,13 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                   Cài đặt
                 </Link>
                 <div className={styles.userDropdownDivider}></div>
-                <Link href="/auth/login" className={styles.userDropdownItem}>
+                <button
+                  className={styles.userDropdownItem}
+                  onClick={logout}
+                >
                   <LogOut className="h-4 w-4 mr-2" />
                   Đăng xuất
-                </Link>
+                </button>
               </div>
             </div>
           </div>
