@@ -6,8 +6,11 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Eye, EyeOff, Lock, Mail, User } from "lucide-react"
+import { useAppDispatch, useAppSelector } from "@/src/store"
+import { selectOtpSending, selectOtpVerifying, selectOtpError } from "@/src/thunks/auth/authSlice"
 
 import { Button } from "@/components/ui/button"
+import { handleSendOtp, handleVerifyOtp, handleRegister } from "@/src/thunks/auth/authThunk"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,14 +18,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export default function RegisterPage() {
   const router = useRouter()
+  const dispatch = useAppDispatch()
   const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState("")
+  const [isOtpSent, setIsOtpSent] = useState(false)
+  const [isOtpVerified, setIsOtpVerified] = useState(false)
+  
+  // Get OTP states from Redux
+  const otpSending = useAppSelector(selectOtpSending)
+  const otpVerifying = useAppSelector(selectOtpVerifying)
+  const otpError = useAppSelector(selectOtpError)
+  const loading = otpSending || otpVerifying
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
-    accountType: "reader",
+    accountType: "user",
     agreeTerms: false,
+    otp: "",
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,24 +61,133 @@ export default function RegisterPage() {
     }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSendOtpClick = async () => {
+    if (!formData.email) {
+      setError("Vui lòng nhập email trước khi gửi mã OTP")
+      return
+    }
+
+    setError("")
+    
+    try {
+      const result = await dispatch(handleSendOtp({
+        email: formData.email,
+        action: "REGISTER"
+      })).unwrap()
+      
+      setIsOtpSent(true)
+      setIsOtpSent(true)
+      setError("Mã OTP đã được gửi đến email của bạn. Mã có hiệu lực trong 5 phút.")
+    } catch (error) {
+      setIsOtpSent(false)
+      const errorMessage = typeof error === 'string' ? error : 'Có lỗi xảy ra khi gửi mã OTP';
+      if (errorMessage === "Email already exists") {
+        setError("Email này đã được đăng ký")
+      } else {
+        setError(errorMessage)
+      }
+    }
+  }
+
+  const handleVerifyOtpClick = async () => {
+    if (!formData.otp) {
+      setError("Vui lòng nhập mã OTP")
+      return
+    }
+
+    setError("")
+
+    try {
+      const result = await dispatch(handleVerifyOtp({
+        email: formData.email,
+        code: formData.otp,
+        action: "REGISTER"
+      })).unwrap()
+      
+      setIsOtpVerified(true)
+      setIsOtpVerified(true)
+      setError("Xác thực OTP thành công")
+    } catch (error) {
+      setIsOtpVerified(false)
+      const errorMessage = typeof error === 'string' ? error : 'Có lỗi xảy ra khi xác thực OTP';
+      if (errorMessage === "Invalid OTP") {
+        setError("Mã OTP không chính xác hoặc đã hết hạn")
+      } else {
+        setError(errorMessage)
+      }
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
 
     if (formData.password !== formData.confirmPassword) {
-      alert("Mật khẩu không khớp!")
+      setError("Mật khẩu không khớp!")
       return
     }
 
     if (!formData.agreeTerms) {
-      alert("Bạn cần đồng ý với điều khoản dịch vụ!")
+      setError("Bạn cần đồng ý với điều khoản dịch vụ!")
       return
     }
 
-    // Simulate registration - in a real app, this would be an API call
-    console.log("Registration data:", formData)
+    if (!isOtpVerified) {
+      setError("Vui lòng xác thực mã OTP trước khi đăng ký")
+      return
+    }
 
-    // Redirect to login page
-    router.push("/auth/login")
+    setError("")
+
+    try {
+      // First verify if OTP is still valid
+      if (!isOtpVerified) {
+        setError("Vui lòng xác thực OTP trước khi đăng ký");
+        return;
+      }
+
+      const registerPayload = {
+        email: formData.email,
+        password: formData.password,
+        fullname: formData.fullName,
+        role: formData.accountType === 'journalist' ? 'JOURNALIST' : 'USER',
+        otp: formData.otp,
+        action: 'REGISTER',
+        bio: null,
+        avatar: null
+      };
+
+      console.log('Sending registration request with:', registerPayload);
+
+      const result = await dispatch(handleRegister(registerPayload)).unwrap();
+      
+      console.log('Registration successful:', result);
+      setError('Đăng ký thành công! Đang chuyển hướng đến trang đăng nhập...');
+      
+      // Delay redirect to show success message
+      setTimeout(() => {
+        router.push("/auth/login");
+      }, 2000);
+      
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      
+      // Handle specific error messages
+      if (error.includes('Email đã được đăng ký')) {
+        setError('Email này đã được đăng ký. Vui lòng sử dụng email khác.');
+      } else if (error.includes('OTP')) {
+        setError('Mã OTP không hợp lệ hoặc đã hết hạn. Vui lòng thử lại.');
+        setIsOtpVerified(false);
+      } else {
+        setError(error || 'Có lỗi xảy ra trong quá trình đăng ký. Vui lòng thử lại.');
+      }
+
+      // Scroll to error message
+      const errorElement = document.querySelector('.error-message');
+      if (errorElement) {
+        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
   }
 
   return (
@@ -101,6 +224,18 @@ export default function RegisterPage() {
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div
+              className={`p-3 text-sm rounded-md border error-message ${
+                error.includes("thành công")
+                  ? "text-green-500 bg-green-50 border-green-200"
+                  : "text-red-500 bg-red-50 border-red-200"
+              }`}
+            >
+              <p className="font-medium">{error.includes("thành công") ? "Thành công!" : "Lỗi!"}</p>
+              <p>{error}</p>
+            </div>
+          )}
           <div className="space-y-4">
             <div>
               <Label htmlFor="fullName">Họ và tên</Label>
@@ -195,14 +330,64 @@ export default function RegisterPage() {
             </div>
 
             <div>
+              <Label htmlFor="otp">Mã OTP</Label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <Input
+                  id="otp"
+                  name="otp"
+                  type="text"
+                  required
+                  className="pr-24"
+                  placeholder="Nhập mã OTP"
+                  value={formData.otp}
+                  onChange={handleChange}
+                />
+                <div className="absolute inset-y-0 right-0 flex py-1.5 pr-1.5">
+                  {!isOtpSent ? (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleSendOtpClick}
+                      disabled={loading || !formData.email}
+                    >
+                      Gửi mã
+                    </Button>
+                  ) : !isOtpVerified ? (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleVerifyOtpClick}
+                      disabled={loading || !formData.otp}
+                    >
+                      Xác thực
+                    </Button>
+                  ) : (
+                    <div className="text-green-600 flex items-center pr-3">
+                      ✓ Đã xác thực
+                    </div>
+                  )}
+                </div>
+              </div>
+              {isOtpSent && !isOtpVerified && (
+                <p className="mt-1 text-sm text-gray-600">
+                  Mã OTP đã được gửi đến email của bạn.<br/>
+                  Vui lòng kiểm tra hòm thư (kể cả thư rác) và nhập mã trong vòng 5 phút.<br/>
+                  Nếu không nhận được, hãy thử kiểm tra email đã nhập chính xác chưa và thử lại.
+                </p>
+              )}
+            </div>
+
+            <div>
               <Label htmlFor="accountType">Loại tài khoản</Label>
               <Select value={formData.accountType} onValueChange={(value) => handleSelectChange("accountType", value)}>
                 <SelectTrigger id="accountType" className="mt-1">
                   <SelectValue placeholder="Chọn loại tài khoản" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="reader">Độc giả</SelectItem>
-                  <SelectItem value="author">Tác giả</SelectItem>
+                  <SelectItem value="user">Độc giả</SelectItem>
+                  <SelectItem value="journalist">Tác giả</SelectItem>
                 </SelectContent>
               </Select>
               <p className="mt-1 text-xs text-gray-500">
@@ -226,8 +411,8 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <Button type="submit" className="w-full">
-              Đăng ký
+            <Button type="submit" className="w-full" disabled={loading || !isOtpVerified}>
+              {loading ? "Đang xử lý..." : "Đăng ký"}
             </Button>
           </div>
         </form>
