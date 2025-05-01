@@ -175,3 +175,23 @@ export const handleGetUserById = createAsyncThunk(
     }
   }
 );
+
+export const handleDeleteUser = createAsyncThunk(
+  'auth/deleteUser',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      console.log(`Đang gọi API xóa người dùng với ID: ${id}`);
+      await userApi.deleteUser(id);
+      return id; // Trả về id của người dùng đã xóa để cập nhật state
+    } catch (error: any) {
+      console.error('Lỗi khi xóa người dùng:', error);
+      
+      if (error.response?.status === 403) {
+        return rejectWithValue('Bạn không có quyền xóa người dùng này');
+      } else if (error.response?.data?.message) {
+        return rejectWithValue(error.response.data.message);
+      }
+      return rejectWithValue('Có lỗi xảy ra khi xóa người dùng: ' + (error.toString() || 'Lỗi không xác định'));
+    }
+  }
+);

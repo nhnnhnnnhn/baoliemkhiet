@@ -1,22 +1,45 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Edit, Mail, MapPin, Phone, Bug } from "lucide-react"
+import { ArrowLeft, Edit, Mail, Trash2, AlertTriangle, Loader2 } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "@/src/store"
-import { handleGetUserById } from "@/src/thunks/auth/authThunk"
-import { selectLoadingUserDetails, selectSelectedUser, selectUserDetailsError } from "@/src/thunks/auth/authSlice"
+import { handleGetUserById, handleDeleteUser } from "@/src/thunks/auth/authThunk"
+import { 
+  selectLoadingUserDetails, 
+  selectSelectedUser, 
+  selectUserDetailsError, 
+  selectDeletingUser,
+  selectDeleteUserError,
+  selectDeleteUserSuccess
+} from "@/src/thunks/auth/authSlice"
 
 import { Button } from "@/components/ui/button"
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog"
+import { useToast } from "@/hooks/use-toast"
 import styles from "../../admin.module.css"
-import { User } from "@/src/apis/user"
 
 export default function UserDetailPage({ params }: { params: { id: string } }) {
+  const router = useRouter()
   const dispatch = useAppDispatch()
+  const { toast } = useToast()
   const user = useAppSelector(selectSelectedUser)
   const loading = useAppSelector(selectLoadingUserDetails)
   const error = useAppSelector(selectUserDetailsError)
-  const [showDebug, setShowDebug] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
+  // Thêm selectors cho thao tác xóa
+  const deleting = useAppSelector(selectDeletingUser)
+  const deleteError = useAppSelector(selectDeleteUserError)
+  const deleteSuccess = useAppSelector(selectDeleteUserSuccess)
 
   useEffect(() => {
     if (params.id) {
@@ -26,6 +49,37 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
       }, 300)
     }
   }, [params.id, dispatch])
+
+  // Xử lý sau khi xóa thành công
+  useEffect(() => {
+    if (deleteSuccess) {
+      toast({
+        title: "Xóa người dùng thành công",
+        description: `Người dùng với ID ${params.id} đã được xóa.`,
+      })
+      // Điều hướng về trang danh sách người dùng
+      router.push('/admin/users')
+    }
+  }, [deleteSuccess, router, params.id, toast])
+
+  // Xử lý hiển thị lỗi khi xóa
+  useEffect(() => {
+    if (deleteError) {
+      toast({
+        title: "Lỗi khi xóa người dùng",
+        description: deleteError,
+        variant: "destructive",
+      })
+    }
+  }, [deleteError, toast])
+
+  // Hàm xử lý xóa người dùng
+  const handleDelete = () => {
+    if (user && user.id) {
+      dispatch(handleDeleteUser(user.id))
+    }
+    setShowDeleteDialog(false)
+  }
 
   if (loading) {
     return (
@@ -129,25 +183,30 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={() => setShowDebug(!showDebug)}>
-            <Bug className="h-4 w-4" />
-          </Button>
           <Link href={`/admin/users/${userData.id}/edit`}>
-            <Button>
+            <Button className="mr-2">
               <Edit className="h-4 w-4 mr-2" />
               Chỉnh sửa
             </Button>
           </Link>
+          <Button 
+            variant="destructive" 
+            onClick={() => setShowDeleteDialog(true)}
+            disabled={user.role === "ADMIN" || deleting}>
+            {deleting ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Đang xóa...
+              </>
+            ) : (
+              <>
+                <Trash2 className="h-4 w-4 mr-2" />
+                Xóa
+              </>
+            )}
+          </Button>
         </div>
       </div>
-
-      {/* Debug Panel */}
-      {showDebug && (
-        <div className="mb-6 p-4 bg-gray-100 rounded-md overflow-auto">
-          <h3 className="font-semibold mb-2">Debug - Dữ liệu người dùng từ API:</h3>
-          <pre className="text-xs">{JSON.stringify(user, null, 2)}</pre>
-        </div>
-      )}
 
       {/* User Profile */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -298,6 +357,42 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center text-red-600">
+              <AlertTriangle className="h-5 w-5 mr-2 text-red-600" />
+              Xác nhận xóa người dùng
+            </DialogTitle>
+          </DialogHeader>
+          <DialogDescription className="py-4">
+            <p>Bạn có chắc chắn muốn xóa người dùng <strong>{userData.name}</strong> không?</p>
+            <p className="mt-2">Hành động này không thể hoàn tác và tất cả dữ liệu liên quan đến người dùng này sẽ bị xóa vĩnh viễn.</p>
+            <p className="mt-2 text-red-500">Nếu người dùng là tác giả của các bài viết, những bài viết đó cũng sẽ bị xóa!</p>
+          </DialogDescription>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              Hủy
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Đang xóa...
+                </>
+              ) : (
+                "Xóa người dùng"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

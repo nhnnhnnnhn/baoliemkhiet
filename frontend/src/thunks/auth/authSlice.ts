@@ -6,7 +6,8 @@ import {
   handleSendOtp,
   handleVerifyOtp,
   handleChangePassword,
-  handleGetUserById
+  handleGetUserById,
+  handleDeleteUser
 } from './authThunk';
 import type { RootState } from '../../store';
 
@@ -51,10 +52,13 @@ export interface AuthState {
   selectedUser: User | null;
   loadingUserDetails: boolean;
   userDetailsError: string | null;
+  deletingUser: boolean;
+  deleteUserError: string | null;
+  deleteUserSuccess: boolean;
 }
 
 const initialState: AuthState = {
-  isLoggedIn: false,
+  isLoggedIn: typeof window !== 'undefined' ? !!localStorage.getItem('accessToken') : false,
   logging: false,
   user: null,
   accessToken: typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null,
@@ -67,7 +71,10 @@ const initialState: AuthState = {
   changePasswordError: null,
   selectedUser: null,
   loadingUserDetails: false,
-  userDetailsError: null
+  userDetailsError: null,
+  deletingUser: false,
+  deleteUserError: null,
+  deleteUserSuccess: false
 };
 
 const authSlice = createSlice({
@@ -77,6 +84,10 @@ const authSlice = createSlice({
     updateUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
     },
+    setTokenFromStorage: (state, action: PayloadAction<{accessToken: string | null, isLoggedIn: boolean}>) => {
+      state.accessToken = action.payload.accessToken;
+      state.isLoggedIn = action.payload.isLoggedIn;
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -139,7 +150,12 @@ const authSlice = createSlice({
         state.accessToken = null;
       })
       // Get Profile
+      .addCase(handleGetProfile.pending, (state) => {
+        // Không thay đổi trạng thái isLoggedIn khi đang gọi API
+      })
       .addCase(handleGetProfile.fulfilled, (state, action) => {
+        // Đặt isLoggedIn = true khi lấy thông tin người dùng thành công
+        state.isLoggedIn = true;
         // Ánh xạ từ name sang fullname nếu API trả về name thay vì fullname
         if (action.payload.data) {
           state.user = {
@@ -147,6 +163,12 @@ const authSlice = createSlice({
             fullname: action.payload.data.fullname || action.payload.data.name || '',
           };
         }
+      })
+      .addCase(handleGetProfile.rejected, (state) => {
+        // Khi lấy thông tin người dùng thất bại, đặt isLoggedIn = false
+        state.isLoggedIn = false;
+        state.user = null;
+        state.accessToken = null;
       })
       
       // Change Password
@@ -179,12 +201,28 @@ const authSlice = createSlice({
         state.loadingUserDetails = false;
         state.selectedUser = null;
         state.userDetailsError = action.payload;
+      })
+      // Delete User
+      .addCase(handleDeleteUser.pending, (state) => {
+        state.deletingUser = true;
+        state.deleteUserError = null;
+        state.deleteUserSuccess = false;
+      })
+      .addCase(handleDeleteUser.fulfilled, (state) => {
+        state.deletingUser = false;
+        state.deleteUserSuccess = true;
+        state.deleteUserError = null;
+      })
+      .addCase(handleDeleteUser.rejected, (state, action: any) => {
+        state.deletingUser = false;
+        state.deleteUserError = action.payload;
+        state.deleteUserSuccess = false;
       });
   },
 });
 
 // Export actions
-export const { updateUser } = authSlice.actions;
+export const { updateUser, setTokenFromStorage } = authSlice.actions;
 
 // Export reducer
 export default authSlice.reducer;
@@ -204,3 +242,6 @@ export const selectChangePasswordError = (state: RootState) => state.auth.change
 export const selectSelectedUser = (state: RootState) => state.auth.selectedUser;
 export const selectLoadingUserDetails = (state: RootState) => state.auth.loadingUserDetails;
 export const selectUserDetailsError = (state: RootState) => state.auth.userDetailsError;
+export const selectDeletingUser = (state: RootState) => state.auth.deletingUser;
+export const selectDeleteUserError = (state: RootState) => state.auth.deleteUserError;
+export const selectDeleteUserSuccess = (state: RootState) => state.auth.deleteUserSuccess;
