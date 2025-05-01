@@ -31,7 +31,7 @@ async function loginUser(email, password) {
     user: {
       id: user.id,
       email: user.email,
-      name: user.name,
+      fullname: user.fullname || user.name, // Trả về fullname thay vì name
       role: user.role,
     },
   };

@@ -15,6 +15,7 @@ export interface User {
   fullname: string;
   role: string;
   avatar?: string;
+  name?: string; // Optional property to handle cases where 'name' is returned
 }
 
 export interface AuthState {
@@ -92,7 +93,13 @@ const authSlice = createSlice({
       .addCase(handleLogin.fulfilled, (state, action) => {
         state.isLoggedIn = true;
         state.logging = false;
-        state.user = action.payload.user;
+        // Ánh xạ từ name sang fullname nếu API trả về name thay vì fullname
+        if (action.payload.user) {
+          state.user = {
+            ...action.payload.user,
+            fullname: action.payload.user.fullname || action.payload.user.name || '',
+          };
+        }
         state.accessToken = action.payload.accessToken;
       })
       .addCase(handleLogin.rejected, (state) => {
@@ -109,7 +116,13 @@ const authSlice = createSlice({
       })
       // Get Profile
       .addCase(handleGetProfile.fulfilled, (state, action) => {
-        state.user = action.payload.data;
+        // Ánh xạ từ name sang fullname nếu API trả về name thay vì fullname
+        if (action.payload.data) {
+          state.user = {
+            ...action.payload.data,
+            fullname: action.payload.data.fullname || action.payload.data.name || '',
+          };
+        }
       })
       
       // Change Password
