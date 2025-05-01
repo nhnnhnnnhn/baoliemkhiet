@@ -1,5 +1,12 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
-import { handleLogin, handleLogout, handleGetProfile, handleSendOtp, handleVerifyOtp } from './authThunk';
+import {
+  handleLogin,
+  handleLogout,
+  handleGetProfile,
+  handleSendOtp,
+  handleVerifyOtp,
+  handleChangePassword
+} from './authThunk';
 import type { RootState } from '../../store';
 
 export interface User {
@@ -10,7 +17,7 @@ export interface User {
   avatar?: string;
 }
 
-interface AuthState {
+export interface AuthState {
   isLoggedIn: boolean;
   logging: boolean;
   user: User | null;
@@ -20,6 +27,8 @@ interface AuthState {
   otpSent: boolean;
   otpVerified: boolean;
   otpError: string | null;
+  changingPassword: boolean;
+  changePasswordError: string | null;
 }
 
 const initialState: AuthState = {
@@ -32,6 +41,8 @@ const initialState: AuthState = {
   otpSent: false,
   otpVerified: false,
   otpError: null,
+  changingPassword: false,
+  changePasswordError: null
 };
 
 const authSlice = createSlice({
@@ -99,6 +110,20 @@ const authSlice = createSlice({
       // Get Profile
       .addCase(handleGetProfile.fulfilled, (state, action) => {
         state.user = action.payload.data;
+      })
+      
+      // Change Password
+      .addCase(handleChangePassword.pending, (state) => {
+        state.changingPassword = true;
+        state.changePasswordError = null;
+      })
+      .addCase(handleChangePassword.fulfilled, (state) => {
+        state.changingPassword = false;
+        state.changePasswordError = null;
+      })
+      .addCase(handleChangePassword.rejected, (state, action: any) => {
+        state.changingPassword = false;
+        state.changePasswordError = action.payload;
       });
   },
 });
@@ -119,3 +144,5 @@ export const selectOtpVerifying = (state: RootState) => state.auth.otpVerifying;
 export const selectOtpSent = (state: RootState) => state.auth.otpSent;
 export const selectOtpVerified = (state: RootState) => state.auth.otpVerified;
 export const selectOtpError = (state: RootState) => state.auth.otpError;
+export const selectChangingPassword = (state: RootState) => state.auth.changingPassword;
+export const selectChangePasswordError = (state: RootState) => state.auth.changePasswordError;
