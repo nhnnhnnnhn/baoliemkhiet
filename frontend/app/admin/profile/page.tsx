@@ -2,16 +2,26 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { Calendar, Save, Upload, User } from "lucide-react"
+import { useState, useEffect } from "react"
+import { useDispatch, useSelector } from "react-redux"
+import { AppDispatch } from "@/src/store"
+import { handleChangePassword, handleLogout } from "@/src/thunks/auth/authThunk"
+import { selectChangingPassword, selectChangePasswordError } from "@/src/thunks/auth/authSlice"
+import { Calendar, CheckCircle, Save, Upload, User } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { useToast } from "@/hooks/use-toast"
 import styles from "../admin.module.css"
 
 export default function ProfilePage() {
+  const dispatch = useDispatch<AppDispatch>();
+  const isChangingPassword = useSelector(selectChangingPassword);
+  const changePasswordError = useSelector(selectChangePasswordError);
+  const { toast } = useToast();
+  
   // Mock user data
   const [user, setUser] = useState({
     id: "USR-001",
@@ -213,26 +223,119 @@ export default function ProfilePage() {
             </div>
             <div className="p-6">
               <div className="space-y-6">
-                <div>
-                  <Label htmlFor="current-password">Mật khẩu hiện tại</Label>
-                  <Input id="current-password" type="password" className="mt-1" placeholder="Nhập mật khẩu hiện tại" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const email = formData.get('email') as string;
+                  const oldPassword = formData.get('oldPassword') as string;
+                  const newPassword = formData.get('newPassword') as string;
+                  const confirmPassword = formData.get('confirmPassword') as string;
+
+                  if (newPassword !== confirmPassword) {
+                    toast({
+                      title: "Lỗi",
+                      description: "Mật khẩu xác nhận không khớp",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+
+                  try {
+                    await dispatch(handleChangePassword({ email, oldPassword, newPassword })).unwrap();
+                    
+                    // Hiển thị toast thông báo thành công
+                    toast({
+                      title: "Đổi mật khẩu thành công",
+                      description: "Bạn sẽ được đăng xuất trong giây lát",
+                      variant: "success",
+                      duration: 3000,
+                    });
+                    
+                    // Đặt timeout để tự động đăng xuất sau 3 giây
+                    setTimeout(() => {
+                      dispatch(handleLogout());
+                    }, 3000);
+                    
+                    // Reset form
+                    e.currentTarget.reset();
+                    
+                  } catch (error) {
+                    // Error will be shown through changePasswordError
+                  }
+                }}>
                   <div>
-                    <Label htmlFor="new-password">Mật khẩu mới</Label>
-                    <Input id="new-password" type="password" className="mt-1" placeholder="Nhập mật khẩu mới" />
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      className="mt-1"
+                      placeholder="Nhập email của bạn"
+                      required
+                    />
                   </div>
                   <div>
-                    <Label htmlFor="confirm-password">Xác nhận mật khẩu</Label>
-                    <Input id="confirm-password" type="password" className="mt-1" placeholder="Nhập lại mật khẩu mới" />
+                    <Label htmlFor="oldPassword">Mật khẩu hiện tại</Label>
+                    <Input
+                      id="oldPassword"
+                      name="oldPassword"
+                      type="password"
+                      className="mt-1"
+                      placeholder="Nhập mật khẩu hiện tại"
+                      required
+                    />
                   </div>
-                </div>
-                <div className="flex justify-end">
-                  <Button variant="outline" className="mr-2">
-                    Hủy
-                  </Button>
-                  <Button>Đổi mật khẩu</Button>
-                </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <div>
+                      <Label htmlFor="newPassword">Mật khẩu mới</Label>
+                      <Input
+                        id="newPassword"
+                        name="newPassword"
+                        type="password"
+                        className="mt-1"
+                        placeholder="Nhập mật khẩu mới"
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>
+                      <Input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type="password"
+                        className="mt-1"
+                        placeholder="Nhập lại mật khẩu mới"
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                  </div>
+                  {changePasswordError && (
+                    <div className="mt-2 text-red-500 text-sm">
+                      {changePasswordError}
+                    </div>
+                  )}
+                  <div className="flex justify-end mt-6">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="mr-2"
+                      onClick={() => {
+                        const form = document.querySelector('form') as HTMLFormElement;
+                        form?.reset();
+                      }}
+                    >
+                      Hủy
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={isChangingPassword}
+                    >
+                      {isChangingPassword ? 'Đang xử lý...' : 'Đổi mật khẩu'}
+                    </Button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>

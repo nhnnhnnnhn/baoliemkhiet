@@ -1,5 +1,13 @@
+"use client"
+
 import { Calendar, Mail, MapPin, Phone, User, FileText, MessageSquare } from "lucide-react"
 import Image from "next/image"
+import { useState, useEffect } from "react"
+import { useDispatch, useSelector } from "react-redux"
+import { AppDispatch } from "@/src/store"
+import { handleChangePassword, handleLogout } from "@/src/thunks/auth/authThunk"
+import { selectChangingPassword, selectChangePasswordError, selectCurrentUser } from "@/src/thunks/auth/authSlice"
+import { useToast } from "@/hooks/use-toast"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,6 +18,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 
 export default function AuthorProfilePage() {
+  const dispatch = useDispatch<AppDispatch>();
+  const isChangingPassword = useSelector(selectChangingPassword);
+  const changePasswordError = useSelector(selectChangePasswordError);
+  const user = useSelector(selectCurrentUser);
+  const { toast } = useToast();
+  
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row gap-6">
@@ -121,25 +135,94 @@ export default function AuthorProfilePage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="username">Tên đăng nhập</Label>
-                    <Input id="username" defaultValue="tranvanb" />
+                    <Label htmlFor="gmail">Gmail</Label>
+                    <Input id="gmail" defaultValue="tranvanb@gmail.com" />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Mật khẩu hiện tại</Label>
-                    <Input id="currentPassword" type="password" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="newPassword">Mật khẩu mới</Label>
-                    <Input id="newPassword" type="password" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Xác nhận mật khẩu mới</Label>
-                    <Input id="confirmPassword" type="password" />
-                  </div>
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    const oldPassword = formData.get('oldPassword') as string;
+                    const newPassword = formData.get('newPassword') as string;
+                    const confirmPassword = formData.get('confirmPassword') as string;
+
+                    if (newPassword !== confirmPassword) {
+                      toast({
+                        title: "Lỗi",
+                        description: "Mật khẩu xác nhận không khớp",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+
+                    try {
+                      // Sử dụng email của người dùng từ trạng thái Redux
+                      const email = user?.email || '';
+                      
+                      await dispatch(handleChangePassword({ email, oldPassword, newPassword })).unwrap();
+                      
+                      // Hiển thị toast thông báo thành công
+                      toast({
+                        title: "Đổi mật khẩu thành công",
+                        description: "Bạn sẽ được đăng xuất trong giây lát",
+                        variant: "success",
+                        duration: 3000,
+                      });
+                      
+                      // Đặt timeout để tự động đăng xuất sau 3 giây
+                      setTimeout(() => {
+                        dispatch(handleLogout());
+                      }, 3000);
+                      
+                      // Reset form
+                      e.currentTarget.reset();
+                      
+                    } catch (error) {
+                      // Error will be shown through changePasswordError
+                    }
+                  }}>
+                    <div className="space-y-2">
+                      <Label htmlFor="oldPassword">Mật khẩu hiện tại</Label>
+                      <Input 
+                        id="oldPassword" 
+                        name="oldPassword"
+                        type="password"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="newPassword">Mật khẩu mới</Label>
+                      <Input 
+                        id="newPassword" 
+                        name="newPassword"
+                        type="password"
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Xác nhận mật khẩu mới</Label>
+                      <Input 
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type="password"
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                    
+                    {changePasswordError && (
+                      <div className="mt-2 text-red-500 text-sm">
+                        {changePasswordError}
+                      </div>
+                    )}
+                    
+                    <CardFooter className="flex justify-end px-0 pt-4">
+                      <Button type="submit" disabled={isChangingPassword}>
+                        {isChangingPassword ? 'Đang xử lý...' : 'Cập nhật mật khẩu'}
+                      </Button>
+                    </CardFooter>
+                  </form>
                 </CardContent>
-                <CardFooter className="flex justify-end">
-                  <Button>Cập nhật mật khẩu</Button>
-                </CardFooter>
               </Card>
             </TabsContent>
             <TabsContent value="preferences" className="space-y-4 mt-4">

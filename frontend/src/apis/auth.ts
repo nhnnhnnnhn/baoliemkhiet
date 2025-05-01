@@ -74,6 +74,14 @@ const authApi = {
   async getProfile() {
     return await axiosClient.get('/auth/profile');
   },
+
+  async changePassword(email: string, oldPassword: string, newPassword: string) {
+    return await axiosClient.post('/auth/change-password', {
+      email,
+      oldPassword,
+      newPassword
+    });
+  },
 };
 
 export default authApi;

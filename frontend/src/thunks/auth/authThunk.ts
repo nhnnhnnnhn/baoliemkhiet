@@ -128,3 +128,28 @@ export const handleRegister = createAsyncThunk(
     }
   }
 );
+
+interface ChangePasswordPayload {
+  email: string;
+  oldPassword: string;
+  newPassword: string;
+}
+
+export const handleChangePassword = createAsyncThunk(
+  'auth/changePassword',
+  async (payload: ChangePasswordPayload, { rejectWithValue }) => {
+    try {
+      const response = await authApi.changePassword(
+        payload.email,
+        payload.oldPassword,
+        payload.newPassword
+      );
+      return response;
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        return rejectWithValue('Mật khẩu cũ không chính xác');
+      }
+      return rejectWithValue(error.response?.data?.message || 'Đổi mật khẩu thất bại');
+    }
+  }
+);
