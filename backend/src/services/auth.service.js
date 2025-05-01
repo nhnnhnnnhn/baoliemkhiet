@@ -68,9 +68,8 @@ async function logoutUser(userId) {
   });
 }
 
-async function changePassword(userId, oldPassword, newPassword, otp) {
-  await this.verifyOtp(email, otp, action);
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+async function changePassword(email, oldPassword, newPassword) {
+  const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
     throw new Error("User not found");
   }
@@ -80,13 +79,14 @@ async function changePassword(userId, oldPassword, newPassword, otp) {
   }
   const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-  await this.jwtToken.deleteMany({
+  await prisma.jwtToken.deleteMany({
     where: {
-      userId,
+      userId: user.id,
     },
   });
+  
   await prisma.user.update({
-    where: { id: userId },
+    where: { email },
     data: { password: hashedPassword },
   });
 
