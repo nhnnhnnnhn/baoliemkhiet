@@ -128,7 +128,7 @@ async function getUserById(id) {
           },
         },
       },
-      Follow: {
+      following: {
         select: {
           id: true,
           journalist: {
