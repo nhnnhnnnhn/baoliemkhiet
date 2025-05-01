@@ -1,5 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import authApi from '../../apis/auth';
+import userApi from '../../apis/user'; // Import user API
 
 interface LoginPayload {
   email: string;
@@ -150,6 +151,27 @@ export const handleChangePassword = createAsyncThunk(
         return rejectWithValue('Mật khẩu cũ không chính xác');
       }
       return rejectWithValue(error.response?.data?.message || 'Đổi mật khẩu thất bại');
+    }
+  }
+);
+
+export const handleGetUserById = createAsyncThunk(
+  'auth/getUserById',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      console.log(`Đang gọi API lấy thông tin người dùng với ID: ${id}`);
+      const response = await userApi.getUserById(id);
+      console.log('Dữ liệu người dùng nhận được từ API:', response);
+      return response;
+    } catch (error: any) {
+      console.error('Lỗi khi lấy thông tin người dùng:', error);
+      
+      if (error.response?.status === 404) {
+        return rejectWithValue('Không tìm thấy người dùng');
+      } else if (error.response?.data?.message) {
+        return rejectWithValue(error.response.data.message);
+      }
+      return rejectWithValue('Có lỗi xảy ra khi tải thông tin người dùng: ' + (error.toString() || 'Lỗi không xác định'));
     }
   }
 );

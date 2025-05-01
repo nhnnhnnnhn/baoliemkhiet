@@ -7,15 +7,42 @@ export interface User {
   role: "ADMIN" | "JOURNALIST" | "USER"
   avatar: string | null
   bio: string | null
+  is_online: boolean
   created_at: string
   updated_at: string
+  articles?: Array<{
+    id: number
+    title: string
+    status: string
+    publishedAt?: string
+    createdAt?: string
+  }>
+  followers?: Array<{
+    id: number
+    follower: {
+      id: number
+      fullname: string
+      avatar: string | null
+    }
+  }>
+  Follow?: Array<{
+    id: number
+    journalist: {
+      id: number
+      fullname: string
+      avatar: string | null
+    }
+  }>
 }
 
 export interface GetUsersResponse {
   users: User[]
-  total: number
-  page: number
-  limit: number
+  pagination: {
+    total: number
+    page: number
+    limit: number
+    totalPages: number
+  }
 }
 
 export interface GetUsersParams {

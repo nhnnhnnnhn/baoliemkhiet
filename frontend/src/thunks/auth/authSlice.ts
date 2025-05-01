@@ -5,7 +5,8 @@ import {
   handleGetProfile,
   handleSendOtp,
   handleVerifyOtp,
-  handleChangePassword
+  handleChangePassword,
+  handleGetUserById
 } from './authThunk';
 import type { RootState } from '../../store';
 
@@ -13,9 +14,26 @@ export interface User {
   id: number;
   email: string;
   fullname: string;
-  role: string;
-  avatar?: string;
   name?: string; // Optional property to handle cases where 'name' is returned
+  role: string;
+  avatar?: string | null;
+  bio?: string | null;
+  is_online?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  last_login?: string;
+  phone?: string;
+  address?: string;
+  articles?: Array<{
+    id: number;
+    title: string;
+    status: string;
+    publishedAt?: string;
+    createdAt?: string;
+    views?: number;
+  }>;
+  followers?: Array<any>;
+  Follow?: Array<any>;
 }
 
 export interface AuthState {
@@ -30,6 +48,9 @@ export interface AuthState {
   otpError: string | null;
   changingPassword: boolean;
   changePasswordError: string | null;
+  selectedUser: User | null;
+  loadingUserDetails: boolean;
+  userDetailsError: string | null;
 }
 
 const initialState: AuthState = {
@@ -43,7 +64,10 @@ const initialState: AuthState = {
   otpVerified: false,
   otpError: null,
   changingPassword: false,
-  changePasswordError: null
+  changePasswordError: null,
+  selectedUser: null,
+  loadingUserDetails: false,
+  userDetailsError: null
 };
 
 const authSlice = createSlice({
@@ -97,7 +121,7 @@ const authSlice = createSlice({
         if (action.payload.user) {
           state.user = {
             ...action.payload.user,
-            fullname: action.payload.user.fullname || action.payload.user.name || '',
+            fullname: action.payload.user.fullname || (action.payload.user as User).name || '',
           };
         }
         state.accessToken = action.payload.accessToken;
@@ -137,6 +161,24 @@ const authSlice = createSlice({
       .addCase(handleChangePassword.rejected, (state, action: any) => {
         state.changingPassword = false;
         state.changePasswordError = action.payload;
+      })
+      // Get User By ID
+      .addCase(handleGetUserById.pending, (state) => {
+        state.loadingUserDetails = true;
+        state.userDetailsError = null;
+      })
+      .addCase(handleGetUserById.fulfilled, (state, action) => {
+        state.loadingUserDetails = false;
+        state.selectedUser = {
+          ...action.payload,
+          avatar: action.payload.avatar ?? undefined,
+        };
+        state.userDetailsError = null;
+      })
+      .addCase(handleGetUserById.rejected, (state, action: any) => {
+        state.loadingUserDetails = false;
+        state.selectedUser = null;
+        state.userDetailsError = action.payload;
       });
   },
 });
@@ -159,3 +201,6 @@ export const selectOtpVerified = (state: RootState) => state.auth.otpVerified;
 export const selectOtpError = (state: RootState) => state.auth.otpError;
 export const selectChangingPassword = (state: RootState) => state.auth.changingPassword;
 export const selectChangePasswordError = (state: RootState) => state.auth.changePasswordError;
+export const selectSelectedUser = (state: RootState) => state.auth.selectedUser;
+export const selectLoadingUserDetails = (state: RootState) => state.auth.loadingUserDetails;
+export const selectUserDetailsError = (state: RootState) => state.auth.userDetailsError;
