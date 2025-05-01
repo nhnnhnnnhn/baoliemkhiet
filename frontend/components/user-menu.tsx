@@ -51,7 +51,7 @@ export function UserMenu({ user, isScrolled }: UserMenuProps) {
         <span className={`hidden sm:block font-medium ${
           isScrolled ? "text-gray-800" : "text-white"
         }`}>
-          {user.fullname || "Người dùng"}
+          {user.fullname}
         </span>
       </button>
 

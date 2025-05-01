@@ -1,4 +1,4 @@
-import { configureStore } from '@reduxjs/toolkit';
+  import { configureStore } from '@reduxjs/toolkit';
 import { useDispatch, useSelector, TypedUseSelectorHook } from 'react-redux';
 import authReducer from './thunks/auth/authSlice';
 

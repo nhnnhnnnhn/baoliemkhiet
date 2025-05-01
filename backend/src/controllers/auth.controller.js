@@ -13,7 +13,7 @@ const login = controllerHandler(async (req, res) => {
     user: {
       id: user.id,
       email: user.email,
-      name: user.name,
+      fullname: user.name || user.fullname || '', // Trả về fullname thay vì name
       role: user.role,
     },
   });
@@ -25,7 +25,7 @@ const register = controllerHandler(async (req, res) => {
   res.status(201).json({
     id: user.id,
     email: user.email,
-    name: user.name,
+    fullname: user.name || user.fullname || '', // Trả về fullname thay vì name
     role: user.role,
     bio: user.bio,
     avatar: user.avatar,    
