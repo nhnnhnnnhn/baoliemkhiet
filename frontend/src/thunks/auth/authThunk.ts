@@ -6,6 +6,28 @@ interface LoginPayload {
   password: string;
 }
 
+interface OtpPayload {
+  email: string;
+  action: string;
+}
+
+interface VerifyOtpPayload {
+  email: string;
+  code: string;
+  action: string;
+}
+
+interface RegisterPayload {
+  email: string;
+  password: string;
+  fullname: string;
+  role: string;
+  otp: string;
+  action: string;
+  bio: string | null;
+  avatar: string | null;
+}
+
 export const handleLogin = createAsyncThunk(
   'auth/login',
   async (payload: LoginPayload, { rejectWithValue }) => {
@@ -14,7 +36,7 @@ export const handleLogin = createAsyncThunk(
       // Store tokens in localStorage
       localStorage.setItem('accessToken', response.accessToken);
       localStorage.setItem('refreshToken', response.refreshToken);
-      localStorage.setItem('userRole', response.user.role); // Thêm lưu role
+      localStorage.setItem('userRole', response.user.role);
       return response;
     } catch (error: any) {
       if (error.response?.status === 400) {
@@ -67,6 +89,42 @@ export const handleGetProfile = createAsyncThunk(
       return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to get profile');
+    }
+  }
+);
+
+export const handleSendOtp = createAsyncThunk(
+  'auth/sendOtp',
+  async (payload: OtpPayload, { rejectWithValue }) => {
+    try {
+      const response = await authApi.sendOtp(payload);
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to send OTP');
+    }
+  }
+);
+
+export const handleVerifyOtp = createAsyncThunk(
+  'auth/verifyOtp',
+  async (payload: VerifyOtpPayload, { rejectWithValue }) => {
+    try {
+      const response = await authApi.verifyOtp(payload);
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to verify OTP');
+    }
+  }
+);
+
+export const handleRegister = createAsyncThunk(
+  'auth/register',
+  async (payload: RegisterPayload, { rejectWithValue }) => {
+    try {
+      const response = await authApi.register(payload);
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Registration failed');
     }
   }
 );
