@@ -29,7 +29,7 @@ export default function UsersPage() {
       })
       console.log('API Response:', response) // Debug log
       setUsers(response.users)
-      setTotal(response.total)
+      setTotal(response.pagination.total)
     } catch (error) {
       toast({
         title: "Lỗi",
@@ -67,6 +67,8 @@ export default function UsersPage() {
     switch (role) {
       case "ADMIN":
         return { text: "Admin", classes: "bg-purple-100 text-purple-800" }
+      case "EDITOR":
+        return { text: "Biên tập viên", classes: "bg-green-100 text-green-800" }
       case "JOURNALIST":
         return { text: "Nhà báo", classes: "bg-blue-100 text-blue-800" }
       case "USER":

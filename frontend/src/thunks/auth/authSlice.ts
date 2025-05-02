@@ -6,8 +6,7 @@ import {
   handleSendOtp,
   handleVerifyOtp,
   handleChangePassword,
-  handleGetUserById,
-  handleDeleteUser
+  handleUpdateProfile
 } from './authThunk';
 import type { RootState } from '../../store';
 
@@ -15,7 +14,6 @@ export interface User {
   id: number;
   email: string;
   fullname: string;
-  name?: string; // Optional property to handle cases where 'name' is returned
   role: string;
   avatar?: string | null;
   bio?: string | null;
@@ -25,6 +23,7 @@ export interface User {
   last_login?: string;
   phone?: string;
   address?: string;
+  status?: string;
   articles?: Array<{
     id: number;
     title: string;
@@ -49,12 +48,9 @@ export interface AuthState {
   otpError: string | null;
   changingPassword: boolean;
   changePasswordError: string | null;
-  selectedUser: User | null;
-  loadingUserDetails: boolean;
-  userDetailsError: string | null;
-  deletingUser: boolean;
-  deleteUserError: string | null;
-  deleteUserSuccess: boolean;
+  updatingProfile: boolean;
+  updateProfileError: string | null;
+  updateProfileSuccess: boolean;
 }
 
 const initialState: AuthState = {
@@ -69,12 +65,9 @@ const initialState: AuthState = {
   otpError: null,
   changingPassword: false,
   changePasswordError: null,
-  selectedUser: null,
-  loadingUserDetails: false,
-  userDetailsError: null,
-  deletingUser: false,
-  deleteUserError: null,
-  deleteUserSuccess: false
+  updatingProfile: false,
+  updateProfileError: null,
+  updateProfileSuccess: false
 };
 
 const authSlice = createSlice({
@@ -128,12 +121,8 @@ const authSlice = createSlice({
       .addCase(handleLogin.fulfilled, (state, action) => {
         state.isLoggedIn = true;
         state.logging = false;
-        // Ánh xạ từ name sang fullname nếu API trả về name thay vì fullname
         if (action.payload.user) {
-          state.user = {
-            ...action.payload.user,
-            fullname: action.payload.user.fullname || (action.payload.user as User).name || '',
-          };
+          state.user = action.payload.user;
         }
         state.accessToken = action.payload.accessToken;
       })
@@ -154,23 +143,16 @@ const authSlice = createSlice({
         // Không thay đổi trạng thái isLoggedIn khi đang gọi API
       })
       .addCase(handleGetProfile.fulfilled, (state, action) => {
-        // Đặt isLoggedIn = true khi lấy thông tin người dùng thành công
         state.isLoggedIn = true;
-        // Ánh xạ từ name sang fullname nếu API trả về name thay vì fullname
         if (action.payload.data) {
-          state.user = {
-            ...action.payload.data,
-            fullname: action.payload.data.fullname || action.payload.data.name || '',
-          };
+          state.user = action.payload.data;
         }
       })
       .addCase(handleGetProfile.rejected, (state) => {
-        // Khi lấy thông tin người dùng thất bại, đặt isLoggedIn = false
         state.isLoggedIn = false;
         state.user = null;
         state.accessToken = null;
       })
-      
       // Change Password
       .addCase(handleChangePassword.pending, (state) => {
         state.changingPassword = true;
@@ -184,39 +166,31 @@ const authSlice = createSlice({
         state.changingPassword = false;
         state.changePasswordError = action.payload;
       })
-      // Get User By ID
-      .addCase(handleGetUserById.pending, (state) => {
-        state.loadingUserDetails = true;
-        state.userDetailsError = null;
+      // Update Profile
+      .addCase(handleUpdateProfile.pending, (state) => {
+        state.updatingProfile = true;
+        state.updateProfileError = null;
+        state.updateProfileSuccess = false;
       })
-      .addCase(handleGetUserById.fulfilled, (state, action) => {
-        state.loadingUserDetails = false;
-        state.selectedUser = {
-          ...action.payload,
-          avatar: action.payload.avatar ?? undefined,
-        };
-        state.userDetailsError = null;
+      .addCase(handleUpdateProfile.fulfilled, (state, action) => {
+        state.updatingProfile = false;
+        state.updateProfileSuccess = true;
+        state.updateProfileError = null;
+        if (state.user && action.payload) {
+          state.user = {
+            ...state.user,
+            fullname: action.payload.fullname || state.user.fullname,
+            email: action.payload.email || state.user.email,
+            phone: action.payload.phone || state.user.phone,
+            address: action.payload.address || state.user.address,
+            bio: action.payload.bio || state.user.bio
+          };
+        }
       })
-      .addCase(handleGetUserById.rejected, (state, action: any) => {
-        state.loadingUserDetails = false;
-        state.selectedUser = null;
-        state.userDetailsError = action.payload;
-      })
-      // Delete User
-      .addCase(handleDeleteUser.pending, (state) => {
-        state.deletingUser = true;
-        state.deleteUserError = null;
-        state.deleteUserSuccess = false;
-      })
-      .addCase(handleDeleteUser.fulfilled, (state) => {
-        state.deletingUser = false;
-        state.deleteUserSuccess = true;
-        state.deleteUserError = null;
-      })
-      .addCase(handleDeleteUser.rejected, (state, action: any) => {
-        state.deletingUser = false;
-        state.deleteUserError = action.payload;
-        state.deleteUserSuccess = false;
+      .addCase(handleUpdateProfile.rejected, (state, action: any) => {
+        state.updatingProfile = false;
+        state.updateProfileError = action.payload;
+        state.updateProfileSuccess = false;
       });
   },
 });
@@ -239,9 +213,6 @@ export const selectOtpVerified = (state: RootState) => state.auth.otpVerified;
 export const selectOtpError = (state: RootState) => state.auth.otpError;
 export const selectChangingPassword = (state: RootState) => state.auth.changingPassword;
 export const selectChangePasswordError = (state: RootState) => state.auth.changePasswordError;
-export const selectSelectedUser = (state: RootState) => state.auth.selectedUser;
-export const selectLoadingUserDetails = (state: RootState) => state.auth.loadingUserDetails;
-export const selectUserDetailsError = (state: RootState) => state.auth.userDetailsError;
-export const selectDeletingUser = (state: RootState) => state.auth.deletingUser;
-export const selectDeleteUserError = (state: RootState) => state.auth.deleteUserError;
-export const selectDeleteUserSuccess = (state: RootState) => state.auth.deleteUserSuccess;
+export const selectUpdatingProfile = (state: RootState) => state.auth.updatingProfile;
+export const selectUpdateProfileError = (state: RootState) => state.auth.updateProfileError;
+export const selectUpdateProfileSuccess = (state: RootState) => state.auth.updateProfileSuccess;

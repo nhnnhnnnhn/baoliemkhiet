@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 const prisma = new PrismaClient();
 
 async function createUser(userData) {
-  const { email, password, fullname, role, avatar, bio } = userData;
+  const { email, password, fullname, role, avatar, bio, phone, address, status } = userData;
 
   // Check if email already exists
   const existingUser = await prisma.user.findUnique({
@@ -24,6 +24,9 @@ async function createUser(userData) {
       role,
       avatar,
       bio,
+      phone,
+      address,
+      status
     },
     select: {
       id: true,
@@ -32,6 +35,9 @@ async function createUser(userData) {
       role: true,
       avatar: true,
       bio: true,
+      phone: true,
+      address: true,
+      status: true,
       created_at: true,
       updated_at: true,
     },
@@ -77,7 +83,7 @@ async function getAllUsers(filters = {}, pagination = {}) {
       skip,
       take: limit,
       orderBy: {
-        created_at: 'desc',
+        id: 'asc',
       },
     }),
     prisma.user.count({ where }),

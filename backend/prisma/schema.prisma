@@ -22,6 +22,9 @@ model User {
   is_online  Boolean? @default(false)
   password   String
   role       Role
+  phone      String?
+  address    String?
+  status     UserStatus @default(ACTIVE)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -179,7 +182,14 @@ model Configuration {
 enum Role {
   USER
   ADMIN
+  EDITOR
   JOURNALIST
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
 }
 
 enum OtpAction {
