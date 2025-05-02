@@ -8,6 +8,9 @@ import Image from "next/image"
 import { Suspense, useState } from "react"
 import { usePathname } from "next/navigation"
 
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+
 import { NotificationDropdown } from "@/components/notification-dropdown"
 import { ImageWithFallback } from "@/components/image-with-fallback"
 import styles from "./admin.module.css"
@@ -168,6 +171,14 @@ export default function AdminLayoutClient({
             <button className={styles.menuButton}>
               <Menu size={20} />
             </button>
+            <Separator orientation="vertical" className="h-6 mx-2" />
+            <Link href="/">
+              <Button variant="ghost" size="icon" className="mr-2">
+                <Home className="h-5 w-5" />
+                <span className="sr-only">Về trang chủ</span>
+              </Button>
+            </Link>
+            <Separator orientation="vertical" className="h-6 mx-2" />
             <div className={styles.searchContainer}>
               <Search className={styles.searchIcon} />
               <input type="text" placeholder="Tìm kiếm..." className={styles.searchInput} />

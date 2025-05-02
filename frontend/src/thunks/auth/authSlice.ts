@@ -6,7 +6,9 @@ import {
   handleSendOtp,
   handleVerifyOtp,
   handleChangePassword,
-  handleUpdateProfile
+  handleUpdateProfile,
+  handleGetUserById,
+  handleDeleteUser
 } from './authThunk';
 import type { RootState } from '../../store';
 
@@ -51,6 +53,12 @@ export interface AuthState {
   updatingProfile: boolean;
   updateProfileError: string | null;
   updateProfileSuccess: boolean;
+  selectedUser: User | null;
+  loadingUserDetails: boolean;
+  userDetailsError: string | null;
+  deletingUser: boolean;
+  deleteUserError: string | null;
+  deleteUserSuccess: boolean;
 }
 
 const initialState: AuthState = {
@@ -67,7 +75,13 @@ const initialState: AuthState = {
   changePasswordError: null,
   updatingProfile: false,
   updateProfileError: null,
-  updateProfileSuccess: false
+  updateProfileSuccess: false,
+  selectedUser: null,
+  loadingUserDetails: false,
+  userDetailsError: null,
+  deletingUser: false,
+  deleteUserError: null,
+  deleteUserSuccess: false
 };
 
 const authSlice = createSlice({
@@ -191,6 +205,38 @@ const authSlice = createSlice({
         state.updatingProfile = false;
         state.updateProfileError = action.payload;
         state.updateProfileSuccess = false;
+      })
+      // Get User By ID
+      .addCase(handleGetUserById.pending, (state) => {
+        state.loadingUserDetails = true;
+        state.userDetailsError = null;
+        state.selectedUser = null;
+      })
+      .addCase(handleGetUserById.fulfilled, (state, action) => {
+        state.loadingUserDetails = false;
+        state.selectedUser = action.payload;
+        state.userDetailsError = null;
+      })
+      .addCase(handleGetUserById.rejected, (state, action: any) => {
+        state.loadingUserDetails = false;
+        state.userDetailsError = action.payload;
+        state.selectedUser = null;
+      })
+      // Delete User
+      .addCase(handleDeleteUser.pending, (state) => {
+        state.deletingUser = true;
+        state.deleteUserError = null;
+        state.deleteUserSuccess = false;
+      })
+      .addCase(handleDeleteUser.fulfilled, (state) => {
+        state.deletingUser = false;
+        state.deleteUserError = null;
+        state.deleteUserSuccess = true;
+      })
+      .addCase(handleDeleteUser.rejected, (state, action: any) => {
+        state.deletingUser = false;
+        state.deleteUserError = action.payload;
+        state.deleteUserSuccess = false;
       });
   },
 });
@@ -216,3 +262,9 @@ export const selectChangePasswordError = (state: RootState) => state.auth.change
 export const selectUpdatingProfile = (state: RootState) => state.auth.updatingProfile;
 export const selectUpdateProfileError = (state: RootState) => state.auth.updateProfileError;
 export const selectUpdateProfileSuccess = (state: RootState) => state.auth.updateProfileSuccess;
+export const selectSelectedUser = (state: RootState) => state.auth.selectedUser;
+export const selectLoadingUserDetails = (state: RootState) => state.auth.loadingUserDetails;
+export const selectUserDetailsError = (state: RootState) => state.auth.userDetailsError;
+export const selectDeletingUser = (state: RootState) => state.auth.deletingUser;
+export const selectDeleteUserError = (state: RootState) => state.auth.deleteUserError;
+export const selectDeleteUserSuccess = (state: RootState) => state.auth.deleteUserSuccess;

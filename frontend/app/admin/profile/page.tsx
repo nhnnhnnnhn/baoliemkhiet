@@ -1,13 +1,11 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
-import { useDispatch, useSelector } from "react-redux"
-import { AppDispatch } from "@/src/store"
-import { handleChangePassword, handleLogout } from "@/src/thunks/auth/authThunk"
-import { selectChangingPassword, selectChangePasswordError } from "@/src/thunks/auth/authSlice"
-import { Calendar, CheckCircle, Save, Upload, User } from "lucide-react"
+import { useAppDispatch, useAppSelector } from "@/src/store"
+import { handleGetProfile, handleUpdateProfile, handleChangePassword, handleLogout } from "@/src/thunks/auth/authThunk"
+import { selectCurrentUser, selectChangingPassword, selectChangePasswordError, selectUpdatingProfile } from "@/src/thunks/auth/authSlice"
+import { Calendar, Upload, User } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,61 +15,76 @@ import { useToast } from "@/hooks/use-toast"
 import styles from "../admin.module.css"
 
 export default function ProfilePage() {
-  const dispatch = useDispatch<AppDispatch>();
-  const isChangingPassword = useSelector(selectChangingPassword);
-  const changePasswordError = useSelector(selectChangePasswordError);
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(selectCurrentUser);
+  const isChangingPassword = useAppSelector(selectChangingPassword);
+  const isUpdatingProfile = useAppSelector(selectUpdatingProfile);
+  const changePasswordError = useAppSelector(selectChangePasswordError);
   const { toast } = useToast();
-  
-  // Mock user data
-  const [user, setUser] = useState({
-    id: "USR-001",
-    name: "Nguyễn Văn A",
-    email: "nguyenvana@example.com",
-    phone: "0912345678",
-    address: "123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh",
-    role: "Quản trị viên",
-    accountType: "Premium",
-    status: "Hoạt động",
-    created: "05/04/2025",
-    lastLogin: "06/04/2025 15:30",
-    bio: "Quản trị viên với hơn 5 năm kinh nghiệm trong lĩnh vực báo chí. Chuyên về quản lý nội dung và phát triển đội ngũ biên tập.",
-    avatar: "/placeholder.svg?height=200&width=200",
-  })
 
-  // State for form values
+  // Form state
   const [formValues, setFormValues] = useState({
-    name: user.name,
-    email: user.email,
-    phone: user.phone,
-    address: user.address,
-    bio: user.bio,
-  })
+    fullname: "",
+    email: "",
+    phone: "",
+    address: "",
+    bio: "",
+  });
+
+  // Load user data
+  useEffect(() => {
+    dispatch(handleGetProfile());
+  }, [dispatch]);
+
+  // Update form when user data changes
+  useEffect(() => {
+    if (user) {
+      setFormValues({
+        fullname: user.fullname || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        address: user.address || "",
+        bio: user.bio || "",
+      });
+    }
+  }, [user]);
 
   // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setFormValues((prev) => ({
       ...prev,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Update user data (in a real app, this would be an API call)
-    setUser((prev) => ({
-      ...prev,
-      ...formValues,
-    }))
-    alert("Thông tin hồ sơ đã được cập nhật!")
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await dispatch(handleUpdateProfile(formValues)).unwrap();
+      toast({
+        description: "Cập nhật thông tin thành công",
+        duration: 2000,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Không thể cập nhật thông tin",
+      });
+    }
+  };
+
+  if (!user) {
+    return <div>Loading...</div>;
   }
 
-  // Handle avatar change
-  const handleAvatarChange = () => {
-    // In a real app, this would open a file picker and upload the image
-    alert("Tính năng thay đổi ảnh đại diện sẽ được triển khai sau!")
-  }
+  const joinDate = user.created_at ? new Date(user.created_at).toLocaleDateString("vi-VN") : "N/A";
+  const lastLogin = user.last_login ? new Date(user.last_login).toLocaleDateString("vi-VN", {
+    hour: '2-digit',
+    minute: '2-digit'
+  }) : "N/A";
 
   return (
     <div>
@@ -97,19 +110,15 @@ export default function ProfilePage() {
                 <div className="relative mb-4">
                   <img
                     src={user.avatar || "/placeholder.svg"}
-                    alt={user.name}
+                    alt={user.fullname}
                     className="h-32 w-32 rounded-full object-cover border-4 border-white shadow-md"
                   />
-                  <button
-                    onClick={handleAvatarChange}
-                    className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full shadow-lg"
-                  >
-                    <Upload className="h-4 w-4" />
-                  </button>
                 </div>
-                <h2 className="text-xl font-semibold">{user.name}</h2>
+                <h2 className="text-xl font-semibold">{user.fullname}</h2>
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mt-1">
-                  {user.role}
+                  {user.role === 'ADMIN' ? 'Quản trị viên' : 
+                   user.role === 'EDITOR' ? 'Biên tập viên' : 
+                   user.role === 'JOURNALIST' ? 'Nhà báo' : 'Người dùng'}
                 </span>
               </div>
 
@@ -122,18 +131,10 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-gray-500 mb-1">Loại tài khoản</div>
-                  <div className="flex items-center">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {user.accountType}
-                    </span>
-                  </div>
-                </div>
-                <div>
                   <div className="text-sm font-medium text-gray-500 mb-1">Trạng thái</div>
                   <div className="flex items-center">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      {user.status}
+                      {user.status || "Hoạt động"}
                     </span>
                   </div>
                 </div>
@@ -141,14 +142,14 @@ export default function ProfilePage() {
                   <div className="text-sm font-medium text-gray-500 mb-1">Ngày tạo tài khoản</div>
                   <div className="flex items-center">
                     <Calendar className="h-4 w-4 text-gray-400 mr-2" />
-                    {user.created}
+                    {joinDate}
                   </div>
                 </div>
                 <div>
                   <div className="text-sm font-medium text-gray-500 mb-1">Đăng nhập gần nhất</div>
                   <div className="flex items-center">
                     <Calendar className="h-4 w-4 text-gray-400 mr-2" />
-                    {user.lastLogin}
+                    {lastLogin}
                   </div>
                 </div>
               </div>
@@ -166,8 +167,14 @@ export default function ProfilePage() {
               <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div>
-                    <Label htmlFor="name">Họ và tên</Label>
-                    <Input id="name" name="name" value={formValues.name} onChange={handleChange} className="mt-1" />
+                    <Label htmlFor="fullname">Họ và tên</Label>
+                    <Input
+                      id="fullname"
+                      name="fullname"
+                      value={formValues.fullname}
+                      onChange={handleChange}
+                      className="mt-1"
+                    />
                   </div>
                   <div>
                     <Label htmlFor="email">Email</Label>
@@ -182,7 +189,13 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <Label htmlFor="phone">Số điện thoại</Label>
-                    <Input id="phone" name="phone" value={formValues.phone} onChange={handleChange} className="mt-1" />
+                    <Input
+                      id="phone"
+                      name="phone"
+                      value={formValues.phone}
+                      onChange={handleChange}
+                      className="mt-1"
+                    />
                   </div>
                   <div>
                     <Label htmlFor="address">Địa chỉ</Label>
@@ -207,9 +220,8 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div className="flex justify-end">
-                  <Button type="submit">
-                    <Save className="h-4 w-4 mr-2" />
-                    Lưu thay đổi
+                  <Button type="submit" disabled={isUpdatingProfile}>
+                    {isUpdatingProfile ? 'Đang lưu...' : 'Lưu thay đổi'}
                   </Button>
                 </div>
               </form>
@@ -226,7 +238,7 @@ export default function ProfilePage() {
                 <form onSubmit={async (e) => {
                   e.preventDefault();
                   const formData = new FormData(e.currentTarget);
-                  const email = formData.get('email') as string;
+                  const email = user.email;
                   const oldPassword = formData.get('oldPassword') as string;
                   const newPassword = formData.get('newPassword') as string;
                   const confirmPassword = formData.get('confirmPassword') as string;
@@ -235,45 +247,26 @@ export default function ProfilePage() {
                     toast({
                       title: "Lỗi",
                       description: "Mật khẩu xác nhận không khớp",
-                      variant: "destructive"
+                      variant: "destructive",
                     });
                     return;
                   }
 
                   try {
                     await dispatch(handleChangePassword({ email, oldPassword, newPassword })).unwrap();
-                    
-                    // Hiển thị toast thông báo thành công
                     toast({
                       title: "Đổi mật khẩu thành công",
                       description: "Bạn sẽ được đăng xuất trong giây lát",
-                      variant: "success",
                       duration: 3000,
                     });
-                    
-                    // Đặt timeout để tự động đăng xuất sau 3 giây
                     setTimeout(() => {
                       dispatch(handleLogout());
                     }, 3000);
-                    
-                    // Reset form
                     e.currentTarget.reset();
-                    
                   } catch (error) {
                     // Error will be shown through changePasswordError
                   }
                 }}>
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      className="mt-1"
-                      placeholder="Nhập email của bạn"
-                      required
-                    />
-                  </div>
                   <div>
                     <Label htmlFor="oldPassword">Mật khẩu hiện tại</Label>
                     <Input
@@ -328,10 +321,7 @@ export default function ProfilePage() {
                     >
                       Hủy
                     </Button>
-                    <Button
-                      type="submit"
-                      disabled={isChangingPassword}
-                    >
+                    <Button type="submit" disabled={isChangingPassword}>
                       {isChangingPassword ? 'Đang xử lý...' : 'Đổi mật khẩu'}
                     </Button>
                   </div>
@@ -342,5 +332,5 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

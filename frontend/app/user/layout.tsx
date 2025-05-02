@@ -11,6 +11,7 @@ import { useLogout } from "@/hooks/use-logout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { Separator } from "@/components/ui/separator"
 import styles from "../admin/admin.module.css"
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {
@@ -127,6 +128,14 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
             <Button variant="ghost" size="icon" className={styles.menuButton} onClick={() => setSidebarOpen(true)}>
               <Menu className="h-5 w-5" />
             </Button>
+            <Separator orientation="vertical" className="h-6 mx-2" />
+            <Link href="/">
+              <Button variant="ghost" size="icon" className="mr-2">
+                <Home className="h-5 w-5" />
+                <span className="sr-only">Về trang chủ</span>
+              </Button>
+            </Link>
+            <Separator orientation="vertical" className="h-6 mx-2" />
             <div className={styles.searchContainer}>
               <Search className={styles.searchIcon} />
               <Input type="search" placeholder="Tìm kiếm..." className={styles.searchInput} />

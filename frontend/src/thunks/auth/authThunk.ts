@@ -179,3 +179,27 @@ export const handleChangePassword = createAsyncThunk(
     }
   }
 );
+
+export const handleGetUserById = createAsyncThunk(
+  'auth/getUserById',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const response = await userApi.getUserById(id);
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to get user details');
+    }
+  }
+);
+
+export const handleDeleteUser = createAsyncThunk(
+  'auth/deleteUser',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const response = await userApi.deleteUser(id);
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete user');
+    }
+  }
+);
