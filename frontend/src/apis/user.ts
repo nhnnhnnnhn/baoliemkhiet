@@ -4,7 +4,7 @@ export interface User {
   id: number
   email: string
   fullname: string
-  role: "ADMIN" | "JOURNALIST" | "USER"
+  role: "ADMIN" | "JOURNALIST" | "USER" | "EDITOR"
   avatar: string | null
   bio: string | null
   is_online: boolean
@@ -82,6 +82,20 @@ const userApi = {
       ...data,
       role: "ADMIN"
     })
+  },
+
+  createUser: async (data: {
+    email: string;
+    password: string;
+    fullname: string;
+    role?: string;
+    avatar?: string | null;
+    bio?: string | null;
+    phone?: string | null;
+    address?: string | null;
+    status?: string;
+  }): Promise<User> => {
+    return axiosClient.post('/users', data)
   }
 }
 

@@ -2,20 +2,22 @@ const userService = require("../services/user.service");
 const controllerHandler = require("../utils/controllerHandler");
 
 const createUser = controllerHandler(async (req, res) => {
-  const { email, password, fullname, avatar, bio } = req.body;
+  const { email, password, fullname, avatar, bio, phone, address, role, status } = req.body;
   
   if (!email || !password || !fullname) {
     throw new Error("Email, password and fullname are required");
   }
 
-  // Set default role as USER for new registrations
   const userData = {
     email,
     password,
     fullname,
-    role: "USER",
+    role: role || "USER",
     avatar: avatar || null,
-    bio: bio || null
+    bio: bio || null,
+    phone: phone || null,
+    address: address || null,
+    status: status || "active"
   };
 
   const user = await userService.createUser(userData);

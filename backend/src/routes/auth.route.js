@@ -11,4 +11,10 @@ router.post("/register", authController.register);
 // POST /api/auth/change-password
 router.post("/change-password", authController.changePassword);
 
+// PUT /api/auth/profile
+router.put("/profile", authMiddleware, authController.updateProfile);
+
+// GET /api/auth/profile
+router.get("/profile", authMiddleware, authController.getProfile);
+
 module.exports = router;

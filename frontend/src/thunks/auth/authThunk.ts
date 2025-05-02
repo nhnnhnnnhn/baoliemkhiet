@@ -1,6 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import authApi from '../../apis/auth';
-import userApi from '../../apis/user'; // Import user API
+import userApi from '../../apis/user';
 
 interface LoginPayload {
   email: string;
@@ -29,12 +29,21 @@ interface RegisterPayload {
   avatar: string | null;
 }
 
+interface UpdateProfilePayload {
+  id: number;
+  fullname?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  bio?: string;
+  avatar?: string;
+}
+
 export const handleLogin = createAsyncThunk(
   'auth/login',
   async (payload: LoginPayload, { rejectWithValue }) => {
     try {
       const response = await authApi.login(payload);
-      // Store tokens in localStorage
       localStorage.setItem('accessToken', response.accessToken);
       localStorage.setItem('refreshToken', response.refreshToken);
       localStorage.setItem('userRole', response.user.role);
@@ -57,18 +66,15 @@ export const handleLogout = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       await authApi.logout();
-      // Clear tokens and role from localStorage
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('userRole');
       
-      // Navigate to login page
       if (typeof window !== 'undefined') {
         window.location.href = '/auth/login';
       }
       return;
     } catch (error: any) {
-      // Still clear storage and redirect even if API call fails
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('userRole');
@@ -90,6 +96,25 @@ export const handleGetProfile = createAsyncThunk(
       return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to get profile');
+    }
+  }
+);
+
+export const handleUpdateProfile = createAsyncThunk(
+  'auth/updateProfile',
+  async (payload: {
+    fullname?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    bio?: string;
+    avatar?: string;
+  }, { rejectWithValue }) => {
+    try {
+      const response = await authApi.updateProfile(payload);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update profile');
     }
   }
 );
@@ -151,47 +176,6 @@ export const handleChangePassword = createAsyncThunk(
         return rejectWithValue('Mật khẩu cũ không chính xác');
       }
       return rejectWithValue(error.response?.data?.message || 'Đổi mật khẩu thất bại');
-    }
-  }
-);
-
-export const handleGetUserById = createAsyncThunk(
-  'auth/getUserById',
-  async (id: number, { rejectWithValue }) => {
-    try {
-      console.log(`Đang gọi API lấy thông tin người dùng với ID: ${id}`);
-      const response = await userApi.getUserById(id);
-      console.log('Dữ liệu người dùng nhận được từ API:', response);
-      return response;
-    } catch (error: any) {
-      console.error('Lỗi khi lấy thông tin người dùng:', error);
-      
-      if (error.response?.status === 404) {
-        return rejectWithValue('Không tìm thấy người dùng');
-      } else if (error.response?.data?.message) {
-        return rejectWithValue(error.response.data.message);
-      }
-      return rejectWithValue('Có lỗi xảy ra khi tải thông tin người dùng: ' + (error.toString() || 'Lỗi không xác định'));
-    }
-  }
-);
-
-export const handleDeleteUser = createAsyncThunk(
-  'auth/deleteUser',
-  async (id: number, { rejectWithValue }) => {
-    try {
-      console.log(`Đang gọi API xóa người dùng với ID: ${id}`);
-      await userApi.deleteUser(id);
-      return id; // Trả về id của người dùng đã xóa để cập nhật state
-    } catch (error: any) {
-      console.error('Lỗi khi xóa người dùng:', error);
-      
-      if (error.response?.status === 403) {
-        return rejectWithValue('Bạn không có quyền xóa người dùng này');
-      } else if (error.response?.data?.message) {
-        return rejectWithValue(error.response.data.message);
-      }
-      return rejectWithValue('Có lỗi xảy ra khi xóa người dùng: ' + (error.toString() || 'Lỗi không xác định'));
     }
   }
 );

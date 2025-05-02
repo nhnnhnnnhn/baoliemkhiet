@@ -14,6 +14,9 @@ async function main() {
       fullname: "Admin",
       password: hashedPassword,
       role: "ADMIN",
+      status: "ACTIVE",
+      phone: "0123456789",
+      address: "Hà Nội",
     },
   });
   const user = await prisma.user.upsert({
@@ -26,6 +29,9 @@ async function main() {
       fullname: "User",
       password: hashedPassword,
       role: "USER",
+      status: "ACTIVE",
+      phone: "0987654321",
+      address: "Hồ Chí Minh",
     },
   });
 }

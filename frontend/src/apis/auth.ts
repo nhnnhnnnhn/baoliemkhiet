@@ -82,6 +82,17 @@ const authApi = {
       newPassword
     });
   },
+
+  async updateProfile(data: {
+    fullname?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    bio?: string;
+    avatar?: string;
+  }) {
+    return await axiosClient.put('/auth/profile', data);
+  },
 };
 
 export default authApi;
