@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     env_file:
-      - ./.env
+      - ./stack.env
     environment:
       - NODE_ENV=production
     ports:
@@ -23,7 +23,7 @@ services:
     depends_on:
       - backend
     env_file:
-      - ./.env
+      - ./stack.env
     environment:
       - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL_DOCKER}
     ports:
