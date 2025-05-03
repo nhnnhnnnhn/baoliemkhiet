@@ -23,7 +23,7 @@ yarn-error.log*
 
 # Local env files
 .env
-
+stack.env
 
 # Vercel
 .vercel
