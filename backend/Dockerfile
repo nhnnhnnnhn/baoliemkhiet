@@ -17,7 +17,6 @@ COPY . .
 # Tạo Prisma client
 RUN npx prisma generate
 
-RUN npx prisma migrate deploy
 
 # Mở cổng 3000
 EXPOSE 3000
