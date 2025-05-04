@@ -3,13 +3,9 @@
 import type React from "react"
 import Link from "next/link"
 import { Home, Users, FileText, BarChart2, Settings, Menu, Search, ChevronDown, LogOut, User, Mail } from "lucide-react"
-import { useLogout } from "@/hooks/use-logout"
 import Image from "next/image"
-import { Suspense, useState } from "react"
+import { Suspense } from "react"
 import { usePathname } from "next/navigation"
-
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
 
 import { NotificationDropdown } from "@/components/notification-dropdown"
 import { ImageWithFallback } from "@/components/image-with-fallback"
@@ -118,7 +114,6 @@ export default function AdminLayoutClient({
 }: {
   children: React.ReactNode
 }) {
-  const logout = useLogout()
   // Define fallback image sources
   const avatarFallbackSrc = "/abstract-user-icon.png"
   const smallAvatarFallbackSrc = "/abstract-user-icon.png"
@@ -171,14 +166,6 @@ export default function AdminLayoutClient({
             <button className={styles.menuButton}>
               <Menu size={20} />
             </button>
-            <Separator orientation="vertical" className="h-6 mx-2" />
-            <Link href="/">
-              <Button variant="ghost" size="icon" className="mr-2">
-                <Home className="h-5 w-5" />
-                <span className="sr-only">Về trang chủ</span>
-              </Button>
-            </Link>
-            <Separator orientation="vertical" className="h-6 mx-2" />
             <div className={styles.searchContainer}>
               <Search className={styles.searchIcon} />
               <input type="text" placeholder="Tìm kiếm..." className={styles.searchInput} />
@@ -189,28 +176,7 @@ export default function AdminLayoutClient({
               <NotificationDropdown />
             </div>
             <div className={styles.userDropdown}>
-              <button
-                className={styles.userDropdownTrigger}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const dropdown = e.currentTarget.nextElementSibling as HTMLElement;
-                  if (dropdown) {
-                    const isOpen = dropdown.style.display === 'block';
-                    dropdown.style.display = isOpen ? 'none' : 'block';
-                    
-                    // Click outside to close
-                    const closeDropdown = (e: MouseEvent) => {
-                      if (!dropdown.contains(e.target as Node)) {
-                        dropdown.style.display = 'none';
-                        document.removeEventListener('click', closeDropdown);
-                      }
-                    };
-                    if (!isOpen) {
-                      document.addEventListener('click', closeDropdown);
-                    }
-                  }
-                }}
-              >
+              <div className={styles.userDropdownTrigger}>
                 <ImageWithFallback
                   src="/secure-admin-panel.png"
                   fallbackSrc={smallAvatarFallbackSrc}
@@ -221,8 +187,8 @@ export default function AdminLayoutClient({
                 />
                 <span className={styles.userDropdownName}>Admin User</span>
                 <ChevronDown size={16} />
-              </button>
-              <div className={styles.userDropdownMenu} style={{ display: 'none' }}>
+              </div>
+              <div className={styles.userDropdownMenu}>
                 <Link href="/admin/profile" className={styles.userDropdownItem}>
                   <User size={16} className="mr-2" />
                   Hồ sơ
@@ -232,13 +198,10 @@ export default function AdminLayoutClient({
                   Tin nhắn
                 </div>
                 <div className={styles.userDropdownDivider}></div>
-                <button
-                  onClick={logout}
-                  className={styles.userDropdownItem}
-                >
+                <Link href="/auth/login" className={styles.userDropdownItem}>
                   <LogOut size={16} className="mr-2" />
                   Đăng xuất
-                </button>
+                </Link>
               </div>
             </div>
           </div>
