@@ -27,6 +27,8 @@ async function getNotifications(receiver_id) {
   const user = await prisma.user.findUnique({
     where: { id: receiver_id },
   });
+  console.log("receiver_id", receiver_id);
+
   if (!user) {
     throw new Error("User not found");
   }
@@ -35,7 +37,9 @@ async function getNotifications(receiver_id) {
     where: { receiver_id },
     orderBy: { created_at: "desc" },
   });
-  return notifications;
+  return {
+    data: notifications,
+  };
 }
 
 async function markNotificationAsRead(notification_id) {
@@ -93,7 +97,9 @@ async function getUnreadNotificationCount(receiver_id) {
   const count = await prisma.notification.count({
     where: { receiver_id, is_read: false },
   });
-  return count;
+  return {
+    data: count,
+  };
 }
 
 module.exports = {
