@@ -15,8 +15,32 @@ import {
 import { Button } from "@/components/ui/button"
 import { SafeLink } from "@/components/safe-link"
 
+// Thêm import cho UserNav component
+import { UserNav } from "@/components/user-nav"
+
 export function SiteHeader() {
   const [isScrolled, setIsScrolled] = useState(false)
+  const [username, setUsername] = useState("exampleUser") // Example username, replace with actual user data
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  // Kiểm tra trạng thái đăng nhập khi component được mount
+  useEffect(() => {
+    // Trong ứng dụng thực tế, bạn sẽ kiểm tra token hoặc session
+    // Ở đây chúng ta giả lập bằng cách kiểm tra localStorage
+    const checkLoginStatus = () => {
+      const token = localStorage.getItem("authToken")
+      setIsLoggedIn(!!token)
+    }
+
+    checkLoginStatus()
+
+    // Lắng nghe sự kiện đăng nhập/đăng xuất
+    window.addEventListener("storage", checkLoginStatus)
+
+    return () => {
+      window.removeEventListener("storage", checkLoginStatus)
+    }
+  }, [])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -113,17 +137,22 @@ export function SiteHeader() {
                 <span className="sr-only">Tìm kiếm</span>
               </Button>
             </SafeLink>
-            <SafeLink href="/auth/login">
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`hidden sm:flex ${
-                  isScrolled ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"
-                }`}
-              >
-                ĐĂNG NHẬP
-              </Button>
-            </SafeLink>
+
+            {/* Thay thế phần login/profile button với UserNav component */}
+            {isLoggedIn ? (
+              <UserNav />
+            ) : (
+              <Link href="/auth/login">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`${isScrolled ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"}`}
+                >
+                  Đăng nhập
+                </Button>
+              </Link>
+            )}
+
             <SafeLink href="/subscribe">
               <Button
                 size="sm"

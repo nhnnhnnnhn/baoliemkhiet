@@ -1,120 +1,90 @@
-'use client'
-
-import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ChevronLeftIcon, ChevronRightIcon, Download, Filter, Search, Trash2, UserPlus, Edit, Eye } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import styles from "../admin.module.css"
-import userApi, { User, GetUsersResponse } from "@/src/apis/user"
-import { useToast } from "@/hooks/use-toast"
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [page, setPage] = useState(1)
-  const [total, setTotal] = useState(0)
-  const [limit] = useState(10)
-  const { toast } = useToast()
-
-  const fetchUsers = async () => {
-    try {
-      setIsLoading(true)
-      const response = await userApi.getUsers({
-        search: searchQuery || undefined,
-        page,
-        limit
-      })
-      console.log('API Response:', response) // Debug log
-      setUsers(response.users)
-      setTotal(response.pagination.total)
-    } catch (error) {
-      toast({
-        title: "Lỗi",
-        description: "Không thể tải danh sách người dùng",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchUsers()
-  }, [page, searchQuery])
-
-  const handleDelete = async (id: number) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa người dùng này?")) return
-
-    try {
-      await userApi.deleteUser(id)
-      toast({
-        description: "Đã xóa người dùng thành công",
-      })
-      fetchUsers()
-    } catch (error) {
-      toast({
-        title: "Lỗi",
-        description: "Không thể xóa người dùng",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const getRoleDisplay = (role: User['role']) => {
-    switch (role) {
-      case "ADMIN":
-        return { text: "Admin", classes: "bg-purple-100 text-purple-800" }
-      case "EDITOR":
-        return { text: "Biên tập viên", classes: "bg-green-100 text-green-800" }
-      case "JOURNALIST":
-        return { text: "Nhà báo", classes: "bg-blue-100 text-blue-800" }
-      case "USER":
-        return { text: "Người dùng", classes: "bg-gray-100 text-gray-800" }
-      default:
-        return { text: "Không xác định", classes: "bg-gray-100 text-gray-800" }
-    }
-  }
-
-  const formatDate = (dateString: string) => {
-    try {
-      console.log('Formatting date:', dateString) // Debug log
-      if (!dateString) {
-        console.log('Empty date string')
-        return "Không có dữ liệu"
-      }
-
-      const date = new Date(dateString)
-      if (isNaN(date.getTime())) {
-        console.log('Invalid date:', dateString)
-        return "Không có dữ liệu"
-      }
-
-      const formatter = new Intl.DateTimeFormat("vi-VN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: "Asia/Ho_Chi_Minh"
-      })
-
-      return formatter.format(date)
-    } catch (error) {
-      console.error("Error formatting date:", error)
-      return "Không có dữ liệu"
-    }
-  }
-
-  const totalPages = Math.ceil(total / limit)
-  const startIndex = (page - 1) * limit + 1
-  const endIndex = Math.min(startIndex + limit - 1, total)
+  // Mock user data
+  const users = [
+    {
+      id: "USR-001",
+      name: "Nguyễn Văn A",
+      email: "nguyenvana@example.com",
+      role: "Admin",
+      status: "Hoạt động",
+      articles: 45,
+      created: "05/04/2025",
+    },
+    {
+      id: "USR-002",
+      name: "Trần Thị B",
+      email: "tranthib@example.com",
+      role: "Biên tập viên",
+      status: "Hoạt động",
+      articles: 78,
+      created: "03/04/2025",
+    },
+    {
+      id: "USR-003",
+      name: "Lê Văn C",
+      email: "levanc@example.com",
+      role: "Tác giả",
+      status: "Không hoạt động",
+      articles: 23,
+      created: "28/03/2025",
+    },
+    {
+      id: "USR-004",
+      name: "Phạm Thị D",
+      email: "phamthid@example.com",
+      role: "Biên tập viên",
+      status: "Hoạt động",
+      articles: 56,
+      created: "25/03/2025",
+    },
+    {
+      id: "USR-005",
+      name: "Hoàng Văn E",
+      email: "hoangvane@example.com",
+      role: "Tác giả",
+      status: "Chờ duyệt",
+      articles: 12,
+      created: "20/03/2025",
+    },
+    {
+      id: "USR-006",
+      name: "Ngô Thị F",
+      email: "ngothif@example.com",
+      role: "Tác giả",
+      status: "Hoạt động",
+      articles: 34,
+      created: "18/03/2025",
+    },
+    {
+      id: "USR-007",
+      name: "Đỗ Văn G",
+      email: "dovang@example.com",
+      role: "Tác giả",
+      status: "Hoạt động",
+      articles: 19,
+      created: "15/03/2025",
+    },
+    {
+      id: "USR-008",
+      name: "Vũ Thị H",
+      email: "vuthih@example.com",
+      role: "Biên tập viên",
+      status: "Hoạt động",
+      articles: 42,
+      created: "12/03/2025",
+    },
+  ]
 
   return (
     <div>
+      {/* Page Header */}
       <div className={styles.pageHeader}>
         <h1 className={styles.pageTitle}>Quản lý người dùng</h1>
         <div className={styles.pageBreadcrumb}>
@@ -124,19 +94,14 @@ export default function UsersPage() {
         </div>
       </div>
 
+      {/* Users Table */}
       <div className={styles.tableCard}>
         <div className={styles.tableHeader}>
           <h3 className={styles.tableTitle}>Tất cả người dùng</h3>
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-              <Input
-                type="search"
-                placeholder="Tìm kiếm người dùng..."
-                className="pl-8 h-9 w-[200px] md:w-[300px]"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+              <Input type="search" placeholder="Tìm kiếm người dùng..." className="pl-8 h-9 w-[200px] md:w-[300px]" />
             </div>
             <Button variant="outline" size="sm">
               <Filter className="h-4 w-4 mr-2" />
@@ -162,107 +127,91 @@ export default function UsersPage() {
                 <th className={styles.tableHeaderCell}>Tên</th>
                 <th className={styles.tableHeaderCell}>Email</th>
                 <th className={styles.tableHeaderCell}>Vai trò</th>
+                <th className={styles.tableHeaderCell}>Trạng thái</th>
+                <th className={styles.tableHeaderCell}>Bài viết</th>
                 <th className={styles.tableHeaderCell}>Ngày tạo</th>
                 <th className={styles.tableHeaderCell}>Hành động</th>
               </tr>
             </thead>
             <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-4">
-                    Đang tải...
+              {users.map((user) => (
+                <tr key={user.id} className={styles.tableRow}>
+                  <td className={styles.tableCell}>{user.id}</td>
+                  <td className={styles.tableCell}>
+                    <div className="flex items-center">
+                      <div className="h-8 w-8 rounded-full bg-gray-200 mr-2 flex items-center justify-center text-gray-600 font-medium overflow-hidden">
+                        {user.name.charAt(0)}
+                      </div>
+                      {user.name}
+                    </div>
+                  </td>
+                  <td className={styles.tableCell}>{user.email}</td>
+                  <td className={styles.tableCell}>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        user.role === "Admin"
+                          ? "bg-purple-100 text-purple-800"
+                          : user.role === "Biên tập viên"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {user.role}
+                    </span>
+                  </td>
+                  <td className={styles.tableCell}>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        user.status === "Hoạt động"
+                          ? "bg-green-100 text-green-800"
+                          : user.status === "Không hoạt động"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
+                      {user.status}
+                    </span>
+                  </td>
+                  <td className={styles.tableCell}>{user.articles}</td>
+                  <td className={styles.tableCell}>{user.created}</td>
+                  <td className={styles.tableCell}>
+                    <div className="flex space-x-2">
+                      <Link href={`/admin/users/${user.id}`}>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Link href={`/admin/users/${user.id}/edit`}>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </td>
                 </tr>
-              ) : users.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-4">
-                    Không tìm thấy người dùng nào
-                  </td>
-                </tr>
-              ) : (
-                users.map((user) => {
-                  const role = getRoleDisplay(user.role)
-                  return (
-                    <tr key={user.id} className={styles.tableRow}>
-                      <td className={styles.tableCell}>{user.id}</td>
-                      <td className={styles.tableCell}>
-                        <div className="flex items-center">
-                          <div className="h-8 w-8 rounded-full bg-gray-200 mr-2 flex items-center justify-center text-gray-600 font-medium overflow-hidden">
-                            {user.fullname?.charAt(0) || '?'}
-                          </div>
-                          {user.fullname}
-                        </div>
-                      </td>
-                      <td className={styles.tableCell}>{user.email}</td>
-                      <td className={styles.tableCell}>
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${role.classes}`}
-                        >
-                          {role.text}
-                        </span>
-                      </td>
-                      <td className={styles.tableCell}>
-                        {formatDate(user.created_at)}
-                      </td>
-                      <td className={styles.tableCell}>
-                        <div className="flex space-x-2">
-                          <Link href={`/admin/users/${user.id}`}>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </Link>
-                          <Link href={`/admin/users/${user.id}/edit`}>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </Link>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => handleDelete(user.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })
-              )}
+              ))}
             </tbody>
           </table>
         </div>
         <div className={styles.tableFooter}>
-          <div className={styles.paginationInfo}>
-            {total > 0 ? `Hiển thị ${startIndex} đến ${endIndex} trong tổng số ${total} người dùng` : ""}
-          </div>
+          <div className={styles.paginationInfo}>Hiển thị 1 đến 8 trong tổng số 50 người dùng</div>
           <div className={styles.paginationControls}>
-            <button 
-              className={`${styles.paginationButton} ${page === 1 ? styles.paginationButtonDisabled : ""}`}
-              onClick={() => setPage(p => p - 1)}
-              disabled={page === 1}
-            >
+            <button className={`${styles.paginationButton} ${styles.paginationButtonDisabled}`} disabled>
               <ChevronLeftIcon className="h-4 w-4" />
             </button>
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
-              <button
-                key={i + 1}
-                className={`${styles.paginationButton} ${
-                  page === i + 1 ? styles.paginationButtonActive : ""
-                }`}
-                onClick={() => setPage(i + 1)}
-              >
-                {i + 1}
-              </button>
-            ))}
-            <button
-              className={`${styles.paginationButton} ${
-                page === totalPages ? styles.paginationButtonDisabled : ""
-              }`}
-              onClick={() => setPage(p => p + 1)}
-              disabled={page === totalPages}
-            >
+            <button className={`${styles.paginationButton} ${styles.paginationButtonActive}`}>1</button>
+            <button className={styles.paginationButton}>2</button>
+            <button className={styles.paginationButton}>3</button>
+            <button className={styles.paginationButton}>4</button>
+            <button className={styles.paginationButton}>5</button>
+            <button className={styles.paginationButton}>
               <ChevronRightIcon className="h-4 w-4" />
             </button>
           </div>

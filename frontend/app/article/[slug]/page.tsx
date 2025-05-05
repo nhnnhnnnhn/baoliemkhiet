@@ -4,13 +4,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { MessageSquare, ThumbsUp, Share2, Bookmark, Facebook, Twitter } from "lucide-react"
+import { MessageSquare, ThumbsUp, Share2, Bookmark, Facebook, Twitter, AlertTriangle } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
 import { ChatbotButton } from "@/components/chatbot-button"
 
 // Giả lập dữ liệu bài viết
 const getArticleData = (slug: string) => {
   return {
+    id: "article123", // Added article ID
     title: "Việt Nam đạt thỏa thuận hợp tác kinh tế mới với các nước ASEAN",
     publishDate: "15/04/2025",
     publishTime: "08:30",
@@ -19,6 +20,7 @@ const getArticleData = (slug: string) => {
       name: "Nguyễn Văn A",
       avatar: "/placeholder.svg?height=80&width=80",
       bio: "Phóng viên kinh tế với hơn 10 năm kinh nghiệm theo dõi thị trường Đông Nam Á",
+      username: "nguyenvanA",
     },
     content: [
       {
@@ -54,7 +56,7 @@ const getArticleData = (slug: string) => {
       {
         type: "text",
         value:
-          "Theo số liệu thống kê, kim ngạch thương mại giữa Việt Nam và các nước ASEAN đã tăng 15% trong năm 2024, đạt 80 tỷ USD. Với thỏa thuận mới, con số này d��� kiến sẽ tăng lên 100 tỷ USD vào năm 2026.",
+          "Theo số liệu thống kê, kim ngạch thương mại giữa Việt Nam và các nước ASEAN đã tăng 15% trong năm 2024, đạt 80 tỷ USD. Với thỏa thuận mới, con số này dự kiến sẽ tăng lên 100 tỷ USD vào năm 2026.",
       },
       {
         type: "text",
@@ -180,6 +182,10 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
               <Bookmark size={16} />
               <span className="hidden sm:inline">Lưu</span>
             </Button>
+            <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              <Link href={`/user/reports/add?articleId=${article.id}`}>Báo cáo</Link>
+            </Button>
           </div>
         </div>
 
@@ -213,9 +219,9 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
 
         {/* Author Info */}
         <div className="bg-gray-50 p-6 rounded-lg mb-10">
-          <div className="flex items-start gap-4">
+          <Link href={`/profile/${article.author.username}`} className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
-              <AvatarImage src={article.author.avatar} alt={article.author.name} />
+              <AvatarImage src={article.author.avatar || "/placeholder.svg"} alt={article.author.name} />
               <AvatarFallback>{article.author.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div>
@@ -225,7 +231,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
                 Xem tất cả bài viết
               </Button>
             </div>
-          </div>
+          </Link>
         </div>
 
         <Separator className="my-10" />
@@ -252,7 +258,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
                 <div className="flex justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={comment.user.avatar} alt={comment.user.name} />
+                      <AvatarImage src={comment.user.avatar || "/placeholder.svg"} alt={comment.user.name} />
                       <AvatarFallback>{comment.user.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <span className="font-medium">{comment.user.name}</span>

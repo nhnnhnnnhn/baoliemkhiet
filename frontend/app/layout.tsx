@@ -5,7 +5,6 @@ import { Suspense } from "react"
 
 import "./globals.css"
 import Loading from "./loading"
-import Providers from "@/components/providers"
 
 // Sử dụng font Inter cho nội dung - font sans-serif hiện đại
 const inter = Inter({
@@ -25,6 +24,7 @@ const montserrat = Montserrat({
 export const metadata: Metadata = {
   title: "Báo Liêm Khiết - Tin tức nhanh chóng và chính xác",
   description: "Trang tin tức cập nhật nhanh chóng và chính xác nhất Việt Nam",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -35,9 +35,7 @@ export default function RootLayout({
   return (
     <html lang="vi" className={`${inter.variable} ${montserrat.variable}`}>
       <body className={inter.className}>
-        <Providers>
-          <Suspense fallback={<Loading />}>{children}</Suspense>
-        </Providers>
+        <Suspense fallback={<Loading />}>{children}</Suspense>
       </body>
     </html>
   )

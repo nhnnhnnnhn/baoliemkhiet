@@ -6,14 +6,11 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Eye, EyeOff, Lock, Mail } from "lucide-react"
-import { useAppDispatch } from "@/src/store"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { handleLogin } from "../../../src/thunks/auth/authThunk"
-import { AppDispatch } from "../../../src/store"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -21,7 +18,6 @@ export default function LoginPage() {
   const redirectTo = searchParams.get("redirectTo") || "/"
 
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState("")
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -43,26 +39,48 @@ export default function LoginPage() {
     }))
   }
 
-  const dispatch = useAppDispatch()
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setError("") // Clear any previous errors
 
-    try {
-      const response = await dispatch(handleLogin({
+    // Simulate login - in a real app, this would be an API call
+    console.log("Login data:", formData)
+
+    // Lưu token giả lập vào localStorage
+    localStorage.setItem("authToken", "fake-jwt-token")
+
+    // Lưu thông tin người dùng giả lập
+    const userRole = formData.email.includes("admin")
+      ? "ADMIN"
+      : formData.email.includes("author")
+        ? "JOURNALIST"
+        : "USER"
+
+    localStorage.setItem(
+      "userInfo",
+      JSON.stringify({
+        name: formData.email.split("@")[0],
         email: formData.email,
-        password: formData.password
-      })).unwrap()
+        role: userRole,
+        username: formData.email.split("@")[0].toLowerCase(),
+      }),
+    )
 
-      // Store role in localStorage
-      localStorage.setItem('userRole', response.user.role);
-      
-      // Always redirect to home page after login
-      router.push("/")
-    } catch (error: any) {
-      console.error('Login failed:', error)
-      setError(error.toString())
+    // Redirect based on role (simulated)
+    // In a real app, this would be determined by the API response
+    const role = formData.email.includes("admin") ? "admin" : formData.email.includes("author") ? "author" : "user"
+
+    if (role === "admin") {
+      router.push("/admin")
+    } else if (role === "author") {
+      router.push("/author")
+    } else {
+      // If redirectTo is provided and not a dashboard, redirect there
+      // Otherwise go to user dashboard
+      if (redirectTo && !redirectTo.includes("/admin") && !redirectTo.includes("/author")) {
+        router.push(redirectTo)
+      } else {
+        router.push("/user")
+      }
     }
   }
 
@@ -100,11 +118,6 @@ export default function LoginPage() {
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md border border-red-200">
-              {error}
-            </div>
-          )}
           <div className="space-y-4">
             <div>
               <Label htmlFor="email">Email</Label>
@@ -175,6 +188,11 @@ export default function LoginPage() {
             <Button type="submit" className="w-full">
               Đăng nhập
             </Button>
+          </div>
+          <div className="text-sm text-right mt-2">
+            <Link href="/auth/forgot-password" className="text-blue-600 hover:underline">
+              Quên mật khẩu?
+            </Link>
           </div>
         </form>
 

@@ -1,104 +1,15 @@
-"use client"
-
-import { useState } from "react"
-import { useDispatch, useSelector } from "react-redux"
-import { AppDispatch } from "@/src/store"
-import { handleChangePassword, handleLogout } from "@/src/thunks/auth/authThunk"
-import { selectChangingPassword, selectChangePasswordError } from "@/src/thunks/auth/authSlice"
 import { Bell, Globe, Lock, Moon, Sun } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { useToast } from "@/hooks/use-toast"
 
 export default function AuthorSettingsPage() {
-  const dispatch = useDispatch<AppDispatch>();
-  const isChangingPassword = useSelector(selectChangingPassword);
-  const changePasswordError = useSelector(selectChangePasswordError);
-  const { toast } = useToast();
-  const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
-  const [passwordFormData, setPasswordFormData] = useState({
-    email: "",
-    oldPassword: "",
-    newPassword: "",
-    confirmPassword: ""
-  });
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setPasswordFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handlePasswordChangeSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (passwordFormData.newPassword !== passwordFormData.confirmPassword) {
-      toast({
-        title: "Lỗi",
-        description: "Mật khẩu xác nhận không khớp với mật khẩu mới",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      await dispatch(handleChangePassword({
-        email: passwordFormData.email,
-        oldPassword: passwordFormData.oldPassword,
-        newPassword: passwordFormData.newPassword
-      })).unwrap();
-      
-      setShowChangePasswordDialog(false);
-      setPasswordFormData({
-        email: "",
-        oldPassword: "",
-        newPassword: "",
-        confirmPassword: ""
-      });
-      
-      // Hiển thị toast thông báo thành công
-      toast({
-        title: "Đổi mật khẩu thành công",
-        description: "Bạn sẽ được đăng xuất trong giây lát",
-        variant: "success",
-        duration: 3000,
-      });
-      
-      // Tự động đăng xuất sau 3 giây
-      setTimeout(() => {
-        dispatch(handleLogout());
-      }, 3000);
-      
-    } catch (error) {
-      // Error will be shown through changePasswordError
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div>
@@ -323,11 +234,7 @@ export default function AuthorSettingsPage() {
               </div>
               <div className="space-y-2">
                 <Label>Đổi mật khẩu</Label>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => setShowChangePasswordDialog(true)}
-                >
+                <Button variant="outline" className="w-full">
                   Đổi mật khẩu
                 </Button>
               </div>
@@ -335,89 +242,6 @@ export default function AuthorSettingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Đổi mật khẩu Dialog */}
-      <AlertDialog open={showChangePasswordDialog} onOpenChange={setShowChangePasswordDialog}>
-        <AlertDialogContent className="max-w-md">
-          <form onSubmit={handlePasswordChangeSubmit}>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Đổi mật khẩu</AlertDialogTitle>
-              <AlertDialogDescription>
-                Vui lòng nhập thông tin dưới đây để đổi mật khẩu của bạn.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="Nhập email của bạn"
-                  value={passwordFormData.email}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="oldPassword">Mật khẩu hiện tại</Label>
-                <Input
-                  id="oldPassword"
-                  name="oldPassword"
-                  type="password"
-                  placeholder="Nhập mật khẩu hiện tại"
-                  value={passwordFormData.oldPassword}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">Mật khẩu mới</Label>
-                <Input
-                  id="newPassword"
-                  name="newPassword"
-                  type="password"
-                  placeholder="Nhập mật khẩu mới"
-                  value={passwordFormData.newPassword}
-                  onChange={handleInputChange}
-                  required
-                  minLength={6}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Xác nhận mật khẩu mới</Label>
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  placeholder="Xác nhận mật khẩu mới"
-                  value={passwordFormData.confirmPassword}
-                  onChange={handleInputChange}
-                  required
-                  minLength={6}
-                />
-              </div>
-              {changePasswordError && (
-                <div className="text-red-500 text-sm mt-2">
-                  {changePasswordError}
-                </div>
-              )}
-            </div>
-            <AlertDialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setShowChangePasswordDialog(false)}
-                type="button"
-              >
-                Hủy
-              </Button>
-              <Button type="submit" disabled={isChangingPassword}>
-                {isChangingPassword ? 'Đang xử lý...' : 'Xác nhận'}
-              </Button>
-            </AlertDialogFooter>
-          </form>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }

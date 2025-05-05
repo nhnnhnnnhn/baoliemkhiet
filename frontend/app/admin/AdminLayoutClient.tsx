@@ -2,7 +2,22 @@
 
 import type React from "react"
 import Link from "next/link"
-import { Home, Users, FileText, BarChart2, Settings, Menu, Search, ChevronDown, LogOut, User, Mail } from "lucide-react"
+import {
+  Home,
+  Users,
+  FileText,
+  BarChart2,
+  Settings,
+  Menu,
+  Search,
+  ChevronDown,
+  LogOut,
+  User,
+  Mail,
+  AlertTriangle,
+  MessageSquare,
+  Tag,
+} from "lucide-react"
 import Image from "next/image"
 import { Suspense } from "react"
 import { usePathname } from "next/navigation"
@@ -61,6 +76,34 @@ function SidebarNavigation() {
             <Users className={styles.navIcon} />
             Người dùng
           </Link>
+          <Link
+            href="/admin/comments"
+            className={`${styles.navLink} ${isActive("/admin/comments") ? styles.navLinkActive : ""}`}
+          >
+            <MessageSquare className={styles.navIcon} />
+            Bình luận
+          </Link>
+          <Link
+            href="/admin/categories"
+            className={`${styles.navLink} ${isActive("/admin/categories") ? styles.navLinkActive : ""}`}
+          >
+            <FileText className={styles.navIcon} />
+            Danh mục
+          </Link>
+          <Link
+            href="/admin/tags"
+            className={`${styles.navLink} ${isActive("/admin/tags") ? styles.navLinkActive : ""}`}
+          >
+            <Tag className={styles.navIcon} />
+            Thẻ
+          </Link>
+          <Link
+            href="/admin/reports"
+            className={`${styles.navLink} ${isActive("/admin/reports") ? styles.navLinkActive : ""}`}
+          >
+            <AlertTriangle className={styles.navIcon} />
+            Báo cáo
+          </Link>
         </div>
       </div>
       <div className={styles.navSection}>
@@ -96,6 +139,10 @@ function HeaderBreadcrumb() {
     if (pathname.startsWith("/admin/statistics")) return "Thống kê"
     if (pathname.startsWith("/admin/articles")) return "Bài viết"
     if (pathname.startsWith("/admin/users")) return "Người dùng"
+    if (pathname.startsWith("/admin/comments")) return "Bình luận"
+    if (pathname.startsWith("/admin/categories")) return "Danh mục"
+    if (pathname.startsWith("/admin/tags")) return "Thẻ"
+    if (pathname.startsWith("/admin/reports")) return "Báo cáo"
     if (pathname.startsWith("/admin/profile")) return "Hồ sơ"
     if (pathname.startsWith("/admin/settings")) return "Cài đặt"
     return "Trang chủ"

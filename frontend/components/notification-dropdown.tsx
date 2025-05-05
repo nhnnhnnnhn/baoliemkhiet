@@ -3,112 +3,105 @@
 import { useState } from "react"
 import { Bell } from "lucide-react"
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
+import { ImageWithFallback } from "./image-with-fallback"
+import styles from "@/app/admin/admin.module.css"
 
 export function NotificationDropdown() {
-  const [unreadCount, setUnreadCount] = useState(3)
+  const [isOpen, setIsOpen] = useState(false)
 
   // Mock notifications data
   const notifications = [
     {
       id: 1,
-      title: "Bài viết mới cần duyệt",
-      message: "Nguyễn Văn A đã gửi một bài viết mới cần được duyệt",
+      type: "comment",
+      message: "Nguyễn Văn A đã bình luận về bài viết của bạn",
       time: "5 phút trước",
       read: false,
-      avatar: "/placeholder.svg?height=32&width=32",
-      avatarFallback: "NA",
+      userAvatar: "/diverse-avatars.png",
     },
     {
       id: 2,
-      title: "Bình luận mới",
-      message: "Có 5 bình luận mới cần được duyệt",
-      time: "30 phút trước",
+      type: "article",
+      message: "Bài viết của bạn đã được phê duyệt",
+      time: "1 giờ trước",
       read: false,
-      avatar: "/placeholder.svg?height=32&width=32",
-      avatarFallback: "CM",
+      userAvatar: null,
     },
     {
       id: 3,
-      title: "Người dùng mới đăng ký",
-      message: "Trần Thị B vừa đăng ký tài khoản mới",
-      time: "1 giờ trước",
-      read: false,
-      avatar: "/placeholder.svg?height=32&width=32",
-      avatarFallback: "TB",
-    },
-    {
-      id: 4,
-      title: "Cập nhật hệ thống",
-      message: "Hệ thống vừa được cập nhật lên phiên bản mới",
+      type: "system",
+      message: "Hệ thống đã được cập nhật lên phiên bản mới",
       time: "1 ngày trước",
       read: true,
-      avatar: "/placeholder.svg?height=32&width=32",
-      avatarFallback: "SY",
+      userAvatar: null,
     },
   ]
 
-  // Mark all notifications as read
-  const markAllAsRead = () => {
-    setUnreadCount(0)
+  const unreadCount = notifications.filter((notification) => !notification.read).length
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen)
   }
 
+  // Đảm bảo fallbackSrc không rỗng
+  const avatarFallbackSrc = "/abstract-user-icon.png"
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
-            <span className="absolute top-0 right-0 h-4 w-4 rounded-full bg-red-600 text-[10px] font-medium text-white flex items-center justify-center">
-              {unreadCount}
-            </span>
-          )}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-80" align="end">
-        <DropdownMenuLabel className="flex items-center justify-between">
-          <span>Thông báo</span>
-          {unreadCount > 0 && (
-            <Button variant="ghost" size="sm" onClick={markAllAsRead} className="h-auto text-xs px-2">
-              Đánh dấu tất cả đã đọc
-            </Button>
-          )}
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup className="max-h-[300px] overflow-y-auto">
-          {notifications.map((notification) => (
-            <DropdownMenuItem key={notification.id} className={notification.read ? "" : "bg-muted/50"}>
-              <div className="flex items-start gap-2 py-1">
-                <Avatar className="h-8 w-8">
-                  {notification.avatar ? <AvatarImage src={notification.avatar || "/placeholder.svg"} alt="" /> : null}
-                  <AvatarFallback>{notification.avatarFallback}</AvatarFallback>
-                </Avatar>
-                <div className="grid gap-1">
-                  <div className="font-medium">{notification.title}</div>
-                  <div className="text-sm text-muted-foreground">{notification.message}</div>
-                  <div className="text-xs text-muted-foreground">{notification.time}</div>
+    <div className="relative">
+      <button
+        className={styles.notificationButton}
+        onClick={toggleDropdown}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+      >
+        <Bell size={20} />
+        {unreadCount > 0 && <span className={styles.notificationBadge}>{unreadCount}</span>}
+      </button>
+
+      {isOpen && (
+        <div className={styles.notificationDropdown}>
+          <div className={styles.notificationHeader}>
+            <h3 className={styles.notificationTitle}>Thông báo</h3>
+            {unreadCount > 0 && <span className={styles.notificationCount}>{unreadCount} mới</span>}
+          </div>
+          <div className={styles.notificationList}>
+            {notifications.map((notification) => (
+              <div
+                key={notification.id}
+                className={cn(styles.notificationItem, {
+                  [styles.notificationItemUnread]: !notification.read,
+                })}
+              >
+                <div className={styles.notificationAvatar}>
+                  {notification.userAvatar ? (
+                    <ImageWithFallback
+                      src={notification.userAvatar || "/placeholder.svg"}
+                      fallbackSrc={avatarFallbackSrc}
+                      alt="User Avatar"
+                      width={40}
+                      height={40}
+                      className={styles.notificationAvatarImg}
+                    />
+                  ) : (
+                    <div className={styles.notificationIconContainer}>
+                      <Bell size={16} />
+                    </div>
+                  )}
+                </div>
+                <div className={styles.notificationContent}>
+                  <div className={styles.notificationMessage}>{notification.message}</div>
+                  <div className={styles.notificationTime}>{notification.time}</div>
                 </div>
               </div>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="justify-center">
-          <Button variant="ghost" size="sm" className="w-full">
-            Xem tất cả thông báo
-          </Button>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+            ))}
+          </div>
+          <div className={styles.notificationFooter}>
+            <button className={styles.notificationAction}>Xem tất cả</button>
+            <button className={styles.notificationAction}>Đánh dấu đã đọc</button>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

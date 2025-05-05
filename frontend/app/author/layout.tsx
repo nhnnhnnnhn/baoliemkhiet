@@ -3,8 +3,20 @@
 import type React from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { FileText, Home, LogOut, Menu, MessageSquare, Settings, User, Edit, ChevronDown } from "lucide-react"
-import { useLogout } from "@/hooks/use-logout"
+import {
+  FileText,
+  Home,
+  LogOut,
+  Menu,
+  MessageSquare,
+  Settings,
+  User,
+  Edit,
+  ChevronDown,
+  Bell,
+  BarChart2,
+  Users,
+} from "lucide-react"
 import { usePathname } from "next/navigation"
 import { Suspense } from "react"
 
@@ -40,6 +52,13 @@ function AuthorSidebarNavigation() {
             <Home className={styles.navIcon} />
             Trang chủ
           </Link>
+          <Link
+            href="/author/statistics"
+            className={`${styles.navLink} ${isActive("/author/statistics") ? styles.navLinkActive : ""}`}
+          >
+            <BarChart2 className={styles.navIcon} />
+            Thống kê
+          </Link>
         </div>
       </div>
       <div className={styles.navSection}>
@@ -58,6 +77,32 @@ function AuthorSidebarNavigation() {
           >
             <Edit className={styles.navIcon} />
             Viết bài mới
+          </Link>
+          <Link
+            href="/author/comments"
+            className={`${styles.navLink} ${isActive("/author/comments") ? styles.navLinkActive : ""}`}
+          >
+            <MessageSquare className={styles.navIcon} />
+            Bình luận
+          </Link>
+        </div>
+      </div>
+      <div className={styles.navSection}>
+        <div className={styles.navSectionTitle}>Cộng đồng</div>
+        <div className={styles.navLinks}>
+          <Link
+            href="/author/followers"
+            className={`${styles.navLink} ${isActive("/author/followers") ? styles.navLinkActive : ""}`}
+          >
+            <Users className={styles.navIcon} />
+            Người theo dõi
+          </Link>
+          <Link
+            href="/author/notifications"
+            className={`${styles.navLink} ${isActive("/author/notifications") ? styles.navLinkActive : ""}`}
+          >
+            <Bell className={styles.navIcon} />
+            Thông báo
           </Link>
         </div>
       </div>
@@ -91,8 +136,12 @@ function AuthorHeaderBreadcrumb() {
   // Get the current section name based on the pathname
   const getCurrentSection = () => {
     if (pathname === "/author") return "Trang chủ"
+    if (pathname.startsWith("/author/statistics")) return "Thống kê"
     if (pathname.startsWith("/author/articles/add")) return "Viết bài mới"
     if (pathname.startsWith("/author/articles")) return "Bài viết của tôi"
+    if (pathname.startsWith("/author/comments")) return "Bình luận"
+    if (pathname.startsWith("/author/followers")) return "Người theo dõi"
+    if (pathname.startsWith("/author/notifications")) return "Thông báo"
     if (pathname.startsWith("/author/profile")) return "Hồ sơ"
     if (pathname.startsWith("/author/settings")) return "Cài đặt"
     return "Trang chủ"
@@ -106,7 +155,6 @@ function AuthorHeaderBreadcrumb() {
 }
 
 export default function AuthorLayout({ children }: { children: React.ReactNode }) {
-  const logout = useLogout();
   // Define fallback image sources
   const avatarFallbackSrc = "/abstract-user-icon.png"
 
@@ -175,12 +223,9 @@ export default function AuthorLayout({ children }: { children: React.ReactNode }
         {/* Desktop Header */}
         <header className="hidden md:flex sticky top-0 z-10 bg-white border-b p-4 items-center justify-between">
           <div className="flex items-center">
-            <Link href="/">
-              <Button variant="ghost" size="icon" className="mr-2">
-                <Home className="h-5 w-5" />
-                <span className="sr-only">Về trang chủ</span>
-              </Button>
-            </Link>
+            <Button variant="ghost" size="icon" className="mr-2">
+              <Home className="h-5 w-5" />
+            </Button>
             <Separator orientation="vertical" className="h-6 mx-2" />
             <Suspense fallback={<div>Loading...</div>}>
               <AuthorHeaderBreadcrumb />
@@ -192,12 +237,7 @@ export default function AuthorLayout({ children }: { children: React.ReactNode }
               <MessageSquare className="h-5 w-5" />
             </Button>
             <Separator orientation="vertical" className="h-6" />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-2"
-              onClick={logout}
-            >
+            <Button variant="ghost" size="sm" className="gap-2">
               <LogOut className="h-4 w-4" />
               Đăng xuất
             </Button>
