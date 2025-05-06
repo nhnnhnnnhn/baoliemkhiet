@@ -59,7 +59,7 @@ export default function LoginPage() {
       localStorage.setItem('userRole', response.user.role);
       
       // Always redirect to home page after login
-      router.push("/")
+      router.push('/');
     } catch (error: any) {
       console.error('Login failed:', error)
       setError(error.toString())

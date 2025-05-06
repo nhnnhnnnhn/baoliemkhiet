@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useAppSelector } from "@/src/store"
+import { selectCurrentUser, selectIsLoggedIn } from "@/src/thunks/auth/authSlice"
 import {
   SearchIcon,
   TrendingUpIcon,
@@ -14,9 +16,12 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { SafeLink } from "@/components/safe-link"
+import { UserMenu } from "@/components/user-menu"
 
 export function SiteHeader() {
   const [isScrolled, setIsScrolled] = useState(false)
+  const isLoggedIn = useAppSelector(selectIsLoggedIn)
+  const currentUser = useAppSelector(selectCurrentUser)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -101,7 +106,7 @@ export function SiteHeader() {
             </nav>
           </div>
 
-          {/* Nửa bên phải: Tìm kiếm, Đăng nhập, Đăng ký */}
+          {/* Nửa bên phải: Tìm kiếm và User Menu hoặc Đăng nhập/Đăng ký */}
           <div className="flex items-center space-x-2 md:space-x-4">
             <SafeLink href="/search">
               <Button
@@ -113,27 +118,38 @@ export function SiteHeader() {
                 <span className="sr-only">Tìm kiếm</span>
               </Button>
             </SafeLink>
-            <SafeLink href="/auth/login">
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`hidden sm:flex ${
-                  isScrolled ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"
-                }`}
-              >
-                ĐĂNG NHẬP
-              </Button>
-            </SafeLink>
-            <SafeLink href="/subscribe">
-              <Button
-                size="sm"
-                className={
-                  isScrolled ? "bg-black text-white hover:bg-gray-800" : "bg-white text-black hover:bg-gray-100"
-                }
-              >
-                ĐĂNG KÝ
-              </Button>
-            </SafeLink>
+            
+            {/* Hiển thị User Menu nếu đã đăng nhập, ngược lại hiển thị nút Đăng nhập/Đăng ký */}
+            {isLoggedIn ? (
+              <UserMenu
+                user={currentUser || { fullname: 'User' }}
+                isScrolled={isScrolled}
+              />
+            ) : (
+              <>
+                <SafeLink href="/auth/login">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`hidden sm:flex ${
+                      isScrolled ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"
+                    }`}
+                  >
+                    ĐĂNG NHẬP
+                  </Button>
+                </SafeLink>
+                <SafeLink href="/subscribe">
+                  <Button
+                    size="sm"
+                    className={
+                      isScrolled ? "bg-black text-white hover:bg-gray-800" : "bg-white text-black hover:bg-gray-100"
+                    }
+                  >
+                    ĐĂNG KÝ
+                  </Button>
+                </SafeLink>
+              </>
+            )}
           </div>
         </div>
       </div>

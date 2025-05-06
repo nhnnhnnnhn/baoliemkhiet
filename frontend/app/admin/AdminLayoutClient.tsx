@@ -4,8 +4,10 @@ import type React from "react"
 import Link from "next/link"
 import { Home, Users, FileText, BarChart2, Settings, Menu, Search, ChevronDown, LogOut, User, Mail } from "lucide-react"
 import Image from "next/image"
-import { Suspense } from "react"
-import { usePathname } from "next/navigation"
+import { Suspense, useEffect } from "react"
+import { usePathname, useRouter } from "next/navigation"
+import { useAppSelector } from "@/src/store"
+import { selectCurrentUser, selectIsLoggedIn } from "@/src/thunks/auth/authSlice"
 
 import { NotificationDropdown } from "@/components/notification-dropdown"
 import { ImageWithFallback } from "@/components/image-with-fallback"
@@ -114,6 +116,21 @@ export default function AdminLayoutClient({
 }: {
   children: React.ReactNode
 }) {
+  const router = useRouter()
+  const isLoggedIn = useAppSelector(selectIsLoggedIn)
+  const user = useAppSelector(selectCurrentUser)
+
+  useEffect(() => {
+    // If not logged in or not an admin, redirect to login
+    if (!isLoggedIn || !user || user.role !== 'ADMIN') {
+      router.push('/auth/login')
+    }
+  }, [isLoggedIn, user, router])
+
+  // Don't render anything while checking authentication
+  if (!isLoggedIn || !user || user.role !== 'ADMIN') {
+    return null
+  }
   // Define fallback image sources
   const avatarFallbackSrc = "/abstract-user-icon.png"
   const smallAvatarFallbackSrc = "/abstract-user-icon.png"

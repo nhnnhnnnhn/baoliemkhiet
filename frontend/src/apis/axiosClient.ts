@@ -92,9 +92,12 @@ axiosClient.interceptors.response.use(
         }
         
         const response = await axios.post(
-          'http://localhost:3000/api/auth/refresh-token', 
+          'http://localhost:3000/api/auth/refresh-token',
           { refreshToken },
-          { headers: { 'Content-Type': 'application/json' } }
+          {
+            headers: { 'Content-Type': 'application/json' },
+            withCredentials: true
+          }
         );
         
         const { accessToken } = response.data;
@@ -107,19 +110,26 @@ axiosClient.interceptors.response.use(
         isRefreshing = false;
         return axiosClient(originalRequest);
       } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError);
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
+        const axiosError = refreshError as any;
+        console.error('Token refresh failed:', axiosError);
         
-        // Thông báo cho các request đang đợi rằng refresh token đã thất bại
-        processQueue(refreshError, null);
-        isRefreshing = false;
-        
-        // Nếu refresh token thất bại và không đang trong quá trình kiểm tra đăng nhập, chuyển hướng
-        if (!window.location.pathname.startsWith('/auth/')) {
-          setTimeout(() => {
+        // Only remove tokens and redirect if it's an authentication error
+        if (axiosError.response?.status === 401) {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          
+          // Thông báo cho các request đang đợi rằng refresh token đã thất bại
+          processQueue(refreshError, null);
+          isRefreshing = false;
+          
+          // Nếu refresh token thất bại và không đang trong quá trình kiểm tra đăng nhập, chuyển hướng
+          if (!window.location.pathname.startsWith('/auth/')) {
             window.location.href = '/auth/login';
-          }, 100);
+          }
+        } else {
+          // For other errors, just notify waiting requests but don't clear tokens
+          processQueue(refreshError, null);
+          isRefreshing = false;
         }
         
         return Promise.reject(refreshError);
