@@ -189,11 +189,6 @@ export default function LoginPage() {
               Đăng nhập
             </Button>
           </div>
-          <div className="text-sm text-right mt-2">
-            <Link href="/auth/forgot-password" className="text-blue-600 hover:underline">
-              Quên mật khẩu?
-            </Link>
-          </div>
         </form>
 
         <div className="mt-6">

@@ -14,10 +14,10 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build ứng dụng
-RUN npm run build
+RUN pnpm run build
 
 # Mở cổng 3001 (Next.js mặc định chạy trên 3000)
 EXPOSE 3001
 
 # Khởi động ứng dụng
-CMD ["npm", "start", "--", "-p", "3001"]
+CMD ["pnpm", "start", "--", "-p", "3001"]
