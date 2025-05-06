@@ -82,32 +82,30 @@ async function updateComment(comment_id, content) {
       status: CommentStatus.PENDING, // Reset status to PENDING when updating
     },
   });
-  shell.send({ content: content });
-  shell.on("message", async function (message) {
-    const response = message.response;
-    if (!response) {
-      throw new Error("No response from Python script");
-    }
-    const jsonResponse = extractJSON(response);
-    let status = CommentStatus.PENDING;
-    if (jsonResponse.data.detect) status = CommentStatus.APPROVED;
-    else if (jsonResponse.data.detect === false)
-      status = CommentStatus.REJECTED_BY_AI;
+  const response = await deepseek(content);
 
-    await prisma.comment.update({
-      where: { id: comment_id },
-      data: {
-        status: status,
-      },
-    });
-    console.log(`Comment status updated to: ${status}`);
-  });
-  shell.end(function (err, code, signal) {
-    if (err) throw err;
-    console.log(`Script finished with code ${code}`);
+  if (!response) {
+    throw new Error("No response from Python script");
+  }
+  const jsonResponse = await extractJSON(response);
+  console.log(jsonResponse.data.detect);
+
+  let status = CommentStatus.PENDING;
+  if (!jsonResponse.data.detect) {
+    status = CommentStatus.APPROVED;
+  } else if (jsonResponse.data.detect == true) {
+    status = CommentStatus.REJECTED_BY_AI;
+  }
+  const commentId = comment.id;
+
+  const updateCommentStatus = await prisma.comment.update({
+    where: { id: commentId },
+    data: {
+      status: status,
+    },
   });
   // Return the updated comment
-  return updatedComment;
+  return updateCommentStatus;
 }
 
 async function deleteComment(comment_id) {
