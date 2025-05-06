@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Cài đặt dependencies
 COPY package.json package-lock.json* pnpm-lock.yaml* ./
-RUN pnpm install --legacy-peer-deps
+RUN npm install --legacy-peer-deps
 
 # Sao chép source code
 COPY . .
@@ -14,7 +14,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build ứng dụng
-RUN pnpm build
+RUN npm run build
 
 # Mở cổng 3001 (Next.js mặc định chạy trên 3000)
 EXPOSE 3001
