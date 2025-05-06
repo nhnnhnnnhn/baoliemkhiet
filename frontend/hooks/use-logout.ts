@@ -1,3 +1,5 @@
+"use client"
+
 import { useRouter } from "next/navigation"
 import { useAppDispatch } from "@/src/store"
 import { handleLogout } from "@/src/thunks/auth/authThunk"

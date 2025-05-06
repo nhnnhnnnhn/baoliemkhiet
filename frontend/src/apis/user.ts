@@ -1,4 +1,4 @@
-import axiosClient from './axiosClient'
+import axiosClient from "./axiosClient"
 
 export interface User {
   id: number
@@ -62,7 +62,7 @@ export interface CreateAdminPayload {
 
 const userApi = {
   getUsers: async (params: GetUsersParams): Promise<GetUsersResponse> => {
-    return axiosClient.get('/users', { params })
+    return axiosClient.get("/users", { params })
   },
 
   getUserById: async (id: number): Promise<User> => {
@@ -78,25 +78,25 @@ const userApi = {
   },
 
   createAdmin: async (data: CreateAdminPayload): Promise<User> => {
-    return axiosClient.post('/users/admin', {
+    return axiosClient.post("/users/admin", {
       ...data,
-      role: "ADMIN"
+      role: "ADMIN",
     })
   },
 
   createUser: async (data: {
-    email: string;
-    password: string;
-    fullname: string;
-    role?: string;
-    avatar?: string | null;
-    bio?: string | null;
-    phone?: string | null;
-    address?: string | null;
-    status?: string;
+    email: string
+    password: string
+    fullname: string
+    role?: string
+    avatar?: string | null
+    bio?: string | null
+    phone?: string | null
+    address?: string | null
+    status?: string
   }): Promise<User> => {
-    return axiosClient.post('/users', data)
-  }
+    return axiosClient.post("/users", data)
+  },
 }
 
 export default userApi

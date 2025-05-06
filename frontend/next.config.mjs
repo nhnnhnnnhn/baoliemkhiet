@@ -1,4 +1,4 @@
- let userConfig = undefined
+let userConfig = undefined
 try {
   // File v0-user-next.config.mjs có thể không tồn tại, nên chúng ta bỏ qua lỗi
   try {

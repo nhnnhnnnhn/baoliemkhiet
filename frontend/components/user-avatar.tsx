@@ -13,7 +13,7 @@ export function UserAvatar({ src, name, className }: UserAvatarProps) {
   const initials = name
     ? name
         .split(" ")
-        .map(n => n[0])
+        .map((n) => n[0])
         .join("")
         .toUpperCase()
         .slice(0, 2)
