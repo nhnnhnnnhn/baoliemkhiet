@@ -2,16 +2,12 @@ import axiosClient from "./axiosClient";
 
 const notificationApi = {
   async getNotifications() {
-    const a = await axiosClient.get("/notifications", {});
-    console.log(a);
-    return a;
+    return await axiosClient.get("/notifications", {});
   },
   async markAsRead(notification_id: number) {
     return await axiosClient.put(`/notifications/read/${notification_id}`);
   },
   async markAllAsRead() {
-    console.log("cc");
-
     return await axiosClient.put(`/notifications/read-all`);
   },
   async getUnreadCount() {

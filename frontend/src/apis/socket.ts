@@ -1,12 +1,4 @@
-// src/apis/socket.ts
-import { Manager } from "socket.io-client";
-
-interface Socket {
-  on: (event: string, callback: (...args: any[]) => void) => void;
-  off: (event: string, callback?: (...args: any[]) => void) => void;
-  emit: (event: string, data?: any) => void;
-  disconnect: () => void;
-}
+import { io, Socket } from "socket.io-client";
 
 interface NotificationPayload {
   receiver_id: number;
@@ -19,27 +11,27 @@ let socket: Socket | null = null;
 
 export const initializeSocket = (jwt_token: string): Socket => {
   if (!socket) {
-    const manager = new Manager(
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
-    );
-    const newSocket = manager.socket("/") as Socket;
+    socket = io(process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000", {
+      autoConnect: true,
+      auth: {
+        token: jwt_token
+      },
+      transports: ['websocket', 'polling']
+    });
 
-    newSocket.on("connect", () => {
+    socket.on("connect", () => {
       console.log("Socket connected");
-      // Send login event with JWT token
-      newSocket.emit("login", { jwt_token });
     });
 
-    newSocket.on("error", (error: Error) => {
-      console.error("Socket error:", error);
+    socket.on("connect_error", (error) => {
+      console.error("Socket connection error:", error);
     });
 
-    newSocket.on("disconnect", () => {
-      console.log("Socket disconnected");
+    socket.on("disconnect", (reason) => {
+      console.log("Socket disconnected:", reason);
     });
-
-    socket = newSocket;
   }
+
   return socket;
 };
 

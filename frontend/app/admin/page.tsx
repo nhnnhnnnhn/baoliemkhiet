@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { ArrowDownIcon, ArrowUpIcon, Eye, MessageSquare, PenSquare } from "lucide-react"
+import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
 import styles from "./admin.module.css"
@@ -69,6 +70,9 @@ export default function AdminDashboard() {
       publishedAt: "12 giờ trước",
     },
   ]
+
+  // Đảm bảo đường dẫn hình ảnh không rỗng
+  const chartImagePath = "/business-growth-chart.png"
 
   return (
     <div>
@@ -157,9 +161,19 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className={styles.chartContent}>
-            {/* Placeholder for daily views chart */}
+            {/* Sử dụng Next/Image thay vì img tag và đảm bảo src không rỗng */}
             <div className="flex items-center justify-center h-full">
-              <img src="/business-growth-chart.png" alt="Chart Placeholder" />
+              {chartImagePath ? (
+                <Image
+                  src={chartImagePath || "/placeholder.svg"}
+                  alt="Chart Placeholder"
+                  width={600}
+                  height={300}
+                  style={{ objectFit: "contain" }}
+                />
+              ) : (
+                <div className="text-gray-400">Không có dữ liệu biểu đồ</div>
+              )}
             </div>
           </div>
         </div>

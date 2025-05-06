@@ -3,20 +3,24 @@
 import { useState } from "react"
 import Image, { type ImageProps } from "next/image"
 
-interface ImageWithFallbackProps extends Omit<ImageProps, "onError"> {
+interface ImageWithFallbackProps extends ImageProps {
   fallbackSrc: string
 }
 
-export function ImageWithFallback({ src, fallbackSrc, alt, ...rest }: ImageWithFallbackProps) {
-  const [imgSrc, setImgSrc] = useState<string>(src as string)
+export function ImageWithFallback({ src, fallbackSrc, alt, ...props }: ImageWithFallbackProps) {
+  const [imgSrc, setImgSrc] = useState(src)
 
-  // Handle image load error
-  const handleError = () => {
-    setImgSrc(fallbackSrc)
-  }
+  // Sử dụng fallbackSrc nếu src là chuỗi rỗng hoặc undefined
+  const actualSrc = imgSrc && imgSrc !== "" ? imgSrc : fallbackSrc
 
-  // If src is empty, null, or undefined, use fallback
-  const sourceSrc = src ? imgSrc : fallbackSrc
-
-  return <Image {...rest} src={sourceSrc || "/placeholder.svg"} alt={alt} onError={handleError} />
+  return (
+    <Image
+      {...props}
+      src={actualSrc || "/placeholder.svg"}
+      alt={alt}
+      onError={() => {
+        setImgSrc(fallbackSrc)
+      }}
+    />
+  )
 }

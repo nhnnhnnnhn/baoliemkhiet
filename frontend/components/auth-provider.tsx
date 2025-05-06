@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useAppDispatch, useAppSelector } from "@/src/store"
 import { handleGetProfile } from "@/src/thunks/auth/authThunk"
 import { selectIsLoggedIn, setTokenFromStorage } from "@/src/thunks/auth/authSlice"
+import { initializeSocket, disconnectSocket } from "@/src/apis/socket"
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch()
@@ -35,18 +36,22 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
           isLoggedIn: !!accessToken
         }))
         
-        // Nếu có token, tiến hành lấy thông tin profile
+        // Nếu có token, tiến hành lấy thông tin profile và khởi tạo socket
         if (accessToken) {
           try {
             await dispatch(handleGetProfile()).unwrap()
             console.log("Đăng nhập thành công từ token hiện có")
+            
+            // Khởi tạo kết nối socket sau khi xác thực thành công
+            initializeSocket(accessToken)
           } catch (error) {
             console.error("Lỗi khi lấy thông tin profile:", error)
             
-            // Chỉ xóa token và chuyển hướng nếu lỗi là 401 (token hết hạn hoặc không hợp lệ)
+            // Chỉ xóa token và chuyển hướng nếu lỗi là 401
             if (error && typeof error === 'string' && error.includes('Unauthorized')) {
               localStorage.removeItem('accessToken')
               localStorage.removeItem('refreshToken')
+              disconnectSocket() // Ngắt kết nối socket khi token không hợp lệ
               router.push('/auth/login')
             }
           }
@@ -73,7 +78,10 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     }
     
     window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      disconnectSocket() // Cleanup socket when component unmounts
+    }
   }, [isClient, dispatch, router])
   
   if (isLoading && isClient) {

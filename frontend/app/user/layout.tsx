@@ -2,23 +2,91 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, Suspense, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Bell, ChevronDown, CreditCard, Home, LogOut, Menu, Search, Settings, User } from "lucide-react"
-import { useLogout } from "@/hooks/use-logout"
+import { usePathname, useRouter } from "next/navigation"
+import { useAppSelector, useAppDispatch } from "@/src/store"
+import { selectCurrentUser, selectIsLoggedIn } from "@/src/thunks/auth/authSlice"
+import { handleGetProfile, handleLogout } from "@/src/thunks/auth/authThunk"
+
+import {
+  Bell,
+  ChevronDown,
+  CreditCard,
+  Home,
+  LogOut,
+  Menu,
+  Search,
+  Settings,
+  User,
+  BookMarked,
+  MessageSquare,
+  AlertTriangle,
+  Users,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
-import { Separator } from "@/components/ui/separator"
 import styles from "../admin/admin.module.css"
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [dropdownOpen, setDropdownOpen] = useState(false)
   const pathname = usePathname()
-  const logout = useLogout()
+  const router = useRouter()
+  const isLoggedIn = useAppSelector(selectIsLoggedIn)
+  const user = useAppSelector(selectCurrentUser)
+  const dispatch = useAppDispatch()
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        setIsLoading(true)
+
+        // Check for access token
+        const token = localStorage.getItem('accessToken')
+        const userRole = localStorage.getItem('userRole')
+        
+        if (!token) {
+          throw new Error('No access token')
+        }
+
+        // Kiểm tra nhanh quyền user trước khi gọi API
+        if (userRole !== 'USER' && userRole !== 'ADMIN' && userRole !== 'JOURNALIST') {
+          throw new Error('Not authorized')
+        }
+
+        // If not logged in or no user data, fetch profile
+        if (!isLoggedIn || !user) {
+          await dispatch(handleGetProfile()).unwrap()
+        }
+
+        setIsLoading(false)
+      } catch (error) {
+        console.error('Auth check failed:', error)
+        // Xóa toàn bộ thông tin xác thực để đảm bảo đăng xuất hoàn toàn
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+        localStorage.removeItem('userRole')
+        
+        // Chuyển hướng sau khi xóa dữ liệu
+        setTimeout(() => {
+          router.push('/auth/login')
+        }, 100)
+      }
+    }
+
+    checkAuth()
+  }, [isLoggedIn, user, router, dispatch])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      </div>
+    )
+  }
 
   const isActive = (path: string) => {
     if (path === "/user" && pathname === "/user") {
@@ -36,6 +104,10 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
       <span>{children}</span>
     </Link>
   )
+
+  const handleLogoutClick = () => {
+    dispatch(handleLogout());
+  }
 
   const SidebarContent = () => (
     <div className={styles.sidebarContent}>
@@ -81,24 +153,50 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
             </NavLink>
           </div>
         </div>
+
+        <div className={styles.navSection}>
+          <div className={styles.navSectionTitle}>Nội dung</div>
+          <div className={styles.navLinks}>
+            <NavLink href="/user/bookmarks" icon={BookMarked}>
+              Bài viết đã lưu
+            </NavLink>
+            <NavLink href="/user/comments" icon={MessageSquare}>
+              Bình luận của tôi
+            </NavLink>
+            <NavLink href="/user/following" icon={Users}>
+              Đang theo dõi
+            </NavLink>
+          </div>
+        </div>
+
+        <div className={styles.navSection}>
+          <div className={styles.navSectionTitle}>Thông báo</div>
+          <div className={styles.navLinks}>
+            <NavLink href="/user/notifications" icon={Bell}>
+              Thông báo
+            </NavLink>
+            <NavLink href="/user/reports" icon={AlertTriangle}>
+              Báo cáo
+            </NavLink>
+          </div>
+        </div>
       </div>
 
       <div className={styles.sidebarFooter}>
         <div className={styles.userCard}>
           <div className={styles.userAvatar}>
-            <img src="/placeholder.svg?height=40&width=40" alt="User Avatar" className={styles.userAvatarImg} />
+            <img 
+              src={user?.avatar || "/placeholder.svg?height=40&width=40"} 
+              alt="User Avatar" 
+              className={styles.userAvatarImg} 
+            />
             <span className={styles.userStatus}></span>
           </div>
           <div className={styles.userInfo}>
-            <div className={styles.userName}>Nguyễn Văn A</div>
+            <div className={styles.userName}>{user?.fullname || "Người dùng"}</div>
             <div className={styles.userRole}>Độc giả</div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className={styles.userAction}
-            onClick={logout}
-          >
+          <Button variant="ghost" size="icon" className={styles.userAction} onClick={handleLogoutClick}>
             <LogOut className="h-4 w-4" />
           </Button>
         </div>
@@ -128,14 +226,6 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
             <Button variant="ghost" size="icon" className={styles.menuButton} onClick={() => setSidebarOpen(true)}>
               <Menu className="h-5 w-5" />
             </Button>
-            <Separator orientation="vertical" className="h-6 mx-2" />
-            <Link href="/">
-              <Button variant="ghost" size="icon" className="mr-2">
-                <Home className="h-5 w-5" />
-                <span className="sr-only">Về trang chủ</span>
-              </Button>
-            </Link>
-            <Separator orientation="vertical" className="h-6 mx-2" />
             <div className={styles.searchContainer}>
               <Search className={styles.searchIcon} />
               <Input type="search" placeholder="Tìm kiếm..." className={styles.searchInput} />
@@ -147,15 +237,16 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
               <span className={styles.notificationBadge}>2</span>
             </Button>
             <div className={styles.userDropdown}>
-              <div
-                className={styles.userDropdownTrigger}
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-              >
-                <img src="/placeholder.svg?height=32&width=32" alt="User" className={styles.userDropdownAvatar} />
-                <span className={styles.userDropdownName}>Nguyễn Văn A</span>
+              <div className={styles.userDropdownTrigger}>
+                <img 
+                  src={user?.avatar || "/placeholder.svg?height=32&width=32"} 
+                  alt="User" 
+                  className={styles.userDropdownAvatar} 
+                />
+                <span className={styles.userDropdownName}>{user?.fullname || "Người dùng"}</span>
                 <ChevronDown className="h-4 w-4 opacity-50" />
               </div>
-              <div className={styles.userDropdownMenu} style={{ display: dropdownOpen ? 'block' : 'none' }}>
+              <div className={styles.userDropdownMenu}>
                 <Link href="/user/profile" className={styles.userDropdownItem}>
                   <User className="h-4 w-4 mr-2" />
                   Hồ sơ cá nhân
@@ -165,10 +256,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                   Cài đặt
                 </Link>
                 <div className={styles.userDropdownDivider}></div>
-                <button
-                  className={styles.userDropdownItem}
-                  onClick={logout}
-                >
+                <button onClick={handleLogoutClick} className={styles.userDropdownItem}>
                   <LogOut className="h-4 w-4 mr-2" />
                   Đăng xuất
                 </button>
@@ -178,7 +266,9 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
         </header>
 
         {/* Page Content */}
-        <main className={styles.pageContent}>{children}</main>
+        <main className={styles.pageContent}>
+          <Suspense>{children}</Suspense>
+        </main>
       </div>
     </div>
   )

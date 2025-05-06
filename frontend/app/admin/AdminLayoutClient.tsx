@@ -2,12 +2,28 @@
 
 import type React from "react"
 import Link from "next/link"
-import { Home, Users, FileText, BarChart2, Settings, Menu, Search, ChevronDown, LogOut, User, Mail } from "lucide-react"
+import {
+  Home,
+  Users,
+  FileText,
+  BarChart2,
+  Settings,
+  Menu,
+  Search,
+  ChevronDown,
+  LogOut,
+  User,
+  Mail,
+  AlertTriangle,
+  MessageSquare,
+  Tag,
+} from "lucide-react"
 import Image from "next/image"
-import { Suspense, useEffect } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { useAppSelector } from "@/src/store"
+import { useAppSelector, useAppDispatch } from "@/src/store"
 import { selectCurrentUser, selectIsLoggedIn } from "@/src/thunks/auth/authSlice"
+import { handleGetProfile, handleLogout } from "@/src/thunks/auth/authThunk"
 
 import { NotificationDropdown } from "@/components/notification-dropdown"
 import { ImageWithFallback } from "@/components/image-with-fallback"
@@ -63,6 +79,34 @@ function SidebarNavigation() {
             <Users className={styles.navIcon} />
             Người dùng
           </Link>
+          <Link
+            href="/admin/comments"
+            className={`${styles.navLink} ${isActive("/admin/comments") ? styles.navLinkActive : ""}`}
+          >
+            <MessageSquare className={styles.navIcon} />
+            Bình luận
+          </Link>
+          <Link
+            href="/admin/categories"
+            className={`${styles.navLink} ${isActive("/admin/categories") ? styles.navLinkActive : ""}`}
+          >
+            <FileText className={styles.navIcon} />
+            Danh mục
+          </Link>
+          <Link
+            href="/admin/tags"
+            className={`${styles.navLink} ${isActive("/admin/tags") ? styles.navLinkActive : ""}`}
+          >
+            <Tag className={styles.navIcon} />
+            Thẻ
+          </Link>
+          <Link
+            href="/admin/reports"
+            className={`${styles.navLink} ${isActive("/admin/reports") ? styles.navLinkActive : ""}`}
+          >
+            <AlertTriangle className={styles.navIcon} />
+            Báo cáo
+          </Link>
         </div>
       </div>
       <div className={styles.navSection}>
@@ -98,6 +142,10 @@ function HeaderBreadcrumb() {
     if (pathname.startsWith("/admin/statistics")) return "Thống kê"
     if (pathname.startsWith("/admin/articles")) return "Bài viết"
     if (pathname.startsWith("/admin/users")) return "Người dùng"
+    if (pathname.startsWith("/admin/comments")) return "Bình luận"
+    if (pathname.startsWith("/admin/categories")) return "Danh mục"
+    if (pathname.startsWith("/admin/tags")) return "Thẻ"
+    if (pathname.startsWith("/admin/reports")) return "Báo cáo"
     if (pathname.startsWith("/admin/profile")) return "Hồ sơ"
     if (pathname.startsWith("/admin/settings")) return "Cài đặt"
     return "Trang chủ"
@@ -119,16 +167,69 @@ export default function AdminLayoutClient({
   const router = useRouter()
   const isLoggedIn = useAppSelector(selectIsLoggedIn)
   const user = useAppSelector(selectCurrentUser)
+  const dispatch = useAppDispatch()
+  const [isLoading, setIsLoading] = useState(true)
+  const [isError, setIsError] = useState(false)
 
   useEffect(() => {
-    // If not logged in or not an admin, redirect to login
-    if (!isLoggedIn || !user || user.role !== 'ADMIN') {
-      router.push('/auth/login')
-    }
-  }, [isLoggedIn, user, router])
+    const checkAuth = async () => {
+      try {
+        setIsLoading(true)
+        setIsError(false)
 
-  // Don't render anything while checking authentication
-  if (!isLoggedIn || !user || user.role !== 'ADMIN') {
+        // Check for access token
+        const token = localStorage.getItem('accessToken')
+        const userRole = localStorage.getItem('userRole')
+        
+        if (!token) {
+          throw new Error('No access token')
+        }
+
+        // Kiểm tra nhanh quyền admin trước khi gọi API
+        if (userRole !== 'ADMIN') {
+          throw new Error('Not authorized')
+        }
+
+        // If not logged in or no user data, fetch profile
+        if (!isLoggedIn || !user) {
+          const profileResponse = await dispatch(handleGetProfile()).unwrap()
+          
+          // Verify admin role from response
+          if (profileResponse?.data?.role !== 'ADMIN') {
+            throw new Error('Not authorized')
+          }
+        } else if (user.role !== 'ADMIN') {
+          throw new Error('Not authorized')
+        }
+
+        setIsLoading(false)
+      } catch (error) {
+        console.error('Auth check failed:', error)
+        setIsError(true)
+        // Xóa toàn bộ thông tin xác thực để đảm bảo đăng xuất hoàn toàn
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+        localStorage.removeItem('userRole')
+        
+        // Chuyển hướng sau khi xóa dữ liệu
+        setTimeout(() => {
+          router.push('/auth/login')
+        }, 100)
+      }
+    }
+
+    checkAuth()
+  }, [isLoggedIn, user, router, dispatch])
+
+  if (isLoading || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      </div>
+    )
+  }
+
+  if (user.role !== 'ADMIN') {
     return null
   }
   // Define fallback image sources
@@ -165,8 +266,8 @@ export default function AdminLayoutClient({
                 <div className={styles.userStatus}></div>
               </div>
               <div className={styles.userInfo}>
-                <div className={styles.userName}>Admin User</div>
-                <div className={styles.userRole}>Administrator</div>
+                <div className={styles.userName}>{user?.fullname || 'Admin User'}</div>
+                <div className={styles.userRole}>{user?.role === 'ADMIN' ? 'Administrator' : 'User'}</div>
               </div>
               <div className={styles.userAction}>
                 <ChevronDown size={16} />
@@ -202,7 +303,7 @@ export default function AdminLayoutClient({
                   height={32}
                   className={styles.userDropdownAvatar}
                 />
-                <span className={styles.userDropdownName}>Admin User</span>
+                <span className={styles.userDropdownName}>{user?.fullname || 'Admin User'}</span>
                 <ChevronDown size={16} />
               </div>
               <div className={styles.userDropdownMenu}>
@@ -215,10 +316,13 @@ export default function AdminLayoutClient({
                   Tin nhắn
                 </div>
                 <div className={styles.userDropdownDivider}></div>
-                <Link href="/auth/login" className={styles.userDropdownItem}>
+                <button
+                  onClick={() => dispatch(handleLogout())}
+                  className={styles.userDropdownItem}
+                >
                   <LogOut size={16} className="mr-2" />
                   Đăng xuất
-                </Link>
+                </button>
               </div>
             </div>
           </div>

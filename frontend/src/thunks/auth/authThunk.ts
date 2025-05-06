@@ -43,19 +43,37 @@ export const handleLogin = createAsyncThunk(
   'auth/login',
   async (payload: LoginPayload, { rejectWithValue }) => {
     try {
+      console.log('Login attempt:', payload.email);
       const response = await authApi.login(payload);
+      console.log('Login response:', response);
+
+      if (!response || !response.accessToken || !response.user) {
+        console.error('Invalid login response:', response);
+        return rejectWithValue('Invalid response from server');
+      }
+
+      // Store tokens only after validating the response
       localStorage.setItem('accessToken', response.accessToken);
       localStorage.setItem('refreshToken', response.refreshToken);
       localStorage.setItem('userRole', response.user.role);
+
       return response;
     } catch (error: any) {
-      if (error.response?.status === 400) {
-        return rejectWithValue('Email hoặc mật khẩu không chính xác');
-      } else if (error.response?.status === 429) {
-        return rejectWithValue('Quá nhiều lần thử đăng nhập. Vui lòng thử lại sau.');
-      } else if (error.response?.data?.message) {
-        return rejectWithValue(error.response.data.message);
+      console.error('Login error:', error);
+      
+      if (error.response) {
+        if (error.response.status === 400) {
+          return rejectWithValue('Email hoặc mật khẩu không chính xác');
+        } else if (error.response.status === 429) {
+          return rejectWithValue('Quá nhiều lần thử đăng nhập. Vui lòng thử lại sau.');
+        } else if (error.response.data?.message) {
+          return rejectWithValue(error.response.data.message);
+        }
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        return rejectWithValue('Không thể kết nối đến máy chủ');
       }
+      
       return rejectWithValue('Có lỗi xảy ra khi đăng nhập. Vui lòng thử lại.');
     }
   }
@@ -92,9 +110,24 @@ export const handleGetProfile = createAsyncThunk(
   'auth/getProfile',
   async (_, { rejectWithValue }) => {
     try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        return rejectWithValue('No access token found');
+      }
+
       const response = await authApi.getProfile();
+      
+      // Ensure user role is synchronized
+      if (response.data?.role) {
+        localStorage.setItem('userRole', response.data.role);
+      }
+      
       return response;
     } catch (error: any) {
+      // Clear auth data on error
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('userRole');
       return rejectWithValue(error.response?.data?.message || 'Failed to get profile');
     }
   }

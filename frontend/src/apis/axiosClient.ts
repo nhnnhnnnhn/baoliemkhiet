@@ -19,8 +19,11 @@ const processQueue = (error: any = null, token: string | null = null) => {
   failedQueue = [];
 };
 
+// Get the backend URL from environment variables
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
+
 const axiosClient = axios.create({
-  baseURL: 'http://localhost:3000/api',
+  baseURL: `${BACKEND_URL}/api`,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -59,80 +62,68 @@ axiosClient.interceptors.request.use(
 // Add a response interceptor
 axiosClient.interceptors.response.use(
   (response) => {
-    return response.data; // Return the data directly
+    return response.data;
   },
   async (error) => {
     const originalRequest = error.config;
 
-    // Chỉ thực hiện refresh token khi ở môi trường browser và lỗi 401
+    // Handle 401 error and token refresh
     if (typeof window !== 'undefined' && error.response?.status === 401 && !originalRequest._retry) {
-      // Đánh dấu request này đã được thử refresh token
       originalRequest._retry = true;
-      
-      // Nếu đang trong quá trình refresh token, thêm request vào hàng đợi
+
+      // Queue the request if refresh is in progress
       if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then(token => {
-            if (token) {
-              originalRequest.headers.Authorization = `Bearer ${token}`;
-            }
-            return axiosClient(originalRequest);
-          })
-          .catch(err => Promise.reject(err));
+        try {
+          const token = await new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          });
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return axiosClient(originalRequest);
+        } catch (err) {
+          return Promise.reject(err);
+        }
       }
 
       isRefreshing = true;
-      
+
       try {
         const refreshToken = localStorage.getItem('refreshToken');
         if (!refreshToken) {
-          throw new Error('No refresh token available');
+          throw new Error('Phiên đăng nhập đã hết hạn');
         }
-        
+
         const response = await axios.post(
-          'http://localhost:3000/api/auth/refresh-token',
+          `${BACKEND_URL}/api/auth/refresh-token`,
           { refreshToken },
           {
             headers: { 'Content-Type': 'application/json' },
             withCredentials: true
           }
         );
-        
+
         const { accessToken } = response.data;
+
+        // Update localStorage and notify waiting requests
         localStorage.setItem('accessToken', accessToken);
-        
-        // Cập nhật token cho request hiện tại và các request trong hàng đợi
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         processQueue(null, accessToken);
-        
-        isRefreshing = false;
+
         return axiosClient(originalRequest);
-      } catch (refreshError) {
-        const axiosError = refreshError as any;
-        console.error('Token refresh failed:', axiosError);
-        
-        // Only remove tokens and redirect if it's an authentication error
-        if (axiosError.response?.status === 401) {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          
-          // Thông báo cho các request đang đợi rằng refresh token đã thất bại
-          processQueue(refreshError, null);
-          isRefreshing = false;
-          
-          // Nếu refresh token thất bại và không đang trong quá trình kiểm tra đăng nhập, chuyển hướng
-          if (!window.location.pathname.startsWith('/auth/')) {
-            window.location.href = '/auth/login';
-          }
-        } else {
-          // For other errors, just notify waiting requests but don't clear tokens
-          processQueue(refreshError, null);
-          isRefreshing = false;
+      } catch (error) {
+        // Clear auth data and notify waiting requests
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('userRole');
+        processQueue(error, null);
+
+        // Redirect to login if not already on auth page
+        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth/')) {
+          window.location.href = '/auth/login';
         }
-        
-        return Promise.reject(refreshError);
+
+        return Promise.reject(new Error('Phiên đăng nhập đã hết hạn'));
+      } finally {
+        isRefreshing = false;
       }
     }
     

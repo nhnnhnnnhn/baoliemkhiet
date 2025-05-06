@@ -154,54 +154,48 @@ export default function AdminSettingsPage() {
                     <label
                       htmlFor="color-red"
                       className="h-8 w-8 rounded-full bg-red-600 cursor-pointer ring-2 ring-red-600 ring-offset-2"
-                    >
-                      <span className="sr-only">Đỏ</span>
-                    </label>
+                      aria-label="Đỏ"
+                    ></label>
                   </div>
                   <div className="flex items-center justify-center">
                     <input type="radio" name="primary-color" id="color-blue" className="sr-only" />
                     <label
                       htmlFor="color-blue"
                       className="h-8 w-8 rounded-full bg-blue-600 cursor-pointer hover:ring-2 hover:ring-blue-600 hover:ring-offset-2"
-                    >
-                      <span className="sr-only">Xanh dương</span>
-                    </label>
+                      aria-label="Xanh dương"
+                    ></label>
                   </div>
                   <div className="flex items-center justify-center">
                     <input type="radio" name="primary-color" id="color-green" className="sr-only" />
                     <label
                       htmlFor="color-green"
                       className="h-8 w-8 rounded-full bg-green-600 cursor-pointer hover:ring-2 hover:ring-green-600 hover:ring-offset-2"
-                    >
-                      <span className="sr-only">Xanh lá</span>
-                    </label>
+                      aria-label="Xanh lá"
+                    ></label>
                   </div>
                   <div className="flex items-center justify-center">
                     <input type="radio" name="primary-color" id="color-purple" className="sr-only" />
                     <label
                       htmlFor="color-purple"
                       className="h-8 w-8 rounded-full bg-purple-600 cursor-pointer hover:ring-2 hover:ring-purple-600 hover:ring-offset-2"
-                    >
-                      <span className="sr-only">Tím</span>
-                    </label>
+                      aria-label="Tím"
+                    ></label>
                   </div>
                   <div className="flex items-center justify-center">
                     <input type="radio" name="primary-color" id="color-orange" className="sr-only" />
                     <label
                       htmlFor="color-orange"
                       className="h-8 w-8 rounded-full bg-orange-600 cursor-pointer hover:ring-2 hover:ring-orange-600 hover:ring-offset-2"
-                    >
-                      <span className="sr-only">Cam</span>
-                    </label>
+                      aria-label="Cam"
+                    ></label>
                   </div>
                   <div className="flex items-center justify-center">
                     <input type="radio" name="primary-color" id="color-gray" className="sr-only" />
                     <label
                       htmlFor="color-gray"
                       className="h-8 w-8 rounded-full bg-gray-600 cursor-pointer hover:ring-2 hover:ring-gray-600 hover:ring-offset-2"
-                    >
-                      <span className="sr-only">Xám</span>
-                    </label>
+                      aria-label="Xám"
+                    ></label>
                   </div>
                 </div>
               </div>

@@ -41,6 +41,7 @@ export interface User {
 export interface AuthState {
   isLoggedIn: boolean;
   logging: boolean;
+  loginError: string | null;
   user: User | null;
   accessToken: string | null;
   otpSending: boolean;
@@ -62,10 +63,11 @@ export interface AuthState {
 }
 
 const initialState: AuthState = {
-  isLoggedIn: typeof window !== 'undefined' ? !!localStorage.getItem('accessToken') : false,
+  isLoggedIn: false,
   logging: false,
+  loginError: null,
   user: null,
-  accessToken: typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null,
+  accessToken: null,
   otpSending: false,
   otpVerifying: false,
   otpSent: false,
@@ -131,20 +133,28 @@ const authSlice = createSlice({
       // Login
       .addCase(handleLogin.pending, (state) => {
         state.logging = true;
+        state.loginError = null;
       })
       .addCase(handleLogin.fulfilled, (state, action) => {
-        state.isLoggedIn = true;
         state.logging = false;
-        if (action.payload.user) {
+        if (action.payload && action.payload.accessToken && action.payload.user) {
+          state.isLoggedIn = true;
           state.user = action.payload.user;
+          state.accessToken = action.payload.accessToken;
+          state.loginError = null;
+        } else {
+          state.isLoggedIn = false;
+          state.user = null;
+          state.accessToken = null;
+          state.loginError = 'Invalid response from server';
         }
-        state.accessToken = action.payload.accessToken;
       })
-      .addCase(handleLogin.rejected, (state) => {
+      .addCase(handleLogin.rejected, (state, action) => {
         state.logging = false;
         state.isLoggedIn = false;
         state.user = null;
         state.accessToken = null;
+        state.loginError = action.payload as string || 'Login failed';
       })
       // Logout
       .addCase(handleLogout.fulfilled, (state) => {
@@ -154,18 +164,27 @@ const authSlice = createSlice({
       })
       // Get Profile
       .addCase(handleGetProfile.pending, (state) => {
-        // Không thay đổi trạng thái isLoggedIn khi đang gọi API
+        state.logging = true;
       })
       .addCase(handleGetProfile.fulfilled, (state, action) => {
+        state.logging = false;
         state.isLoggedIn = true;
         if (action.payload.data) {
           state.user = action.payload.data;
+          state.accessToken = localStorage.getItem('accessToken');
         }
       })
       .addCase(handleGetProfile.rejected, (state) => {
+        state.logging = false;
         state.isLoggedIn = false;
         state.user = null;
         state.accessToken = null;
+        // Clear local storage on profile fetch failure
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('userRole');
+        }
       })
       // Change Password
       .addCase(handleChangePassword.pending, (state) => {

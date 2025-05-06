@@ -18,6 +18,8 @@ import { Button } from "@/components/ui/button"
 import { SafeLink } from "@/components/safe-link"
 import { UserMenu } from "@/components/user-menu"
 
+// Loại bỏ import UserNav không cần thiết
+
 export function SiteHeader() {
   const [isScrolled, setIsScrolled] = useState(false)
   const isLoggedIn = useAppSelector(selectIsLoggedIn)
