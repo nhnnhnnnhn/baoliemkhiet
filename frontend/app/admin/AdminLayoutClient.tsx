@@ -6,10 +6,8 @@ import {
   Home,
   Users,
   FileText,
-  BarChart2,
   Settings,
   Menu,
-  Search,
   ChevronDown,
   LogOut,
   User,
@@ -25,6 +23,8 @@ import { usePathname } from "next/navigation"
 import { NotificationDropdown } from "@/components/notification-dropdown"
 import { ImageWithFallback } from "@/components/image-with-fallback"
 import styles from "./admin.module.css"
+// Thêm import cho ThemeToggle
+import { ThemeToggle } from "@/components/theme-toggle"
 
 // Client component for the sidebar navigation with active state detection
 function SidebarNavigation() {
@@ -49,13 +49,6 @@ function SidebarNavigation() {
           >
             <Home className={styles.navIcon} />
             Trang chủ
-          </Link>
-          <Link
-            href="/admin/statistics"
-            className={`${styles.navLink} ${isActive("/admin/statistics") ? styles.navLinkActive : ""}`}
-          >
-            <BarChart2 className={styles.navIcon} />
-            Thống kê
           </Link>
         </div>
       </div>
@@ -198,9 +191,6 @@ export default function AdminLayoutClient({
                 <div className={styles.userName}>Admin User</div>
                 <div className={styles.userRole}>Administrator</div>
               </div>
-              <div className={styles.userAction}>
-                <ChevronDown size={16} />
-              </div>
             </div>
           </div>
         </div>
@@ -213,14 +203,11 @@ export default function AdminLayoutClient({
             <button className={styles.menuButton}>
               <Menu size={20} />
             </button>
-            <div className={styles.searchContainer}>
-              <Search className={styles.searchIcon} />
-              <input type="text" placeholder="Tìm kiếm..." className={styles.searchInput} />
-            </div>
           </div>
           <div className={styles.headerRight}>
             <div className={styles.headerAction}>
               <NotificationDropdown />
+              <ThemeToggle />
             </div>
             <div className={styles.userDropdown}>
               <div className={styles.userDropdownTrigger}>
