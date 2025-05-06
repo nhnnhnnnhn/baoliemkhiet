@@ -18,14 +18,6 @@ export default function TheThaoPage() {
         icon={<Activity className="h-6 w-6 text-white" />}
         color="bg-gradient-to-r from-red-800 to-red-600"
         textColor="text-red-600"
-        tabs={[
-          { value: "all", label: "Tất cả" },
-          { value: "bong-da", label: "Bóng đá" },
-          { value: "bong-ro", label: "Bóng rổ" },
-          { value: "quan-vot", label: "Quần vợt" },
-          { value: "dua-xe", label: "Đua xe F1" },
-          { value: "vo-thuat", label: "Võ thuật" },
-        ]}
       />
 
       <main className="flex-1">

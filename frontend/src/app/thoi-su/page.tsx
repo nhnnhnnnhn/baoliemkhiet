@@ -26,13 +26,6 @@ export default function ThoiSuPage() {
         icon={<FileText className="h-6 w-6 text-white" />}
         color="bg-gradient-to-r from-red-700 to-red-500"
         textColor="text-red-600"
-        tabs={[
-          { value: "all", label: "Tất cả" },
-          { value: "chinh-tri", label: "Chính trị" },
-          { value: "xa-hoi", label: "Xã hội" },
-          { value: "phap-luat", label: "Pháp luật" },
-          { value: "giao-thong", label: "Giao thông" },
-        ]}
       />
 
       {/* Main Content */}

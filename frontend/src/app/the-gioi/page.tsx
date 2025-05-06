@@ -19,14 +19,6 @@ export default function TheGioiPage() {
         icon={<Globe className="h-6 w-6 text-white" />}
         color="bg-gradient-to-r from-green-700 to-green-500"
         textColor="text-green-600"
-        tabs={[
-          { value: "all", label: "Tất cả" },
-          { value: "chau-a", label: "Châu Á" },
-          { value: "chau-au", label: "Châu Âu" },
-          { value: "chau-my", label: "Châu Mỹ" },
-          { value: "chau-phi", label: "Châu Phi" },
-          { value: "chau-dai-duong", label: "Châu Đại Dương" },
-        ]}
       />
 
       {/* Phần nội dung chính giữ nguyên */}
