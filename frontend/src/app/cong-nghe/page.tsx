@@ -19,14 +19,6 @@ export default function CongNghePage() {
         icon={<Cpu className="h-6 w-6 text-white" />}
         color="bg-gradient-to-r from-purple-900 to-purple-700"
         textColor="text-purple-600"
-        tabs={[
-          { value: "all", label: "Tất cả" },
-          { value: "mobile", label: "Di động" },
-          { value: "ai", label: "Trí tuệ nhân tạo" },
-          { value: "software", label: "Phần mềm" },
-          { value: "hardware", label: "Phần cứng" },
-          { value: "internet", label: "Internet" },
-        ]}
       />
 
       <div className="min-h-screen bg-white">
@@ -108,7 +100,7 @@ export default function CongNghePage() {
                       <div className="flex flex-col md:flex-row gap-4">
                         <div className="md:w-1/3 aspect-[4/3]">
                           <img
-                            src={`/placeholder.svg?height=200&width=300&text=Tech ${item}`}
+                            src={`/placeholder.svg?key=bv9bb&height=200&width=300&text=Tech ${item}`}
                             alt={`Tech News ${item}`}
                             className="w-full h-full object-cover rounded"
                           />
@@ -145,7 +137,7 @@ export default function CongNghePage() {
                     <div key={item} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
                       <div className="aspect-[4/3]">
                         <img
-                          src={`/placeholder.svg?height=200&width=300&text=AI ${item}`}
+                          src={`/placeholder.svg?key=9bw6q&height=200&width=300&text=AI ${item}`}
                           alt={`AI News ${item}`}
                           className="w-full h-full object-cover"
                         />
@@ -194,7 +186,7 @@ export default function CongNghePage() {
                       </div>
                       <div className="w-32 h-24 bg-gray-100 rounded overflow-hidden shrink-0">
                         <img
-                          src={`/placeholder.svg?height=200&width=300&text=Mobile ${item}`}
+                          src={`/placeholder.svg?key=9psxb&height=200&width=300&text=Mobile ${item}`}
                           alt={`Mobile News ${item}`}
                           className="w-full h-full object-cover"
                         />
@@ -216,7 +208,7 @@ export default function CongNghePage() {
                       <div key={item} className="flex gap-3 pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                         <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden shrink-0">
                           <img
-                            src={`/placeholder.svg?height=100&width=100&text=Review ${item}`}
+                            src={`/placeholder.svg?key=fcdag&height=100&width=100&text=Review ${item}`}
                             alt={`Product Review ${item}`}
                             className="w-full h-full object-cover"
                           />

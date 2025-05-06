@@ -16,8 +16,6 @@ import {
   Settings,
   User,
   BookMarked,
-  MessageSquare,
-  AlertTriangle,
   Users,
 } from "lucide-react"
 
@@ -25,6 +23,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import styles from "../admin/admin.module.css"
+import Image from "next/image"
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -51,25 +50,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     <div className={styles.sidebarContent}>
       <div className={styles.sidebarHeader}>
         <Link href="/user" className={styles.logo}>
-          <svg
-            width="32"
-            height="32"
-            viewBox="0 0 32 32"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className={styles.logoIcon}
-          >
-            <rect width="32" height="32" rx="8" fill="currentColor" />
-            <path
-              d="M22 12.5C22 10.567 20.433 9 18.5 9C16.567 9 15 10.567 15 12.5C15 14.433 16.567 16 18.5 16C20.433 16 22 14.433 22 12.5Z"
-              fill="white"
-            />
-            <path
-              d="M17 19.5C17 17.567 15.433 16 13.5 16C11.567 16 10 17.567 10 19.5C10 21.433 11.567 23 13.5 23C15.433 23 17 21.433 17 19.5Z"
-              fill="white"
-            />
-          </svg>
-          <span className={styles.logoText}>Tài khoản</span>
+          <Image src="/logo.svg" alt="Báo Liêm Khiết Logo" width={120} height={40} priority />
         </Link>
       </div>
 
@@ -98,23 +79,8 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
             <NavLink href="/user/bookmarks" icon={BookMarked}>
               Bài viết đã lưu
             </NavLink>
-            <NavLink href="/user/comments" icon={MessageSquare}>
-              Bình luận của tôi
-            </NavLink>
             <NavLink href="/user/following" icon={Users}>
               Đang theo dõi
-            </NavLink>
-          </div>
-        </div>
-
-        <div className={styles.navSection}>
-          <div className={styles.navSectionTitle}>Thông báo</div>
-          <div className={styles.navLinks}>
-            <NavLink href="/user/notifications" icon={Bell}>
-              Thông báo
-            </NavLink>
-            <NavLink href="/user/reports" icon={AlertTriangle}>
-              Báo cáo
             </NavLink>
           </div>
         </div>
@@ -130,9 +96,6 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
             <div className={styles.userName}>Nguyễn Văn A</div>
             <div className={styles.userRole}>Độc giả</div>
           </div>
-          <Button variant="ghost" size="icon" className={styles.userAction}>
-            <LogOut className="h-4 w-4" />
-          </Button>
         </div>
       </div>
     </div>

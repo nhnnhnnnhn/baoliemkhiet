@@ -8,7 +8,7 @@ interface CategoryHeaderProps {
   icon: ReactNode
   color: string
   textColor: string
-  tabs: { value: string; label: string }[]
+  tabs?: { value: string; label: string }[]
   defaultTab?: string
 }
 
@@ -18,7 +18,7 @@ export function CategoryHeader({
   icon,
   color,
   textColor,
-  tabs,
+  tabs = [],
   defaultTab = "all",
 }: CategoryHeaderProps) {
   return (
@@ -45,27 +45,29 @@ export function CategoryHeader({
         </div>
       </div>
 
-      {/* Category Navigation */}
-      <div className="border-b border-gray-200 bg-white shadow-sm">
-        <div className="container mx-auto px-4">
-          <Tabs defaultValue={defaultTab} className="py-2">
-            <TabsList className="bg-transparent h-auto p-0 w-full justify-start space-x-8 overflow-x-auto flex-nowrap">
-              {tabs.map((tab) => (
-                <TabsTrigger
-                  key={tab.value}
-                  value={tab.value}
-                  className={`text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:${textColor} data-[state=active]:border-${textColor.replace(
-                    "text-",
-                    "border-",
-                  )} rounded-none pb-3 px-1`}
-                >
-                  {tab.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+      {/* Category Navigation - Only render if tabs exist and have items */}
+      {tabs.length > 0 && (
+        <div className="border-b border-gray-200 bg-white shadow-sm">
+          <div className="container mx-auto px-4">
+            <Tabs defaultValue={defaultTab} className="py-2">
+              <TabsList className="bg-transparent h-auto p-0 w-full justify-start space-x-8 overflow-x-auto flex-nowrap">
+                {tabs.map((tab) => (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    className={`text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:${textColor} data-[state=active]:border-${textColor.replace(
+                      "text-",
+                      "border-",
+                    )} rounded-none pb-3 px-1`}
+                  >
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          </div>
         </div>
-      </div>
+      )}
     </>
   )
 }

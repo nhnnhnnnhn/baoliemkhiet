@@ -7,7 +7,7 @@ export function SiteFooter() {
   return (
     <footer className="bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Column 1: Logo and About */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center">
@@ -71,39 +71,7 @@ export function SiteFooter() {
             </ul>
           </div>
 
-          {/* Column 3: Quick Links */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Liên kết nhanh</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/auth/login" className="text-gray-400 hover:text-white">
-                  Đăng nhập
-                </Link>
-              </li>
-              <li>
-                <Link href="/auth/register" className="text-gray-400 hover:text-white">
-                  Đăng ký
-                </Link>
-              </li>
-              <li>
-                <Link href="/subscribe" className="text-gray-400 hover:text-white">
-                  Đăng ký gói
-                </Link>
-              </li>
-              <li>
-                <Link href="/search" className="text-gray-400 hover:text-white">
-                  Tìm kiếm
-                </Link>
-              </li>
-              <li>
-                <Link href="/reports" className="text-gray-400 hover:text-white">
-                  Báo cáo
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Column 4: Contact */}
+          {/* Column 3: Contact */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Liên hệ</h3>
             <ul className="space-y-3">

@@ -19,14 +19,6 @@ export default function KinhDoanhPage() {
         icon={<DollarSign className="h-6 w-6 text-white" />}
         color="bg-gradient-to-r from-amber-700 to-amber-500"
         textColor="text-amber-600"
-        tabs={[
-          { value: "all", label: "Tất cả" },
-          { value: "doanh-nghiep", label: "Doanh nghiệp" },
-          { value: "chung-khoan", label: "Chứng khoán" },
-          { value: "bat-dong-san", label: "Bất động sản" },
-          { value: "quoc-te", label: "Quốc tế" },
-          { value: "tai-chinh", label: "Tài chính" },
-        ]}
       />
 
       {/* Market Overview */}
@@ -175,7 +167,7 @@ export default function KinhDoanhPage() {
                   <div key={item} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
                     <div className="aspect-[4/3]">
                       <img
-                        src={`/placeholder.svg?height=200&width=300&text=Real Estate ${item}`}
+                        src={`/placeholder.svg?key=pf74w&height=200&width=300&text=Real Estate ${item}`}
                         alt={`Real Estate ${item}`}
                         className="w-full h-full object-cover"
                       />
