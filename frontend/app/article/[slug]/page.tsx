@@ -204,7 +204,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
                   <div className="relative w-full h-[400px]">
                     <Image
                       src={block.url || "/placeholder.svg"}
-                      alt={block.caption}
+                      alt={block.caption || ""}
                       fill
                       className="object-cover rounded-lg"
                     />

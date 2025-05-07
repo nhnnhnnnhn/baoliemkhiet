@@ -148,7 +148,7 @@ export function SiteHeader() {
                   size="sm"
                   className={`${isScrolled ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"}`}
                 >
-                  Đăng nhập
+                  ĐĂNG NHẬP
                 </Button>
               </Link>
             )}
@@ -160,7 +160,7 @@ export function SiteHeader() {
                   isScrolled ? "bg-black text-white hover:bg-gray-800" : "bg-white text-black hover:bg-gray-100"
                 }
               >
-                ĐĂNG KÝ
+                NỘI DUNG PREMIUM
               </Button>
             </SafeLink>
           </div>
