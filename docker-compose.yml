@@ -13,6 +13,7 @@ services:
       - "3000:3000"
     networks:
       - baoliemkhiet-network
+      - nhn
 
   # Service Frontend
   frontend:
@@ -29,8 +30,11 @@ services:
     ports:
       - "3001:3001"
     networks:
+      - baoliemkhiet-network
       - nhn
 
 networks:
+  baoliemkhiet-network:
+    driver: bridge
   nhn:
     external: true
