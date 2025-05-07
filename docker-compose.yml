@@ -29,8 +29,8 @@ services:
     ports:
       - "3001:3001"
     networks:
-      - baoliemkhiet-network
+      - nhn
 
 networks:
-  baoliemkhiet-network:
-    driver: bridge
+  nhn:
+    external: true
