@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const cors = require('cors');
+const cors = require("cors");
 const { PrismaClient } = require("@prisma/client");
 const http = require("http");
 const morgan = require("./configs/morgan.config");
@@ -22,16 +22,20 @@ const tagRoute = require("./routes/tag.route");
 const articleTagRoute = require("./routes/article-tag.route");
 const userRoute = require("./routes/user.route");
 const configurationRoute = require("./routes/configuration.route");
+const likeRoute = require("./routes/like.route");
+const dashboardRoute = require("./routes/dashboard.route");
 
 const prisma = new PrismaClient();
 
 const app = express();
 
 // CORS configuration
-app.use(cors({
-  origin: 'http://localhost:3001', // Allow frontend from port 3001
-  credentials: true, // Allow credentials (cookies)
-}));
+app.use(
+  cors({
+    origin: "http://localhost:3001", // Allow frontend from port 3001
+    credentials: true, // Allow credentials (cookies)
+  })
+);
 
 app.use(express.json());
 const server = http.createServer(app);
@@ -58,6 +62,8 @@ app.use("/api/tags", tagRoute);
 app.use("/api", articleTagRoute);
 app.use("/api/users", userRoute);
 app.use("/api/configuration", configurationRoute);
+app.use("/api/likes", likeRoute);
+app.use("/api/dashboard", dashboardRoute);
 
 // Export wss for use in other files
 app.set("wss", wss);
