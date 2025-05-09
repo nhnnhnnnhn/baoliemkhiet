@@ -24,35 +24,44 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     if (!isClient) return
 
     const initAuth = async () => {
-      setIsLoading(true)
-
+      if (!isClient) return;
+      
+      setIsLoading(true);
+      
       try {
-        // Đọc token từ localStorage
-        const accessToken = localStorage.getItem("accessToken")
-        const refreshToken = localStorage.getItem("refreshToken")
+        const accessToken = localStorage.getItem("accessToken");
+        const refreshToken = localStorage.getItem("refreshToken");
+        
+        if (!accessToken || !refreshToken) {
+          dispatch(setTokenFromStorage({ accessToken: null, isLoggedIn: false }));
+          setIsLoading(false);
+          return;
+        }
 
-        // Cập nhật token vào Redux store
-        dispatch(
-          setTokenFromStorage({
-            accessToken,
-            isLoggedIn: !!accessToken,
-          }),
-        )
+        // First update the token in Redux
+        dispatch(setTokenFromStorage({
+          accessToken,
+          isLoggedIn: true
+        }));
 
-        // Nếu có token, tiến hành lấy thông tin profile
-        if (accessToken) {
-          try {
-            await dispatch(handleGetProfile()).unwrap()
-            console.log("Đăng nhập thành công từ token hiện có")
-          } catch (error) {
-            console.error("Lỗi khi lấy thông tin profile:", error)
-
-            // Chỉ xóa token và chuyển hướng nếu lỗi là 401 (token hết hạn hoặc không hợp lệ)
-            if (error && typeof error === "string" && error.includes("Unauthorized")) {
-              localStorage.removeItem("accessToken")
-              localStorage.removeItem("refreshToken")
-              router.push("/auth/login")
-            }
+        // Then fetch the user profile
+        try {
+          await dispatch(handleGetProfile()).unwrap();
+        } catch (error) {
+          console.error("Failed to load profile:", error);
+          
+          // Clear auth state on any error
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("userRole");
+          
+          dispatch(setTokenFromStorage({
+            accessToken: null,
+            isLoggedIn: false
+          }));
+          
+          if (!window.location.pathname.includes('/auth/')) {
+            router.push("/auth/login");
           }
         }
       } catch (error) {
@@ -78,8 +87,10 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       }
     }
 
-    window.addEventListener("storage", handleStorageChange)
-    return () => window.removeEventListener("storage", handleStorageChange)
+    if (typeof window !== 'undefined') {
+      window.addEventListener("storage", handleStorageChange)
+      return () => window.removeEventListener("storage", handleStorageChange)
+    }
   }, [isClient, dispatch, router])
 
   if (isLoading && isClient) {

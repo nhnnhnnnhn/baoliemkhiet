@@ -55,11 +55,21 @@ export default function LoginPage() {
         password: formData.password
       })).unwrap()
 
-      // Store role in localStorage
-      localStorage.setItem('userRole', response.user.role);
-      
-      // Always redirect to home page after login
-      router.push("/")
+      if (response && response.user && response.accessToken) {
+        // Store auth data
+        localStorage.setItem('accessToken', response.accessToken);
+        localStorage.setItem('refreshToken', response.refreshToken);
+        localStorage.setItem('userRole', response.user.role);
+
+        // Wait for auth state to update
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Refresh and redirect
+        router.refresh();
+        router.push("/");
+      } else {
+        setError('Đăng nhập thất bại: Không nhận được thông tin xác thực')
+      }
     } catch (error: any) {
       console.error('Login failed:', error)
       

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useAppSelector } from "@/src/store"
+import { selectIsLoggedIn } from "@/src/thunks/auth/authSlice"
 import {
   SearchIcon,
   TrendingUpIcon,
@@ -20,27 +22,7 @@ import { UserNav } from "@/components/user-nav"
 
 export function SiteHeader() {
   const [isScrolled, setIsScrolled] = useState(false)
-  const [username, setUsername] = useState("exampleUser") // Example username, replace with actual user data
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-
-  // Kiểm tra trạng thái đăng nhập khi component được mount
-  useEffect(() => {
-    // Trong ứng dụng thực tế, bạn sẽ kiểm tra token hoặc session
-    // Ở đây chúng ta giả lập bằng cách kiểm tra localStorage
-    const checkLoginStatus = () => {
-      const token = localStorage.getItem("authToken")
-      setIsLoggedIn(!!token)
-    }
-
-    checkLoginStatus()
-
-    // Lắng nghe sự kiện đăng nhập/đăng xuất
-    window.addEventListener("storage", checkLoginStatus)
-
-    return () => {
-      window.removeEventListener("storage", checkLoginStatus)
-    }
-  }, [])
+  const isLoggedIn = useAppSelector(selectIsLoggedIn)
 
   useEffect(() => {
     const handleScroll = () => {
