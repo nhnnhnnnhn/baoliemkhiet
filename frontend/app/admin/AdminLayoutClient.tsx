@@ -2,6 +2,14 @@
 
 import type React from "react"
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { useLogout } from "@/hooks/use-logout"
 import {
   Home,
   Users,
@@ -154,6 +162,7 @@ export default function AdminLayoutClient({
 }: {
   children: React.ReactNode
 }) {
+  const logout = useLogout()
   // Define fallback image sources
   const avatarFallbackSrc = "/abstract-user-icon.png"
   const smallAvatarFallbackSrc = "/abstract-user-icon.png"
@@ -200,44 +209,56 @@ export default function AdminLayoutClient({
       <div className={styles.mainContent}>
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <button className={styles.menuButton}>
-              <Menu size={20} />
-            </button>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon">
+                <Menu size={20} />
+              </Button>
+              <Link href="/">
+                <Button variant="ghost" size="icon">
+                  <Home size={20} />
+                </Button>
+              </Link>
+            </div>
           </div>
           <div className={styles.headerRight}>
             <div className={styles.headerAction}>
               <NotificationDropdown />
               <ThemeToggle />
             </div>
-            <div className={styles.userDropdown}>
-              <div className={styles.userDropdownTrigger}>
-                <ImageWithFallback
-                  src="/secure-admin-panel.png"
-                  fallbackSrc={smallAvatarFallbackSrc}
-                  alt="User Avatar"
-                  width={32}
-                  height={32}
-                  className={styles.userDropdownAvatar}
-                />
-                <span className={styles.userDropdownName}>Admin User</span>
-                <ChevronDown size={16} />
-              </div>
-              <div className={styles.userDropdownMenu}>
-                <Link href="/admin/profile" className={styles.userDropdownItem}>
-                  <User size={16} className="mr-2" />
-                  Hồ sơ
-                </Link>
-                <div className={styles.userDropdownItem}>
-                  <Mail size={16} className="mr-2" />
-                  Tin nhắn
-                </div>
-                <div className={styles.userDropdownDivider}></div>
-                <Link href="/auth/login" className={styles.userDropdownItem}>
-                  <LogOut size={16} className="mr-2" />
-                  Đăng xuất
-                </Link>
-              </div>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 flex items-center gap-2 p-2">
+                  <ImageWithFallback
+                    src="/secure-admin-panel.png"
+                    fallbackSrc={smallAvatarFallbackSrc}
+                    alt="User Avatar"
+                    width={32}
+                    height={32}
+                    className="rounded-full"
+                  />
+                  <span className="font-medium">Admin User</span>
+                  <ChevronDown size={16} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/profile" className="flex items-center">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Hồ sơ</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/messages" className="flex items-center">
+                    <Mail className="mr-2 h-4 w-4" />
+                    <span>Tin nhắn</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={logout} className="cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Đăng xuất</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
         <div className={styles.pageContent}>
