@@ -6,6 +6,7 @@ import { Suspense } from "react"
 import "./globals.css"
 import Loading from "./loading"
 import { ReduxProvider } from "./providers"
+import { Toaster } from "@/components/ui/toaster"
 
 // Sử dụng font Inter cho nội dung - font sans-serif hiện đại
 const inter = Inter({
@@ -38,6 +39,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <ReduxProvider>
           <Suspense fallback={<Loading />}>{children}</Suspense>
+          <Toaster />
         </ReduxProvider>
       </body>
     </html>
