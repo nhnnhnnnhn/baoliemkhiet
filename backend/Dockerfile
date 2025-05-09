@@ -15,7 +15,8 @@ RUN npm install --legacy-peer-deps
 COPY . .
 
 # Tạo Prisma client
-RUN npx prisma generate && npx prisma db push
+RUN npx prisma generate
+RUN npx prisma db push
 
 # Mở cổng 3000
 EXPOSE 3000
