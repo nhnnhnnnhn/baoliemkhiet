@@ -1,6 +1,13 @@
 "use client"
 
 import type React from "react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { useLogout } from "@/hooks/use-logout"
 
 import { useState, Suspense } from "react"
 import Link from "next/link"
@@ -29,6 +36,7 @@ import styles from "../admin/admin.module.css"
 export default function UserLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
+  const logout = useLogout()
 
   const isActive = (path: string) => {
     if (path === "/user" && pathname === "/user") {
@@ -130,9 +138,6 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
             <div className={styles.userName}>Nguyễn Văn A</div>
             <div className={styles.userRole}>Độc giả</div>
           </div>
-          <Button variant="ghost" size="icon" className={styles.userAction}>
-            <LogOut className="h-4 w-4" />
-          </Button>
         </div>
       </div>
     </div>
@@ -157,9 +162,18 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
         {/* Header */}
         <header className={styles.header}>
           <div className={styles.headerLeft}>
-            <Button variant="ghost" size="icon" className={styles.menuButton} onClick={() => setSidebarOpen(true)}>
-              <Menu className="h-5 w-5" />
-            </Button>
+            <Link href="/">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
+                  <Menu className="h-5 w-5" />
+                </Button>
+                <Link href="/">
+                  <Button variant="ghost" size="icon">
+                    <Home className="h-5 w-5" />
+                  </Button>
+                </Link>
+              </div>
+            </Link>
             <div className={styles.searchContainer}>
               <Search className={styles.searchIcon} />
               <Input type="search" placeholder="Tìm kiếm..." className={styles.searchInput} />
@@ -170,28 +184,37 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
               <Bell className="h-5 w-5" />
               <span className={styles.notificationBadge}>2</span>
             </Button>
-            <div className={styles.userDropdown}>
-              <div className={styles.userDropdownTrigger}>
-                <img src="/placeholder.svg?height=32&width=32" alt="User" className={styles.userDropdownAvatar} />
-                <span className={styles.userDropdownName}>Nguyễn Văn A</span>
-                <ChevronDown className="h-4 w-4 opacity-50" />
-              </div>
-              <div className={styles.userDropdownMenu}>
-                <Link href="/user/profile" className={styles.userDropdownItem}>
-                  <User className="h-4 w-4 mr-2" />
-                  Hồ sơ cá nhân
-                </Link>
-                <Link href="/user/settings" className={styles.userDropdownItem}>
-                  <Settings className="h-4 w-4 mr-2" />
-                  Cài đặt
-                </Link>
-                <div className={styles.userDropdownDivider}></div>
-                <Link href="/auth/login" className={styles.userDropdownItem}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Đăng xuất
-                </Link>
-              </div>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 flex items-center gap-2 p-2">
+                  <img
+                    src="/placeholder.svg?height=32&width=32"
+                    alt="User"
+                    className="h-8 w-8 rounded-full"
+                  />
+                  <span className="font-medium">Nguyễn Văn A</span>
+                  <ChevronDown className="h-4 w-4 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuItem asChild>
+                  <Link href="/user/profile" className="flex items-center">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Hồ sơ cá nhân</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/user/settings" className="flex items-center">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Cài đặt</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={logout} className="cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Đăng xuất</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 

@@ -223,9 +223,16 @@ export default function AuthorLayout({ children }: { children: React.ReactNode }
         {/* Desktop Header */}
         <header className="hidden md:flex sticky top-0 z-10 bg-white border-b p-4 items-center justify-between">
           <div className="flex items-center">
-            <Button variant="ghost" size="icon" className="mr-2">
-              <Home className="h-5 w-5" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon">
+                <Menu className="h-5 w-5" />
+              </Button>
+              <Link href="/">
+                <Button variant="ghost" size="icon">
+                  <Home className="h-5 w-5" />
+                </Button>
+              </Link>
+            </div>
             <Separator orientation="vertical" className="h-6 mx-2" />
             <Suspense fallback={<div>Loading...</div>}>
               <AuthorHeaderBreadcrumb />
