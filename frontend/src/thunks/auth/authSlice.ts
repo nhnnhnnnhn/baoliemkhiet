@@ -62,10 +62,10 @@ export interface AuthState {
 }
 
 const initialState: AuthState = {
-  isLoggedIn: typeof window !== 'undefined' ? !!localStorage.getItem('accessToken') : false,
+  isLoggedIn: false,
   logging: false,
   user: null,
-  accessToken: typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null,
+  accessToken: null,
   otpSending: false,
   otpVerifying: false,
   otpSent: false,
@@ -154,12 +154,17 @@ const authSlice = createSlice({
       })
       // Get Profile
       .addCase(handleGetProfile.pending, (state) => {
-        // Không thay đổi trạng thái isLoggedIn khi đang gọi API
+        state.isLoggedIn = false;
       })
       .addCase(handleGetProfile.fulfilled, (state, action) => {
-        state.isLoggedIn = true;
-        if (action.payload.data) {
-          state.user = action.payload.data;
+        const { data } = action.payload;
+        if (data) {
+          state.user = data;
+          state.isLoggedIn = true;
+        } else {
+          state.isLoggedIn = false;
+          state.user = null;
+          state.accessToken = null;
         }
       })
       .addCase(handleGetProfile.rejected, (state) => {

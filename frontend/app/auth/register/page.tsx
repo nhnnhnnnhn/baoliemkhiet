@@ -3,7 +3,7 @@
 import type React from "react"
 import type { AxiosError } from "axios"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Eye, EyeOff, Lock, Mail, User } from "lucide-react"
@@ -28,6 +28,7 @@ export default function RegisterPage() {
   const dispatch = useAppDispatch()
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
+  const [countdown, setCountdown] = useState(0)
   
   // Get OTP states from Redux
   const otpSending = useAppSelector(selectOtpSending)
@@ -68,6 +69,18 @@ export default function RegisterPage() {
     }))
   }
 
+  useEffect(() => {
+    let timer: NodeJS.Timeout
+    if (countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown(prev => prev - 1)
+      }, 1000)
+    }
+    return () => {
+      if (timer) clearInterval(timer)
+    }
+  }, [countdown])
+
   const handleSendOtpClick = async () => {
     if (!formData.email) {
       setError("Email không được để trống.\nVui lòng nhập email của bạn để nhận mã OTP.")
@@ -82,6 +95,7 @@ export default function RegisterPage() {
         action: "REGISTER"
       })).unwrap()
       
+      setCountdown(300) // Start 5 minute countdown
       setError("✓ Mã OTP đã được gửi đến email của bạn. Vui lòng kiểm tra và nhập mã.")
     } catch (error: any) {
       console.error('Error sending OTP:', error);
@@ -144,7 +158,7 @@ export default function RegisterPage() {
     setError("")
 
     // Validate password format
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
     if (!passwordRegex.test(formData.password)) {
       setError("❌ Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và số!")
       return
@@ -358,7 +372,7 @@ export default function RegisterPage() {
                 </div>
               </div>
               <p className="mt-1 text-xs text-gray-500">
-                Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và số
+                Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và số (có thể bao gồm các ký tự đặc biệt)
               </p>
             </div>
 
@@ -390,39 +404,60 @@ export default function RegisterPage() {
                   name="otp"
                   type="text"
                   required
-                  className="pr-24"
+                  className="pr-32"
                   placeholder="Nhập mã OTP"
                   value={formData.otp}
                   onChange={handleChange}
                 />
-                <div className="absolute inset-y-0 right-0 flex py-1.5 pr-1.5">
+                <div className="absolute inset-y-0 right-0 flex items-center">
                   {!otpSent ? (
                     <Button
                       type="button"
-                      variant="secondary"
+                      variant="ghost"
                       size="sm"
+                      className="h-full px-3 hover:bg-transparent hover:text-blue-600 text-gray-500"
                       onClick={handleSendOtpClick}
                       disabled={loading || !formData.email}
                     >
                       {otpSending ? "Đang gửi..." : "Gửi mã"}
                     </Button>
                   ) : !otpVerified ? (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      onClick={handleVerifyOtpClick}
-                      disabled={loading || !formData.otp}
-                    >
-                      {otpVerifying ? "Đang xác thực..." : "Xác thực"}
-                    </Button>
+                    <div className="flex items-center gap-2 px-3">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-full hover:bg-transparent hover:text-blue-600 text-gray-500"
+                        onClick={handleVerifyOtpClick}
+                        disabled={loading || !formData.otp}
+                      >
+                        {otpVerifying ? "Đang xác thực..." : "Xác thực"}
+                      </Button>
+                    </div>
                   ) : (
-                    <div className="text-green-600 flex items-center pr-3">
+                    <div className="text-green-600 flex items-center px-3">
                       ✓ Đã xác thực
                     </div>
                   )}
                 </div>
               </div>
+              {otpSent && !otpVerified && countdown > 0 && (
+                <p className="mt-2 text-sm text-gray-500">
+                  Có thể gửi lại mã sau: {Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, '0')}
+                </p>
+              )}
+              {otpSent && !otpVerified && countdown === 0 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="mt-2 h-8 hover:bg-transparent hover:text-blue-600 text-gray-500 p-0"
+                  onClick={handleSendOtpClick}
+                  disabled={loading}
+                >
+                  Gửi lại mã
+                </Button>
+              )}
               {otpSent && !otpVerified && (
                 <p className="mt-1 text-sm text-gray-600">
                   Mã OTP đã được gửi đến email của bạn.<br/>
