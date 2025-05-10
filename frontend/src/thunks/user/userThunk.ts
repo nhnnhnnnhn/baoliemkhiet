@@ -49,6 +49,18 @@ export const handleCreateUser = createAsyncThunk(
   }
 );
 
+export const handleCreateUserNew = createAsyncThunk(
+  'user/createUser',
+  async (payload: CreateUserPayload, { rejectWithValue }) => {
+    try {
+      const response = await userApi.createUser(payload);
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Không thể tạo người dùng mới');
+    }
+  }
+);
+
 export const handleUpdateProfile = createAsyncThunk(
   'user/updateProfile',
   async (payload: UpdateProfilePayload, { rejectWithValue }) => {

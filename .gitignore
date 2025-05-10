@@ -28,6 +28,9 @@ stack.env
 # Vercel
 .vercel
 
+# Windsurf
+.windsurf
+
 # Logs
 logs
 *.log
