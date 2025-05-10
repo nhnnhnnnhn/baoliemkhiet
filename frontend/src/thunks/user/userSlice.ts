@@ -9,6 +9,8 @@ export interface User {
   role: string;
   avatar: string | null;
   bio: string | null;
+  phone: string | null;
+  address: string | null;
   is_online: boolean;
   created_at: string;
   updated_at: string;
@@ -71,7 +73,11 @@ const userSlice = createSlice({
       })
       .addCase(handleGetUsers.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.users = action.payload.users;
+        state.users = action.payload.users.map((user: any) => ({
+          ...user,
+          phone: user.phone || null,
+          address: user.address || null
+        })) as User[];
         state.totalUsers = action.payload.pagination.total;
         state.currentPage = action.payload.pagination.page;
         state.totalPages = action.payload.pagination.totalPages;
@@ -88,7 +94,12 @@ const userSlice = createSlice({
       })
       .addCase(handleCreateUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.users = [...state.users, action.payload];
+        const newUser = {
+          ...action.payload,
+          phone: (action.payload as any).phone || null,
+          address: (action.payload as any).address || null
+        } as User;
+        state.users = [...state.users, newUser];
       })
       .addCase(handleCreateUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -102,7 +113,11 @@ const userSlice = createSlice({
       })
       .addCase(handleGetUserById.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.selectedUser = action.payload;
+        state.selectedUser = {
+          ...action.payload,
+          phone: (action.payload as any).phone || null,
+          address: (action.payload as any).address || null
+        } as User;
       })
       .addCase(handleGetUserById.rejected, (state, action) => {
         state.isLoading = false;
@@ -136,7 +151,11 @@ const userSlice = createSlice({
         // Update user in list if exists
         const index = state.users.findIndex(user => user.id === action.payload.id);
         if (index !== -1) {
-          state.users[index] = action.payload;
+          state.users[index] = {
+            ...action.payload,
+            phone: (action.payload as any).phone || null,
+            address: (action.payload as any).address || null
+          } as User;
         }
       })
       .addCase(handleUpdateProfile.rejected, (state, action) => {
