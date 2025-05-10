@@ -10,13 +10,21 @@ export interface User {
   is_online: boolean
   created_at: string
   updated_at: string
+  // Thông tin bổ sung
+  phone?: string | null
+  address?: string | null
+  last_login?: string
+  status?: string
+  // Bài viết
   articles?: Array<{
     id: number
     title: string
     status: string
     publishedAt?: string
     createdAt?: string
+    views?: number
   }>
+  // Người theo dõi
   followers?: Array<{
     id: number
     follower: {
@@ -25,6 +33,7 @@ export interface User {
       avatar: string | null
     }
   }>
+  // Đang theo dõi
   Follow?: Array<{
     id: number
     journalist: {

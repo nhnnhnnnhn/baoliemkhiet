@@ -1,18 +1,10 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { RootState } from '@/src/store';
 import { handleCreateUser, handleUpdateProfile, handleChangePasswordAdmin, handleGetUsers, handleGetUserById, handleDeleteUser } from './userThunk';
+import { User as ApiUser } from '@/src/apis/user';
 
-export interface User {
-  id: number;
-  email: string;
-  fullname: string;
-  role: string;
-  avatar: string | null;
-  bio: string | null;
-  is_online: boolean;
-  created_at: string;
-  updated_at: string;
-}
+// Sử dụng lại kiểu User từ API để đảm bảo tính nhất quán
+export type User = ApiUser;
 
 interface UserState {
   users: User[];
