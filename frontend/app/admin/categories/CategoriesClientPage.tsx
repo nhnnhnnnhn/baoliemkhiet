@@ -1,112 +1,192 @@
 "use client"
 
-import { useState } from "react"
-import { Edit, Trash2, Plus, AlertCircle, RefreshCw, Save } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Edit, Trash2, Plus, AlertCircle, RefreshCw, Save, Search } from "lucide-react"
+import { useAppDispatch, useAppSelector } from "@/src/store"
+import {
+  handleCreateCategory,
+  handleDeleteCategory as deleteCategory,
+  handleGetCategories,
+  handleUpdateCategory
+} from "@/src/thunks/category/categoryThunk"
+import {
+  selectCategories,
+  selectTotalCategories,
+  selectError,
+  selectIsLoading,
+  selectCreateCategoryError,
+  selectCreateCategorySuccess,
+  selectUpdateCategoryError,
+  selectUpdateCategorySuccess,
+  selectDeleteCategoryError,
+  selectDeleteCategorySuccess,
+  selectIsCreatingCategory,
+  selectIsUpdatingCategory,
+  selectIsDeletingCategory,
+  clearCreateCategoryState,
+  clearUpdateCategoryState,
+  clearDeleteCategoryState,
+  clearCategoryError
+} from "@/src/thunks/category/categorySlice"
+import { toast } from "@/components/ui/use-toast"
 
-interface Category {
-  id: number
-  name: string
-  slug: string
-  articleCount: number
-}
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Category as CategoryType } from "@/src/apis/category"
 
 export default function CategoriesClientPage() {
-  const [categories, setCategories] = useState<Category[]>([
-    { id: 1, name: "Thời sự", slug: "thoi-su", articleCount: 42 },
-    { id: 2, name: "Thế giới", slug: "the-gioi", articleCount: 38 },
-    { id: 3, name: "Kinh doanh", slug: "kinh-doanh", articleCount: 29 },
-    { id: 4, name: "Công nghệ", slug: "cong-nghe", articleCount: 35 },
-    { id: 5, name: "Thể thao", slug: "the-thao", articleCount: 47 },
-  ])
+  const dispatch = useAppDispatch()
+  
+  // Redux selectors
+  const categories = useAppSelector(selectCategories)
+  const totalCategories = useAppSelector(selectTotalCategories)
+  const isLoading = useAppSelector(selectIsLoading)
+  const error = useAppSelector(selectError)
+  const isCreatingCategory = useAppSelector(selectIsCreatingCategory)
+  const createCategoryError = useAppSelector(selectCreateCategoryError)
+  const createCategorySuccess = useAppSelector(selectCreateCategorySuccess)
+  const isUpdatingCategory = useAppSelector(selectIsUpdatingCategory)
+  const updateCategoryError = useAppSelector(selectUpdateCategoryError)
+  const updateCategorySuccess = useAppSelector(selectUpdateCategorySuccess)
+  const isDeletingCategory = useAppSelector(selectIsDeletingCategory)
+  const deleteCategoryError = useAppSelector(selectDeleteCategoryError)
+  const deleteCategorySuccess = useAppSelector(selectDeleteCategorySuccess)
 
+  // Local state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<CategoryType | null>(null)
   const [newCategory, setNewCategory] = useState({ name: "", slug: "" })
   const [editedCategory, setEditedCategory] = useState({ name: "", slug: "" })
-  const [isLoading, setIsLoading] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+
+  // Fetch categories when component mounts
+  useEffect(() => {
+    dispatch(handleGetCategories({}))
+  }, [dispatch])
+
+  // Handle refresh categories
+  const handleRefresh = () => {
+    dispatch(handleGetCategories({}))
+  }
+
+  // Handle create category success/error
+  useEffect(() => {
+    if (createCategorySuccess) {
+      toast({
+        title: "Thành công",
+        description: "Danh mục mới đã được tạo thành công.",
+      })
+      setIsAddModalOpen(false)
+      setNewCategory({ name: "", slug: "" })
+      dispatch(clearCreateCategoryState())
+    } else if (createCategoryError) {
+      toast({
+        title: "Lỗi",
+        description: createCategoryError,
+        variant: "destructive",
+      })
+      dispatch(clearCreateCategoryState())
+    }
+  }, [createCategorySuccess, createCategoryError, dispatch])
+
+  // Handle update category success/error
+  useEffect(() => {
+    if (updateCategorySuccess) {
+      toast({
+        title: "Thành công",
+        description: "Danh mục đã được cập nhật thành công.",
+      })
+      setIsEditModalOpen(false)
+      setSelectedCategory(null)
+      setEditedCategory({ name: "", slug: "" })
+      dispatch(clearUpdateCategoryState())
+    } else if (updateCategoryError) {
+      toast({
+        title: "Lỗi",
+        description: updateCategoryError,
+        variant: "destructive",
+      })
+      dispatch(clearUpdateCategoryState())
+    }
+  }, [updateCategorySuccess, updateCategoryError, dispatch])
+
+  // Handle delete category success/error
+  useEffect(() => {
+    if (deleteCategorySuccess) {
+      toast({
+        title: "Thành công",
+        description: "Danh mục đã được xóa thành công.",
+      })
+      setIsDeleteModalOpen(false)
+      setSelectedCategory(null)
+      dispatch(clearDeleteCategoryState())
+    } else if (deleteCategoryError) {
+      toast({
+        title: "Lỗi",
+        description: deleteCategoryError,
+        variant: "destructive",
+      })
+      dispatch(clearDeleteCategoryState())
+    }
+  }, [deleteCategorySuccess, deleteCategoryError, dispatch])
+
+  // Error handling
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Lỗi",
+        description: error,
+        variant: "destructive",
+      })
+      dispatch(clearCategoryError())
+    }
+  }, [error, dispatch])
 
   const handleAddCategory = () => {
     setIsAddModalOpen(true)
   }
 
-  const handleEditCategory = (category: Category) => {
+  const handleEditCategory = (category: CategoryType) => {
     setSelectedCategory(category)
     setEditedCategory({ name: category.name, slug: category.slug })
     setIsEditModalOpen(true)
   }
 
-  const handleDeleteCategory = (category: Category) => {
+  const handleDeleteCategory = (category: CategoryType) => {
     setSelectedCategory(category)
     setIsDeleteModalOpen(true)
   }
 
   const confirmAddCategory = () => {
     if (!newCategory.name || !newCategory.slug) return
-
-    setIsLoading(true)
-
-    // Simulate API call
-    setTimeout(() => {
-      const newId = Math.max(...categories.map((c) => c.id)) + 1
-      setCategories([
-        ...categories,
-        {
-          id: newId,
-          name: newCategory.name,
-          slug: newCategory.slug,
-          articleCount: 0,
-        },
-      ])
-
-      setIsLoading(false)
-      setIsAddModalOpen(false)
-      setNewCategory({ name: "", slug: "" })
-    }, 500)
+    
+    dispatch(handleCreateCategory({
+      name: newCategory.name,
+      slug: newCategory.slug
+    }))
   }
 
   const confirmEditCategory = () => {
     if (!selectedCategory || !editedCategory.name || !editedCategory.slug) return
 
-    setIsLoading(true)
-
-    // Simulate API call
-    setTimeout(() => {
-      setCategories(
-        categories.map((c) =>
-          c.id === selectedCategory.id ? { ...c, name: editedCategory.name, slug: editedCategory.slug } : c,
-        ),
-      )
-
-      setIsLoading(false)
-      setIsEditModalOpen(false)
-      setSelectedCategory(null)
-      setEditedCategory({ name: "", slug: "" })
-    }, 500)
+    dispatch(handleUpdateCategory({
+      id: selectedCategory.id,
+      data: {
+        name: editedCategory.name,
+        slug: editedCategory.slug
+      }
+    }))
   }
 
   const confirmDeleteCategory = () => {
     if (!selectedCategory) return
-
-    setIsLoading(true)
-
-    // Simulate API call
-    setTimeout(() => {
-      setCategories(categories.filter((c) => c.id !== selectedCategory.id))
-
-      setIsLoading(false)
-      setIsDeleteModalOpen(false)
-      setSelectedCategory(null)
-    }, 500)
-  }
-
-  const handleRefresh = () => {
-    setIsLoading(true)
-    // Simulate API call to refresh data
-    setTimeout(() => {
-      setIsLoading(false)
-    }, 500)
+    
+    // API yêu cầu ID là số nguyên
+    const categoryId = Number(selectedCategory.id)
+    // Gọi hàm xóa category từ thunk đã được đổi tên
+    dispatch(deleteCategory(categoryId))
   }
 
   const generateSlug = (name: string) => {
@@ -163,7 +243,7 @@ export default function CategoriesClientPage() {
                   <td className="p-4 align-middle">{category.id}</td>
                   <td className="p-4 align-middle font-medium">{category.name}</td>
                   <td className="p-4 align-middle">{category.slug}</td>
-                  <td className="p-4 align-middle">{category.articleCount}</td>
+                  <td className="border px-4 py-2 text-center">{category.count || 0}</td>
                   <td className="p-4 align-middle">
                     <div className="flex items-center gap-2">
                       <button
