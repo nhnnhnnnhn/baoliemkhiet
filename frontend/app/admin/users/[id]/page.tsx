@@ -158,12 +158,19 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
                       <div className="text-sm font-medium text-gray-500 mb-1">Trạng thái</div>
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          user.is_online
+                          !user.status || user.status === "ACTIVE"
                             ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
+                            : user.status === "BLOCKED"
+                              ? "bg-red-100 text-red-800"
+                              : user.status === "PENDING"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-gray-100 text-gray-800"
                         }`}
                       >
-                        {user.is_online ? "Đang hoạt động" : "Không hoạt động"}
+                        {!user.status || user.status === "ACTIVE" ? "Hoạt động" : 
+                         user.status === "BLOCKED" ? "Bị chặn" : 
+                         user.status === "PENDING" ? "Chưa xác thực" :
+                         user.status}
                       </span>
                     </div>
                     <div className="mb-4">
@@ -194,8 +201,171 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
         </div>
       )}
 
-      {/* User Articles */}
-      {!isLoading && user && user.articles && user.articles.length > 0 && (
+      {/* User Articles - Hiển thị cho nhà báo */}
+      {!isLoading && user && user.role === "JOURNALIST" && (
+        <>
+          <div className="mt-6 mb-3">
+            <h2 className="text-2xl font-semibold">Quản lý bài viết</h2>
+            <p className="text-gray-500 mt-1">Tổng hợp bài viết của nhà báo {user.fullname}</p>
+          </div>
+          
+          {/* Thống kê bài viết */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className={styles.dashboardCard}>
+              <div className={styles.dashboardCardContent}>
+                <h3 className={styles.dashboardCardTitle}>Tổng số bài viết</h3>
+                <p className={styles.dashboardCardValue}>{user.articles ? user.articles.length : 0}</p>
+              </div>
+            </div>
+            
+            <div className={styles.dashboardCard}>
+              <div className={styles.dashboardCardContent}>
+                <h3 className={styles.dashboardCardTitle}>Đã xuất bản</h3>
+                <p className={styles.dashboardCardValue}>
+                  {user.articles ? user.articles.filter(a => a.status === "PUBLISHED").length : 0}
+                </p>
+              </div>
+            </div>
+            
+            <div className={styles.dashboardCard}>
+              <div className={styles.dashboardCardContent}>
+                <h3 className={styles.dashboardCardTitle}>Chờ duyệt</h3>
+                <p className={styles.dashboardCardValue}>
+                  {user.articles ? user.articles.filter(a => a.status === "PENDING").length : 0}
+                </p>
+              </div>
+            </div>
+            
+            <div className={styles.dashboardCard}>
+              <div className={styles.dashboardCardContent}>
+                <h3 className={styles.dashboardCardTitle}>Bản nháp/Từ chối</h3>
+                <p className={styles.dashboardCardValue}>
+                  {user.articles ? user.articles.filter(a => a.status === "DRAFT" || a.status === "REJECTED").length : 0}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Tabs bài viết theo trạng thái */}
+          <div className="mb-6">
+            <div className="border-b border-gray-200">
+              <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                <button
+                  className={`border-primary text-primary border-b-2 whitespace-nowrap py-4 px-1 font-medium text-sm`}
+                  aria-current="page"
+                >
+                  Tất cả bài viết ({user.articles ? user.articles.length : 0})
+                </button>
+                <button
+                  className={`border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 font-medium text-sm`}
+                >
+                  Đã xuất bản ({user.articles ? user.articles.filter(a => a.status === "PUBLISHED").length : 0})
+                </button>
+                <button
+                  className={`border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 font-medium text-sm`}
+                >
+                  Chờ duyệt ({user.articles ? user.articles.filter(a => a.status === "PENDING").length : 0})
+                </button>
+                <button
+                  className={`border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 font-medium text-sm`}
+                >
+                  Bản nháp/Từ chối ({user.articles ? user.articles.filter(a => a.status === "DRAFT" || a.status === "REJECTED").length : 0})
+                </button>
+              </nav>
+            </div>
+          </div>
+
+          {/* Bảng danh sách bài viết */}
+          {user.articles && user.articles.length > 0 ? (
+            <div className={styles.tableCard}>
+              <div className={styles.tableHeader}>
+                <h3 className={styles.tableTitle}>Bài viết</h3>
+                <Link href={`/admin/articles?author=${user.id}`}>
+                  <Button variant="outline" size="sm">
+                    Xem trong mục quản lý bài viết
+                  </Button>
+                </Link>
+              </div>
+              <div className={styles.tableContent}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th className={styles.tableHeaderCell}>ID</th>
+                      <th className={styles.tableHeaderCell}>Tiêu đề</th>
+                      <th className={styles.tableHeaderCell}>Trạng thái</th>
+                      <th className={styles.tableHeaderCell}>Lượt xem</th>
+                      <th className={styles.tableHeaderCell}>Ngày xuất bản</th>
+                      <th className={styles.tableHeaderCell}>Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {user.articles.map((article) => (
+                      <tr key={article.id} className={styles.tableRow}>
+                        <td className={styles.tableCell}>{article.id}</td>
+                        <td className={styles.tableCell}>
+                          <div className="font-medium">{article.title}</div>
+                        </td>
+                        <td className={styles.tableCell}>
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              article.status === "PUBLISHED"
+                                ? "bg-green-100 text-green-800"
+                                : article.status === "PENDING"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : article.status === "REJECTED"
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {article.status === "PUBLISHED" ? "Đã xuất bản" : 
+                             article.status === "PENDING" ? "Chờ duyệt" : 
+                             article.status === "DRAFT" ? "Bản nháp" : 
+                             article.status === "REJECTED" ? "Bị từ chối" : 
+                             article.status}
+                          </span>
+                        </td>
+                        <td className={styles.tableCell}>{article.views ? article.views.toLocaleString() : 0}</td>
+                        <td className={styles.tableCell}>{article.publishedAt ? format(parseISO(article.publishedAt), 'dd/MM/yyyy') : '-'}</td>
+                        <td className={styles.tableCell}>
+                          <div className="flex space-x-2">
+                            <Link href={`/admin/articles/${article.id}`}>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                aria-label="Xem chi tiết bài viết"
+                                title="Xem chi tiết bài viết"
+                              >
+                                Xem
+                              </Button>
+                            </Link>
+                            <Link href={`/admin/articles/${article.id}/edit`}>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                aria-label="Sửa bài viết"
+                                title="Sửa bài viết"
+                              >
+                                Sửa
+                              </Button>
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg shadow p-8 text-center">
+              <p className="text-gray-500">Nhà báo này chưa có bài viết nào.</p>
+            </div>
+          )}
+        </>
+      )}
+      
+      {/* User Articles - Hiển thị cho các vai trò khác */}
+      {!isLoading && user && user.role !== "JOURNALIST" && user.articles && user.articles.length > 0 && (
         <div className={styles.tableCard}>
           <div className={styles.tableHeader}>
             <h3 className={styles.tableTitle}>Bài viết gần đây</h3>
@@ -244,12 +414,22 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
                     <td className={styles.tableCell}>
                       <div className="flex space-x-2">
                         <Link href={`/admin/articles/${article.id}`}>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            aria-label="Xem chi tiết bài viết"
+                            title="Xem chi tiết bài viết"
+                          >
                             Xem
                           </Button>
                         </Link>
                         <Link href={`/admin/articles/${article.id}/edit`}>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            aria-label="Sửa bài viết"
+                            title="Sửa bài viết"
+                          >
                             Sửa
                           </Button>
                         </Link>

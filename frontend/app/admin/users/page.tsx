@@ -3,15 +3,17 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ChevronLeftIcon, ChevronRightIcon, Download, Filter, Search, Trash2, UserPlus, Edit, Eye } from "lucide-react"
-import { useDispatch, useSelector } from "react-redux"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import styles from "../admin.module.css"
 import { useAppDispatch, useAppSelector } from "@/src/store"
-import { handleDeleteUser, handleGetUsers } from "@/src/thunks/user/userThunk"
+import { handleCreateUser, handleDeleteUser, handleGetUsers } from "@/src/thunks/user/userThunk"
 import { selectCurrentPage, selectError, selectIsLoading, selectTotalPages, selectTotalUsers, selectUsers } from "@/src/thunks/user/userSlice"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "@/components/ui/use-toast"
 import { User } from "@/src/apis/user"
 import { format } from "date-fns"
@@ -30,6 +32,20 @@ export default function UsersPage() {
   const [role, setRole] = useState<string | undefined>(undefined)
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [addUserDialogOpen, setAddUserDialogOpen] = useState(false)
+  
+  // Form state cho thêm người dùng mới
+  const [newUser, setNewUser] = useState({
+    fullname: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "USER",
+    phone: "",
+    address: "",
+    bio: "",
+    status: "ACTIVE"  // Chữ hoa để phù hợp với enum của backend
+  })
 
   // Fetch users on mount and when search/filter changes
   useEffect(() => {
@@ -58,6 +74,90 @@ export default function UsersPage() {
     }
     
     dispatch(handleGetUsers(params))
+  }
+  
+  // Xử lý lọc theo vai trò
+  const handleRoleFilter = (selectedRole: string | undefined) => {
+    setRole(selectedRole)
+  }
+  
+  // Xử lý thêm người dùng mới
+  const handleAddUser = async () => {
+    try {
+      // Kiểm tra trường bắt buộc
+      if (!newUser.fullname || !newUser.email || !newUser.password) {
+        toast({
+          title: "Thiếu thông tin",
+          description: "Vui lòng nhập đầy đủ họ tên, email và mật khẩu",
+          variant: "destructive",
+        })
+        return
+      }
+      
+      // Kiểm tra mật khẩu
+      if (newUser.password !== newUser.confirmPassword) {
+        toast({
+          title: "Mật khẩu không khớp",
+          description: "Mật khẩu và xác nhận mật khẩu phải giống nhau",
+          variant: "destructive",
+        })
+        return
+      }
+      
+      // Gọi API tạo người dùng
+      const userData = {
+        fullname: newUser.fullname,
+        email: newUser.email,
+        password: newUser.password,
+        role: newUser.role,
+        phone: newUser.phone || null,
+        address: newUser.address || null,
+        bio: newUser.bio || null,
+        status: newUser.status  // Sử dụng ACTIVE thay vì active
+      }
+      
+      await dispatch(handleCreateUser(userData)).unwrap()
+      
+      toast({
+        title: "Đã thêm người dùng",
+        description: `Người dùng ${newUser.fullname} đã được tạo thành công.`,
+        variant: "default",
+      })
+      
+      // Reset form và đóng dialog
+      setNewUser({
+        fullname: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        role: "USER",
+        phone: "",
+        address: "",
+        bio: "",
+        status: "ACTIVE"
+      })
+      setAddUserDialogOpen(false)
+      
+      // Tải lại danh sách người dùng
+      dispatch(handleGetUsers({
+        page: currentPage,
+        limit: 10,
+        search: search || undefined,
+        role: role || undefined
+      }))
+    } catch (error: any) {
+      toast({
+        title: "Lỗi",
+        description: error || "Không thể tạo người dùng mới",
+        variant: "destructive",
+      })
+    }
+  }
+  
+  // Xử lý thay đổi giá trị form thêm người dùng
+  const handleNewUserChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setNewUser(prev => ({ ...prev, [name]: value }))
   }
 
   // Handle user deletion
@@ -114,48 +214,63 @@ export default function UsersPage() {
           <h3 className={styles.tableTitle}>Tất cả người dùng</h3>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-              <Input 
-                type="search" 
-                placeholder="Tìm kiếm người dùng..." 
-                className="pl-8 h-9 w-[200px] md:w-[300px]" 
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                type="text"
+                placeholder="Tìm kiếm người dùng..."
+                className="w-64 pl-8"
                 value={search}
                 onChange={handleSearchChange}
               />
             </div>
-            <Button variant="outline" size="sm" onClick={() => setRole(role ? undefined : 'ADMIN')}>
-              <Filter className="h-4 w-4 mr-2" />
-              {role ? `Lọc: ${role}` : 'Lọc'}
+            <div className="relative">
+              <Select 
+                value={role || "all"} 
+                onValueChange={(value) => handleRoleFilter(value === "all" ? undefined : value)}
+              >
+                <SelectTrigger 
+                  id="role-filter" 
+                  className="w-[180px]" 
+                  aria-label="Lọc theo vai trò"
+                >
+                  <div className="flex items-center">
+                    <Filter className="mr-2 h-4 w-4" />
+                    <SelectValue placeholder="Lọc theo vai trò" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tất cả vai trò</SelectItem>
+                  <SelectItem value="ADMIN">Quản trị viên</SelectItem>
+                  <SelectItem value="EDITOR">Biên tập viên</SelectItem>
+                  <SelectItem value="JOURNALIST">Nhà báo</SelectItem>
+                  <SelectItem value="USER">Người dùng</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button 
+              size="sm"
+              onClick={() => setAddUserDialogOpen(true)}
+              aria-label="Thêm người dùng mới"
+              title="Thêm người dùng mới"
+            >
+              <UserPlus className="mr-2 h-4 w-4" />
+              Thêm người dùng
             </Button>
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Xuất
-            </Button>
-            <Link href="/admin/users/add">
-              <Button size="sm">
-                <UserPlus className="h-4 w-4 mr-2" />
-                Thêm người dùng
-              </Button>
-            </Link>
           </div>
         </div>
         <div className={styles.tableContent}>
           {isLoading ? (
-            <div className="p-4">
-              <div className="space-y-4">
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <div key={index} className="flex items-center space-x-4">
-                    <Skeleton className="h-8 w-8 rounded-full" />
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-[250px]" />
-                      <Skeleton className="h-4 w-[200px]" />
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <div className="p-4 space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
             </div>
-          ) : error ? (
-            <div className="p-4 text-red-500">Lỗi: {error}</div>
+          ) : users.length === 0 ? (
+            <div className="text-center p-8 text-gray-500">
+              Không tìm thấy người dùng nào
+            </div>
           ) : (
             <table className={styles.table}>
               <thead>
@@ -171,48 +286,45 @@ export default function UsersPage() {
                 </tr>
               </thead>
               <tbody>
-                {users.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="text-center py-4">Không có dữ liệu người dùng</td>
-                  </tr>
-                ) : users.map((user) => (
-                  <tr key={user.id}>
+                {users.map((user) => (
+                  <tr key={user.id} className={styles.tableRow}>
                     <td className={styles.tableCell}>{user.id}</td>
                     <td className={styles.tableCell}>
                       <div className="flex items-center">
-                        <div className="h-8 w-8 rounded-full bg-gray-200 mr-2 flex items-center justify-center text-gray-600 font-medium overflow-hidden">
-                          {user.fullname.charAt(0)}
+                        <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+                          {user.avatar ? (
+                            <img src={user.avatar} alt={user.fullname} className="h-8 w-8 rounded-full" />
+                          ) : (
+                            <span className="text-xs font-medium">{user.fullname.charAt(0)}</span>
+                          )}
                         </div>
-                        {user.fullname}
+                        <div className="font-medium">{user.fullname}</div>
                       </div>
                     </td>
                     <td className={styles.tableCell}>{user.email}</td>
                     <td className={styles.tableCell}>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          user.role === "ADMIN"
-                            ? "bg-purple-100 text-purple-800"
-                            : user.role === "EDITOR"
-                              ? "bg-blue-100 text-blue-800"
-                              : user.role === "JOURNALIST" 
-                                ? "bg-green-100 text-green-800"
-                                : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
+                      <span className="capitalize">
                         {user.role === "ADMIN" ? "Quản trị viên" : 
-                          user.role === "EDITOR" ? "Biên tập viên" : 
-                          user.role === "JOURNALIST" ? "Nhà báo" : "Người dùng"}
+                         user.role === "EDITOR" ? "Biên tập viên" : 
+                         user.role === "JOURNALIST" ? "Nhà báo" : "Người dùng"}
                       </span>
                     </td>
                     <td className={styles.tableCell}>
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          user.is_online
+                          !user.status || user.status === "ACTIVE"
                             ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
+                            : user.status === "BLOCKED"
+                              ? "bg-red-100 text-red-800"
+                              : user.status === "PENDING"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-gray-100 text-gray-800"
                         }`}
                       >
-                        {user.is_online ? "Đang hoạt động" : "Không hoạt động"}
+                        {!user.status || user.status === "ACTIVE" ? "Hoạt động" : 
+                         user.status === "BLOCKED" ? "Bị chặn" : 
+                         user.status === "PENDING" ? "Chưa xác thực" :
+                         user.status}
                       </span>
                     </td>
                     <td className={styles.tableCell}>{user.articles ? user.articles.length : 0}</td>
@@ -272,6 +384,8 @@ export default function UsersPage() {
               className={`${styles.paginationButton} ${currentPage <= 1 ? styles.paginationButtonDisabled : ''}`} 
               disabled={currentPage <= 1 || isLoading}
               onClick={() => handlePageChange(currentPage - 1)}
+              aria-label="Trang trước"
+              title="Trang trước"
             >
               <ChevronLeftIcon className="h-4 w-4" />
             </button>
@@ -284,6 +398,8 @@ export default function UsersPage() {
                   className={`${styles.paginationButton} ${currentPage === page ? styles.paginationButtonActive : ''}`}
                   onClick={() => handlePageChange(page)}
                   disabled={isLoading}
+                  aria-label={`Trang ${page}`}
+                  title={`Trang ${page}`}
                 >
                   {page}
                 </button>
@@ -294,6 +410,8 @@ export default function UsersPage() {
               className={`${styles.paginationButton} ${currentPage >= totalPages ? styles.paginationButtonDisabled : ''}`}
               disabled={currentPage >= totalPages || isLoading}
               onClick={() => handlePageChange(currentPage + 1)}
+              aria-label="Trang tiếp theo"
+              title="Trang tiếp theo"
             >
               <ChevronRightIcon className="h-4 w-4" />
             </button>
@@ -322,6 +440,168 @@ export default function UsersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+
+      
+      {/* Add User Dialog */}
+      <Dialog open={addUserDialogOpen} onOpenChange={setAddUserDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Thêm người dùng mới</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[70vh] overflow-y-auto pr-6">
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="fullname" className="text-sm">
+                      Họ và tên <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="fullname"
+                      name="fullname"
+                      value={newUser.fullname}
+                      onChange={handleNewUserChange}
+                      placeholder="Nhập họ và tên"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-sm">
+                      Email <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={newUser.email}
+                      onChange={handleNewUserChange}
+                      placeholder="Nhập địa chỉ email"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-sm">
+                      Mật khẩu <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="password"
+                      name="password"
+                      type="password"
+                      value={newUser.password}
+                      onChange={handleNewUserChange}
+                      placeholder="Nhập mật khẩu"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword" className="text-sm">
+                      Xác nhận mật khẩu <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      value={newUser.confirmPassword}
+                      onChange={handleNewUserChange}
+                      placeholder="Nhập lại mật khẩu"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="role" className="text-sm">
+                      Vai trò <span className="text-red-500">*</span>
+                    </Label>
+                    <Select 
+                      value={newUser.role} 
+                      onValueChange={(value) => setNewUser(prev => ({ ...prev, role: value }))}
+                    >
+                      <SelectTrigger id="role">
+                        <SelectValue placeholder="Chọn vai trò" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ADMIN">Quản trị viên</SelectItem>
+                        <SelectItem value="EDITOR">Biên tập viên</SelectItem>
+                        <SelectItem value="JOURNALIST">Nhà báo</SelectItem>
+                        <SelectItem value="USER">Người dùng</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="status" className="text-sm">
+                      Trạng thái
+                    </Label>
+                    <Select 
+                      value={newUser.status} 
+                      onValueChange={(value) => setNewUser(prev => ({ ...prev, status: value }))}
+                    >
+                      <SelectTrigger id="status">
+                        <SelectValue placeholder="Chọn trạng thái" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ACTIVE">Hoạt động</SelectItem>
+                        <SelectItem value="PENDING">Chưa xác thực</SelectItem>
+                        <SelectItem value="BLOCKED">Bị chặn</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-sm">
+                      Số điện thoại
+                    </Label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      value={newUser.phone}
+                      onChange={handleNewUserChange}
+                      placeholder="Nhập số điện thoại"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="address" className="text-sm">
+                      Địa chỉ
+                    </Label>
+                    <Input
+                      id="address"
+                      name="address"
+                      value={newUser.address}
+                      onChange={handleNewUserChange}
+                      placeholder="Nhập địa chỉ"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bio" className="text-sm">
+                    Giới thiệu
+                  </Label>
+                  <Input
+                    id="bio"
+                    name="bio"
+                    value={newUser.bio}
+                    onChange={handleNewUserChange}
+                    placeholder="Mô tả ngắn về người dùng"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddUserDialogOpen(false)}>Hủy</Button>
+            <Button onClick={handleAddUser}>Tạo người dùng</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
