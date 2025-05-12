@@ -1,14 +1,175 @@
+"use client"
+
 import Link from "next/link"
-import { ChevronRightIcon, Globe } from "lucide-react"
+import { useState, useEffect } from "react"
+import { ChevronRightIcon, Globe, Clock } from "lucide-react"
+import { format } from "date-fns"
+import { vi } from "date-fns/locale"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Pagination } from "@/components/pagination-control"
 import { ChatbotButton } from "@/components/chatbot-button"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { CategoryHeader } from "@/components/category-header"
+import articleApi from "@/src/apis/article"
+import { Article } from "@/src/apis/article"
+
+// ID danh mục Thế giới - cần thay thế bằng ID thực tế từ cơ sở dữ liệu
+const CATEGORY_ID = 2 // Giả định ID danh mục Thế giới là 2
 
 export default function TheGioiPage() {
+  const [activeTab, setActiveTab] = useState("all")
+  const [articles, setArticles] = useState<Article[]>([])
+  const [featuredArticles, setFeaturedArticles] = useState<Article[]>([])
+  const [latestArticles, setLatestArticles] = useState<Article[]>([])
+  const [breakingNews, setBreakingNews] = useState<Article[]>([])
+  const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+
+  // Lấy bài viết nổi bật
+  useEffect(() => {
+    const fetchFeaturedArticles = async () => {
+      try {
+        const response = await articleApi.getArticles({
+          category_id: CATEGORY_ID,
+          limit: 5,
+          page: 1,
+          status: "PUBLISHED",
+          sort: "view_count", // Sắp xếp theo lượt xem để lấy bài nổi bật
+          order: "desc"
+        })
+        
+        if (response && response.articles) {
+          setFeaturedArticles(response.articles)
+        } else {
+          setFeaturedArticles([])
+        }
+      } catch (error) {
+        console.error("Error fetching featured articles:", error)
+        setFeaturedArticles([])
+      }
+    }
+    
+    fetchFeaturedArticles()
+  }, [])
+
+  // Lấy bài viết mới nhất
+  useEffect(() => {
+    const fetchLatestArticles = async () => {
+      try {
+        setLoading(true)
+        const response = await articleApi.getArticles({
+          category_id: CATEGORY_ID,
+          limit: 5,
+          page: 1,
+          status: "PUBLISHED",
+          sort: "published_at",
+          order: "desc"
+        })
+        
+        if (response && response.articles) {
+          setLatestArticles(response.articles)
+        } else {
+          setLatestArticles([])
+        }
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching latest articles:", error)
+        setLatestArticles([])
+        setLoading(false)
+      }
+    }
+    
+    fetchLatestArticles()
+  }, [])
+
+  // Lấy tin tức Breaking/mới nhận
+  useEffect(() => {
+    const fetchBreakingNews = async () => {
+      try {
+        const response = await articleApi.getArticles({
+          category_id: CATEGORY_ID,
+          limit: 3,
+          page: 1,
+          status: "PUBLISHED",
+          sort: "published_at",
+          order: "desc"
+        })
+        
+        if (response && response.articles) {
+          setBreakingNews(response.articles)
+        } else {
+          setBreakingNews([])
+        }
+      } catch (error) {
+        console.error("Error fetching breaking news:", error)
+        setBreakingNews([])
+      }
+    }
+    
+    fetchBreakingNews()
+  }, [])
+
+  // Lấy bài viết theo tab và phân trang
+  useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        setLoading(true)
+        
+        const params: any = {
+          category_id: CATEGORY_ID,
+          page,
+          limit: 10,
+          status: "PUBLISHED",
+          sort: "published_at",
+          order: "desc"
+        }
+        
+        if (activeTab !== "all") {
+          params.tag = activeTab
+        }
+        
+        const response = await articleApi.getArticles(params)
+        
+        if (response && response.articles) {
+          setArticles(response.articles)
+          setTotalPages(Math.ceil((response.totalArticles || 0) / 10))
+        } else {
+          setArticles([])
+          setTotalPages(0)
+        }
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching articles:", error)
+        setArticles([])
+        setTotalPages(0)
+        setLoading(false)
+      }
+    }
+    
+    fetchArticles()
+  }, [activeTab, page])
+
+  // Format thời gian từ now
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return format(date, "dd/MM/yyyy HH:mm", { locale: vi })
+  }
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value)
+    setPage(1) // Reset về trang 1 khi chuyển tab
+  }
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage)
+    window.scrollTo(0, 0)
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
@@ -19,17 +180,8 @@ export default function TheGioiPage() {
         icon={<Globe className="h-6 w-6 text-white" />}
         color="bg-gradient-to-r from-green-700 to-green-500"
         textColor="text-green-600"
-        tabs={[
-          { value: "all", label: "Tất cả" },
-          { value: "chau-a", label: "Châu Á" },
-          { value: "chau-au", label: "Châu Âu" },
-          { value: "chau-my", label: "Châu Mỹ" },
-          { value: "chau-phi", label: "Châu Phi" },
-          { value: "chau-dai-duong", label: "Châu Đại Dương" },
-        ]}
       />
 
-      {/* Phần nội dung chính giữ nguyên */}
       <main className="container mx-auto px-4 py-8 flex-grow">
         {/* World Map Section */}
         <div className="mb-12 bg-gray-50 p-6 rounded-lg">
@@ -57,73 +209,94 @@ export default function TheGioiPage() {
             <div className="mb-12">
               <h3 className="text-2xl font-bold mb-6">Tin nổi bật</h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div>
-                  <div className="aspect-[4/3] mb-4">
-                    <img
-                      src="/placeholder.svg?height=300&width=400&text=Featured 1"
-                      alt="Featured Article 1"
-                      className="w-full h-full object-cover rounded-lg"
-                    />
+              {loading ? (
+                <div className="space-y-8">
+                  {/* Loading skeleton cho tin nổi bật chính */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    {[1, 2].map((item) => (
+                      <div key={item} className="space-y-4">
+                        <Skeleton className="aspect-[4/3] w-full rounded-lg" />
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-6 w-full" />
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-3/4" />
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex items-center text-sm text-gray-500 mb-2">
-                    <span className="font-medium text-green-600">Châu Âu</span>
-                    <span className="mx-2">•</span>
-                    <span>2 giờ trước</span>
+                  
+                  {/* Loading skeleton cho tin nổi bật nhỏ */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {[1, 2, 3].map((item) => (
+                      <div key={item} className="space-y-3">
+                        <Skeleton className="aspect-[4/3] w-full rounded-lg" />
+                        <Skeleton className="h-3 w-24" />
+                        <Skeleton className="h-4 w-full" />
+                      </div>
+                    ))}
                   </div>
-                  <h4 className="text-xl font-bold mb-2 hover:text-green-600">
-                    <Link href="/articles/6">Liên minh Châu Âu thông qua gói viện trợ mới cho Ukraine</Link>
-                  </h4>
-                  <p className="text-gray-600">
-                    Các nước thành viên EU đã nhất trí thông qua gói viện trợ trị giá 50 tỷ euro để hỗ trợ Ukraine trong
-                    bối cảnh xung đột kéo dài.
-                  </p>
                 </div>
+              ) : (
+                <>
+                  {featuredArticles.length > 0 ? (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        {featuredArticles.slice(0, 2).map((article) => (
+                          <div key={article.id}>
+                            <div className="aspect-[4/3] mb-4">
+                              <img
+                                src={article.thumbnail || "/news-fallback.jpg"}
+                                alt={article.title}
+                                className="w-full h-full object-cover rounded-lg"
+                              />
+                            </div>
+                            <div className="flex items-center text-sm text-gray-500 mb-2">
+                              <span className="font-medium text-green-600">{article.category?.name || "Thế giới"}</span>
+                              <span className="mx-2">•</span>
+                              <span>{article.published_at ? formatTime(article.published_at) : formatTime(article.created_at)}</span>
+                            </div>
+                            <h4 className="text-xl font-bold mb-2 hover:text-green-600">
+                              <Link href={`/articles/${article.id}`}>{article.title}</Link>
+                            </h4>
+                            <p className="text-gray-600">
+                              {article.content.substring(0, 150).replace(/<[^>]*>/g, '')}...
+                            </p>
+                          </div>
+                        ))}
+                      </div>
 
-                <div>
-                  <div className="aspect-[4/3] mb-4">
-                    <img
-                      src="/placeholder.svg?height=300&width=400&text=Featured 2"
-                      alt="Featured Article 2"
-                      className="w-full h-full object-cover rounded-lg"
-                    />
-                  </div>
-                  <div className="flex items-center text-sm text-gray-500 mb-2">
-                    <span className="font-medium text-green-600">Châu Á</span>
-                    <span className="mx-2">•</span>
-                    <span>3 giờ trước</span>
-                  </div>
-                  <h4 className="text-xl font-bold mb-2 hover:text-green-600">
-                    <Link href="/articles/7">Nhật Bản và Hàn Quốc tăng cường hợp tác an ninh khu vực</Link>
-                  </h4>
-                  <p className="text-gray-600">
-                    Lãnh đạo hai nước đã đồng ý mở rộng hợp tác trong lĩnh vực an ninh và quốc phòng nhằm đối phó với
-                    các thách thức chung trong khu vực.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[1, 2, 3].map((item) => (
-                  <div key={item}>
-                    <div className="aspect-[4/3] mb-3">
-                      <img
-                        src={`/news-banner.png?height=200&width=300&text=News ${item}`}
-                        alt={`News ${item}`}
-                        className="w-full h-full object-cover rounded-lg"
-                      />
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {featuredArticles.slice(2, 5).map((article) => (
+                          <div key={article.id}>
+                            <div className="aspect-[4/3] mb-3">
+                              <img
+                                src={article.thumbnail || "/news-fallback.jpg"}
+                                alt={article.title}
+                                className="w-full h-full object-cover rounded-lg"
+                              />
+                            </div>
+                            <div className="flex items-center text-xs text-gray-500 mb-1">
+                              <span className="font-medium text-green-600">{article.category?.name || "Thế giới"}</span>
+                              <span className="mx-2">•</span>
+                              <span>{article.published_at ? formatTime(article.published_at) : formatTime(article.created_at)}</span>
+                            </div>
+                            <h5 className="font-bold hover:text-green-600">
+                              <Link href={`/articles/${article.id}`}>{article.title}</Link>
+                            </h5>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-12 bg-gray-50 rounded-lg">
+                      <Globe className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+                      <h4 className="text-xl font-bold mb-2">Chưa có tin nổi bật</h4>
+                      <p className="text-gray-500">Các tin nổi bật sẽ được cập nhật sớm.</p>
                     </div>
-                    <div className="flex items-center text-xs text-gray-500 mb-1">
-                      <span className="font-medium text-green-600">Châu Mỹ</span>
-                      <span className="mx-2">•</span>
-                      <span>5 giờ trước</span>
-                    </div>
-                    <h5 className="font-bold hover:text-green-600">
-                      <Link href="/articles/8">Mỹ công bố chiến lược mới về hợp tác kinh tế với khu vực Mỹ Latinh</Link>
-                    </h5>
-                  </div>
-                ))}
-              </div>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Latest News */}
@@ -135,35 +308,58 @@ export default function TheGioiPage() {
                 </Button>
               </div>
 
-              <div className="space-y-6">
-                {[1, 2, 3, 4, 5].map((item) => (
-                  <div key={item} className="flex gap-4 pb-6 border-b border-gray-200 last:border-0">
-                    <div className="flex-1">
-                      <div className="flex items-center text-sm text-gray-500 mb-2">
-                        <span className="font-medium text-green-600">Châu Phi</span>
-                        <span className="mx-2">•</span>
-                        <span>8 giờ trước</span>
+              {loading ? (
+                <div className="space-y-6">
+                  {[1, 2, 3, 4].map((item) => (
+                    <div key={item} className="flex gap-4 pb-6 border-b border-gray-200">
+                      <div className="flex-1 space-y-3">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-6 w-full" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-3/4" />
                       </div>
-                      <h4 className="text-xl font-bold mb-2 hover:text-green-600">
-                        <Link href="/articles/9">
-                          Liên Hợp Quốc kêu gọi tăng cường viện trợ nhân đạo cho các nước Đông Phi
-                        </Link>
-                      </h4>
-                      <p className="text-gray-600">
-                        Tình trạng hạn hán kéo dài đã gây ra khủng hoảng lương thực nghiêm trọng tại nhiều quốc gia
-                        trong khu vực.
-                      </p>
+                      <Skeleton className="w-32 h-24 rounded shrink-0" />
                     </div>
-                    <div className="w-32 h-24 bg-gray-100 rounded overflow-hidden shrink-0">
-                      <img
-                        src={`/news-placeholder.png?key=y0oga&height=200&width=300&text=News ${item}`}
-                        alt={`News ${item}`}
-                        className="w-full h-full object-cover"
-                      />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {latestArticles.length > 0 ? (
+                    latestArticles.map((article) => (
+                      <div key={article.id} className="flex gap-4 pb-6 border-b border-gray-200 last:border-0">
+                        <div className="flex-1">
+                          <div className="flex items-center text-sm text-gray-500 mb-2">
+                            <span className="font-medium text-green-600">{article.category?.name || "Thế giới"}</span>
+                            <span className="mx-2">•</span>
+                            <span>{article.published_at ? formatTime(article.published_at) : formatTime(article.created_at)}</span>
+                          </div>
+                          <h4 className="text-xl font-bold mb-2 hover:text-green-600">
+                            <Link href={`/articles/${article.id}`}>
+                              {article.title}
+                            </Link>
+                          </h4>
+                          <p className="text-gray-600">
+                            {article.content.substring(0, 150).replace(/<[^>]*>/g, '')}...
+                          </p>
+                        </div>
+                        <div className="w-32 h-24 bg-gray-100 rounded overflow-hidden shrink-0">
+                          <img
+                            src={article.thumbnail || "/news-fallback.jpg"}
+                            alt={article.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg">
+                      <Clock className="h-10 w-10 mx-auto text-gray-300 mb-3" />
+                      <h4 className="text-lg font-bold mb-1">Chưa có tin mới nhất</h4>
+                      <p className="text-gray-500">Hãy quay lại sau để xem các tin mới nhất.</p>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  )}
+                </div>
+              )}      
             </div>
           </div>
 
@@ -176,18 +372,35 @@ export default function TheGioiPage() {
                   <span className="inline-block w-3 h-3 bg-green-600 rounded-full mr-2 animate-pulse"></span>
                   Tin mới nhận
                 </h3>
-                <div className="space-y-4">
-                  {[1, 2, 3].map((item) => (
-                    <div key={item} className="pb-4 border-b border-green-100 last:border-0 last:pb-0">
-                      <span className="text-xs font-medium text-green-500 block mb-1">
-                        {item === 1 ? "Vừa cập nhật" : `${item} giờ trước`}
-                      </span>
-                      <h4 className="font-medium hover:text-green-600">
-                        <Link href="/articles/10">Động đất mạnh 6.2 độ richter xảy ra tại khu vực Thái Bình Dương</Link>
-                      </h4>
-                    </div>
-                  ))}
-                </div>
+                {loading ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((item) => (
+                      <div key={item} className="pb-4 border-b border-green-100 last:border-0 last:pb-0">
+                        <Skeleton className="h-3 w-20 mb-1" />
+                        <Skeleton className="h-4 w-full" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {breakingNews.length > 0 ? (
+                      breakingNews.map((article, index) => (
+                        <div key={article.id} className="pb-4 border-b border-green-100 last:border-0 last:pb-0">
+                          <span className="text-xs font-medium text-green-500 block mb-1">
+                            {index === 0 ? "Vừa cập nhật" : article.published_at ? formatTime(article.published_at) : formatTime(article.created_at)}
+                          </span>
+                          <h4 className="font-medium hover:text-green-600">
+                            <Link href={`/articles/${article.id}`}>{article.title}</Link>
+                          </h4>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-6">
+                        <p className="text-sm text-gray-500">Chưa có tin tức mới.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -195,29 +408,41 @@ export default function TheGioiPage() {
             <Card className="mb-8">
               <CardContent className="p-6">
                 <h3 className="text-lg font-bold mb-4 pb-2 border-b">Kinh tế thế giới</h3>
-                <div className="space-y-4">
-                  {[1, 2, 3, 4].map((item) => (
-                    <div key={item} className="flex gap-3 pb-4 border-b border-gray-100 last:border-0 last:pb-0">
-                      <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden shrink-0">
-                        <img
-                          src={`/econ-placeholder.png?key=mw4on&height=100&width=100&text=Econ ${item}`}
-                          alt={`Economy ${item}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div>
-                        <h4 className="font-medium hover:text-green-600">
-                          <Link href="/articles/11">
-                            Ngân hàng Thế giới dự báo tăng trưởng kinh tế toàn cầu đạt 3.1% trong năm 2024
-                          </Link>
-                        </h4>
-                        <div className="flex items-center text-xs text-gray-500 mt-1">
-                          <span>10 giờ trước</span>
+                {loading ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3, 4].map((item) => (
+                      <div key={item} className="flex gap-3 pb-4 border-b border-gray-100 last:border-0 last:pb-0">
+                        <Skeleton className="w-16 h-16 rounded shrink-0" />
+                        <div className="space-y-2 flex-1">
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-3 w-16" />
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {latestArticles.slice(0, 4).map((article) => (
+                      <div key={article.id} className="flex gap-3 pb-4 border-b border-gray-100 last:border-0 last:pb-0">
+                        <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden shrink-0">
+                          <img
+                            src={article.thumbnail || "/econ-placeholder.png"}
+                            alt={article.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div>
+                          <h4 className="font-medium hover:text-green-600">
+                            <Link href={`/articles/${article.id}`}>{article.title}</Link>
+                          </h4>
+                          <div className="flex items-center text-xs text-gray-500 mt-1">
+                            <span>{article.published_at ? formatTime(article.published_at) : formatTime(article.created_at)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -261,6 +486,97 @@ export default function TheGioiPage() {
             </Card>
           </div>
         </div>
+
+        {/* Phân trang */}
+        {!loading && articles.length > 0 && (
+          <div className="mt-8 flex justify-center">
+            <Pagination
+              page={page}
+              count={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        )}
+
+        {/* Hiển thị danh sách bài viết theo tab và trang */}
+        {!loading && articles.length > 0 && (
+          <div className="mt-12">
+            <h3 className="text-2xl font-bold mb-6">
+              {activeTab === "all" ? "Tất cả bài viết" : `Bài viết ${activeTab.replace(/-/g, " ")}`}
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {articles.map((article) => (
+                <div key={article.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                  <div className="aspect-[16/9]">
+                    <img
+                      src={article.thumbnail || "/news-fallback.jpg"}
+                      alt={article.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <div className="flex items-center text-sm text-gray-500 mb-2">
+                      <span className="font-medium text-green-600">{article.category?.name || "Thế giới"}</span>
+                      <span className="mx-2">•</span>
+                      <span>{article.published_at ? formatTime(article.published_at) : formatTime(article.created_at)}</span>
+                    </div>
+                    <h4 className="text-lg font-bold mb-2 hover:text-green-600">
+                      <Link href={`/articles/${article.id}`}>{article.title}</Link>
+                    </h4>
+                    <p className="text-gray-600 text-sm mb-3">
+                      {article.content.substring(0, 120).replace(/<[^>]*>/g, '')}...
+                    </p>
+                    <Link 
+                      href={`/articles/${article.id}`}
+                      className="text-green-600 hover:text-green-800 text-sm font-medium inline-flex items-center"
+                    >
+                      Đọc tiếp <ChevronRightIcon className="ml-1 h-4 w-4" />
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Trạng thái loading cho danh sách bài viết */}
+        {loading && (
+          <div className="mt-12">
+            <Skeleton className="h-8 w-72 mb-6" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((item) => (
+                <div key={item} className="border border-gray-100 rounded-lg overflow-hidden">
+                  <Skeleton className="aspect-[16/9] w-full" />
+                  <div className="p-4 space-y-3">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-6 w-full" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Hiển thị khi không có bài viết */}
+        {!loading && articles.length === 0 && (
+          <div className="mt-12 bg-gray-50 p-8 rounded-lg text-center">
+            <Globe className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+            <h3 className="text-xl font-bold mb-2">Không tìm thấy bài viết</h3>
+            <p className="text-gray-600 mb-6">
+              Hiện tại chưa có bài viết nào trong danh mục này. Vui lòng quay lại sau hoặc tìm kiếm với các từ khóa khác.
+            </p>
+            <Button 
+              variant="outline" 
+              className="border-green-600 text-green-600 hover:bg-green-50"
+              onClick={() => setActiveTab("all")}
+            >
+              Xem tất cả bài viết
+            </Button>
+          </div>
+        )}
       </main>
 
       <SiteFooter />

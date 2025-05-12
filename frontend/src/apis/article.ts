@@ -1,18 +1,23 @@
 import axiosClient from './axiosClient'
 
-// Cập nhật interface để khớp với response từ backend
 export interface Article {
   id: number
   title: string
-  slug: string
   content: string
-  status: "DRAFT" | "PENDING" | "PUBLISHED" | "REJECTED"
-  author: {
+  thumbnail?: string
+  author_id: number
+  category_id: number
+  status: 'DRAFT' | 'PUBLISHED' | 'REJECTED' | 'PENDING_REVIEW'
+  view_count: number
+  published_at?: string
+  created_at: string
+  updated_at: string
+  author?: {
     id: number
-    fullname: string
-    avatar: string | null
+    name: string
+    email: string
   }
-  category: {
+  category?: {
     id: number
     name: string
     slug: string
@@ -22,109 +27,169 @@ export interface Article {
     name: string
     slug: string
   }>
-  thumbnail: string | null
-  views: number
-  publishedAt: string | null
-  createdAt: string
-  updatedAt: string
 }
 
 export interface GetArticlesResponse {
-  data: Article[]             // Backend có thể trả về data thay vì articles
-  pagination: {
-    total: number
-    current_page: number      // Backend có thể dùng snake_case
-    per_page: number         // Backend có thể dùng per_page thay vì limit
-    total_pages: number      // Backend có thể dùng snake_case
-  }
+  articles: Article[]
+  totalArticles: number
+  currentPage: number
+  totalPages: number
 }
 
 export interface GetArticlesParams {
-  status?: string
   search?: string
   page?: number
-  per_page?: number          // Đổi limit thành per_page để khớp với backend
-  category_id?: number       // Đổi thành snake_case
-  author_id?: number         // Đổi thành snake_case
+  limit?: number
+  status?: string
+  category_id?: number
+  author_id?: number
+  tag_id?: number
+  startDate?: string
+  endDate?: string
+  sort?: string
+  order?: 'asc' | 'desc'
+}
+
+export interface CreateArticlePayload {
+  title: string
+  content: string
+  thumbnail?: string
+  authorId: number
+  categoryId: number
+  status?: 'DRAFT' | 'PUBLISHED' | 'PENDING_REVIEW'
+  publishedAt?: string
+  tags?: number[]
+}
+
+export interface EditArticlePayload {
+  title?: string
+  content?: string
+  thumbnail?: string
+  authorId?: number
+  categoryId?: number
+  status?: 'DRAFT' | 'PUBLISHED' | 'PENDING_REVIEW' | 'REJECTED'
+  publishedAt?: string
+  tags?: number[]
+}
+
+export interface DeleteMultipleArticlesPayload {
+  ids: number[]
+}
+
+export interface ArticleStatistics {
+  totalArticles: number
+  totalViews: number
+  mostViewedArticles: Article[]
+  mostLikedArticles: Article[]
+  articlesByCategory: {
+    categoryId: number
+    categoryName: string
+    count: number
+  }[]
+  articlesByStatus: {
+    status: string
+    count: number
+  }[]
+  publishedOverTime: {
+    date: string
+    count: number
+  }[]
 }
 
 const articleApi = {
-  getArticles: async (params: GetArticlesParams): Promise<GetArticlesResponse> => {
-    try {
-      // Log params trước khi gọi API
-      console.log('Request params:', params);
-
-      const response = await axiosClient.get('/articles/get', { params });
-      
-      // Log response để debug
-      console.log('Raw API response:', response);
-
-      // Xử lý response từ axios
-      const articles = response.data;
-      if (Array.isArray(articles)) {
-        return {
-          data: articles,
-          pagination: {
-            total: articles.length,
-            current_page: params.page || 1,
-            per_page: params.per_page || 10,
-            total_pages: Math.ceil(articles.length / (params.per_page || 10))
-          }
-        };
-      }
-
-      throw new Error('Invalid response format');
-      
-      throw new Error('Invalid response format');
-
-    } catch (error: any) {
-      console.error('Articles API error:', error);
-      throw error;
-    }
+  // Lấy danh sách bài viết
+  getArticles: async (params?: GetArticlesParams): Promise<GetArticlesResponse> => {
+    return axiosClient.get('/articles/get', { params })
   },
 
+  // Lấy danh sách bài viết đã đăng
+  getPostedArticles: async (): Promise<Article[]> => {
+    return axiosClient.get('/articles/get-posted')
+  },
+
+  // Lấy thông tin bài viết theo ID
   getArticleById: async (id: number): Promise<Article> => {
-    try {
-      const response = await axiosClient.get(`/articles/${id}`);
-      console.log('Article by ID response:', response);
-      
-      const article = response.data;
-      if (article && typeof article === 'object' && 'id' in article) {
-        return article;
-      }
-      
-      throw new Error('Invalid article response format');
-    } catch (error) {
-      console.error('Error fetching article:', error);
-      throw error;
-    }
+    return axiosClient.get(`/articles/get/${id}`)
   },
 
-  updateArticle: async (id: number, data: Partial<Article>): Promise<Article> => {
-    try {
-      const response = await axiosClient.put(`/articles/${id}`, data);
-      console.log('Update response:', response);
-      
-      const article = response.data;
-      if (article && typeof article === 'object' && 'id' in article) {
-        return article;
-      }
-      
-      throw new Error('Invalid article response format');
-    } catch (error) {
-      console.error('Error updating article:', error);
-      throw error;
-    }
+  // Lấy bài viết được xem nhiều nhất
+  getMostViewedArticles: async (timePeriod: string): Promise<Article[]> => {
+    return axiosClient.get('/articles/most-viewed', { params: { timePeriod } })
   },
 
+  // Lấy bài viết theo danh mục
+  getArticlesByCategory: async (categoryId: number): Promise<Article[]> => {
+    return axiosClient.get(`/articles/get-category/${categoryId}`)
+  },
+
+  // Lấy bài viết theo tác giả
+  getArticlesByAuthor: async (authorId: number): Promise<Article[]> => {
+    return axiosClient.get(`/articles/get-author/${authorId}`)
+  },
+
+  // Lấy bài viết được thích nhiều nhất
+  getMostLikedArticles: async (): Promise<Article[]> => {
+    return axiosClient.get('/articles/most-liked')
+  },
+
+  // Lấy bài viết theo trạng thái
+  getArticlesByStatus: async (status: string): Promise<Article[]> => {
+    return axiosClient.get(`/articles/get-status/${status}`)
+  },
+
+  // Lấy bài viết theo tag
+  getArticlesByTag: async (tagId: number): Promise<Article[]> => {
+    return axiosClient.get(`/articles/get-tag/${tagId}`)
+  },
+
+  // Lấy bài viết theo khoảng thời gian
+  getArticlesByDateRange: async (startDate: string, endDate: string): Promise<Article[]> => {
+    return axiosClient.get('/articles/get-date-range', { params: { startDate, endDate } })
+  },
+
+  // Lấy bài viết liên quan
+  getRelatedArticles: async (id: number): Promise<Article[]> => {
+    return axiosClient.get(`/articles/related/${id}`)
+  },
+
+  // Lấy thống kê bài viết
+  getStatistics: async (startDate: string, endDate: string): Promise<ArticleStatistics> => {
+    return axiosClient.get('/articles/statistics', { params: { startDate, endDate } })
+  },
+
+  // Tìm kiếm bài viết
+  searchArticles: async (keyword: string): Promise<Article[]> => {
+    return axiosClient.get('/articles/search', { params: { keyword } })
+  },
+
+  // Tạo bài viết mới
+  createArticle: async (data: CreateArticlePayload): Promise<Article> => {
+    return axiosClient.post('/articles/create', data)
+  },
+
+  // Cập nhật bài viết
+  updateArticle: async (id: number, data: EditArticlePayload): Promise<Article> => {
+    return axiosClient.patch(`/articles/edit/${id}`, data)
+  },
+
+  // Duyệt bài viết
+  approveArticle: async (id: number): Promise<Article> => {
+    return axiosClient.patch(`/articles/approve/${id}`)
+  },
+
+  // Từ chối bài viết
+  rejectArticle: async (id: number): Promise<Article> => {
+    return axiosClient.patch(`/articles/reject/${id}`)
+  },
+
+  // Xóa bài viết
   deleteArticle: async (id: number): Promise<void> => {
-    try {
-      await axiosClient.delete(`/articles/${id}`);
-      console.log('Article deleted successfully');
-    } catch (error) {
-      console.error('Error deleting article:', error);
-      throw error;
-    }
+    return axiosClient.delete(`/articles/delete/${id}`)
+  },
+
+  // Xóa nhiều bài viết
+  deleteMultipleArticles: async (data: DeleteMultipleArticlesPayload): Promise<void> => {
+    return axiosClient.delete('/articles/delete-multiple', { data })
   }
 }
 

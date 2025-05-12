@@ -1,14 +1,176 @@
+"use client"
+
 import Link from "next/link"
+import { useState, useEffect } from "react"
 import { ChevronRightIcon, TrendingUp, DollarSign, BarChart3 } from "lucide-react"
+import { format } from "date-fns"
+import { vi } from "date-fns/locale"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Pagination } from "@/components/pagination-control"
 import { ChatbotButton } from "@/components/chatbot-button"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { CategoryHeader } from "@/components/category-header"
+import articleApi from "@/src/apis/article"
+import { Article } from "@/src/apis/article"
+
+// ID danh mục Kinh doanh - cần thay thế bằng ID thực tế từ cơ sở dữ liệu
+const CATEGORY_ID = 3 // Giả định ID danh mục Kinh doanh là 3
 
 export default function KinhDoanhPage() {
+  const [activeTab, setActiveTab] = useState("all")
+  const [articles, setArticles] = useState<Article[]>([])
+  const [featuredArticles, setFeaturedArticles] = useState<Article[]>([])
+  const [latestArticles, setLatestArticles] = useState<Article[]>([])
+  const [realEstateArticles, setRealEstateArticles] = useState<Article[]>([])
+  const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+
+  // Format thời gian
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return format(date, "dd/MM/yyyy HH:mm", { locale: vi })
+  }
+
+  // Lấy bài viết nổi bật
+  useEffect(() => {
+    const fetchFeaturedArticles = async () => {
+      try {
+        const response = await articleApi.getArticles({
+          category_id: CATEGORY_ID,
+          limit: 1,
+          page: 1,
+          status: "PUBLISHED",
+          sort: "view_count",
+          order: "desc"
+        })
+        
+        if (response && response.articles) {
+          setFeaturedArticles(response.articles)
+        } else {
+          setFeaturedArticles([])
+        }
+      } catch (error) {
+        console.error("Error fetching featured articles:", error)
+        setFeaturedArticles([])
+      }
+    }
+    
+    fetchFeaturedArticles()
+  }, [])
+
+  // Lấy bài viết mới nhất
+  useEffect(() => {
+    const fetchLatestArticles = async () => {
+      try {
+        setLoading(true)
+        const response = await articleApi.getArticles({
+          category_id: CATEGORY_ID,
+          limit: 4,
+          page: 1,
+          status: "PUBLISHED",
+          sort: "published_at",
+          order: "desc"
+        })
+        
+        if (response && response.articles) {
+          setLatestArticles(response.articles)
+        } else {
+          setLatestArticles([])
+        }
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching latest articles:", error)
+        setLatestArticles([])
+        setLoading(false)
+      }
+    }
+    
+    fetchLatestArticles()
+  }, [])
+
+  // Lấy bài viết về bất động sản (subcategory)
+  useEffect(() => {
+    const fetchRealEstateArticles = async () => {
+      try {
+        const response = await articleApi.getArticles({
+          category_id: CATEGORY_ID,
+          limit: 3,
+          page: 1,
+          status: "PUBLISHED",
+          sort: "published_at",
+          order: "desc",
+          tag_id: 2 // Giả sử tag_id 2 là bất động sản
+        })
+        
+        if (response && response.articles) {
+          setRealEstateArticles(response.articles)
+        } else {
+          setRealEstateArticles([])
+        }
+      } catch (error) {
+        console.error("Error fetching real estate articles:", error)
+        setRealEstateArticles([])
+      }
+    }
+    
+    fetchRealEstateArticles()
+  }, [])
+
+  // Lấy bài viết theo tab và phân trang
+  useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        setLoading(true)
+        
+        const params: any = {
+          category_id: CATEGORY_ID,
+          page,
+          limit: 10,
+          status: "PUBLISHED",
+          sort: "published_at",
+          order: "desc"
+        }
+        
+        if (activeTab !== "all") {
+          params.tag = activeTab
+        }
+        
+        const response = await articleApi.getArticles(params)
+        
+        if (response && response.articles) {
+          setArticles(response.articles)
+          setTotalPages(Math.ceil((response.totalArticles || 0) / 10))
+        } else {
+          setArticles([])
+          setTotalPages(0)
+        }
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching articles:", error)
+        setArticles([])
+        setTotalPages(0)
+        setLoading(false)
+      }
+    }
+    
+    fetchArticles()
+  }, [activeTab, page])
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value)
+    setPage(1) // Reset về trang 1 khi chuyển tab
+  }
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage)
+    window.scrollTo(0, 0)
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
@@ -19,14 +181,6 @@ export default function KinhDoanhPage() {
         icon={<DollarSign className="h-6 w-6 text-white" />}
         color="bg-gradient-to-r from-amber-700 to-amber-500"
         textColor="text-amber-600"
-        tabs={[
-          { value: "all", label: "Tất cả" },
-          { value: "doanh-nghiep", label: "Doanh nghiệp" },
-          { value: "chung-khoan", label: "Chứng khoán" },
-          { value: "bat-dong-san", label: "Bất động sản" },
-          { value: "quoc-te", label: "Quốc tế" },
-          { value: "tai-chinh", label: "Tài chính" },
-        ]}
       />
 
       {/* Market Overview */}
@@ -101,25 +255,47 @@ export default function KinhDoanhPage() {
           <div className="lg:col-span-2">
             {/* Featured Article */}
             <div className="mb-12">
-              <div className="relative aspect-[16/9] mb-4">
-                <img
-                  src="/placeholder.svg?height=500&width=900&text=Business"
-                  alt="Featured Business Article"
-                  className="w-full h-full object-cover rounded-lg"
-                />
-              </div>
-              <h2 className="text-3xl font-bold mb-3 hover:text-amber-600">
-                <Link href="/articles/12">Việt Nam đặt mục tiêu tăng trưởng GDP 6.5% trong năm 2024</Link>
-              </h2>
-              <p className="text-gray-600 mb-4 text-lg">
-                Chính phủ đề ra nhiều giải pháp thúc đẩy tăng trưởng kinh tế, kiểm soát lạm phát và ổn định kinh tế vĩ
-                mô trong bối cảnh kinh tế toàn cầu còn nhiều thách thức.
-              </p>
-              <div className="flex items-center text-sm text-gray-500">
-                <span className="font-medium text-amber-600">Kinh tế vĩ mô</span>
-                <span className="mx-2">•</span>
-                <span>2 giờ trước</span>
-              </div>
+              {loading ? (
+                <div className="space-y-4">
+                  <Skeleton className="aspect-[16/9] w-full rounded-lg" />
+                  <Skeleton className="h-8 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+              ) : (
+                <>
+                  {featuredArticles.length > 0 ? (
+                    <div>
+                      <div className="relative aspect-[16/9] mb-4">
+                        <img
+                          src={featuredArticles[0].thumbnail || "https://placehold.co/900x500/eee/999?text=Kinh+doanh"}
+                          alt={featuredArticles[0].title}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      </div>
+                      <h2 className="text-3xl font-bold mb-3 hover:text-amber-600">
+                        <Link href={`/articles/${featuredArticles[0].id}`}>{featuredArticles[0].title}</Link>
+                      </h2>
+                      <p className="text-gray-600 mb-4 text-lg">
+                        {featuredArticles[0].content.substring(0, 200).replace(/<[^>]*>/g, '')}...
+                      </p>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <span className="font-medium text-amber-600">{featuredArticles[0].category?.name || "Kinh doanh"}</span>
+                        <span className="mx-2">•</span>
+                        <span>{featuredArticles[0].published_at ? formatTime(featuredArticles[0].published_at) : formatTime(featuredArticles[0].created_at)}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 bg-gray-50 rounded-lg">
+                      <DollarSign className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+                      <h3 className="text-xl font-bold mb-2">Chưa có bài viết nổi bật</h3>
+                      <p className="text-gray-500">Bài viết nổi bật sẽ được cập nhật sớm.</p>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Business News Grid */}
@@ -131,36 +307,61 @@ export default function KinhDoanhPage() {
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {[1, 2, 3, 4].map((item) => (
-                  <div key={item} className="border-b pb-6 mb-6 last:border-0 last:mb-0 last:pb-0">
-                    <div className="flex flex-col md:flex-row gap-4">
-                      <div className="md:w-1/3 aspect-[4/3]">
-                        <img
-                          src={`/business-placeholder.png?height=200&width=300&text=Business ${item}`}
-                          alt={`Business News ${item}`}
-                          className="w-full h-full object-cover rounded"
-                        />
-                      </div>
-                      <div className="md:w-2/3">
-                        <h4 className="text-lg font-bold mb-2 hover:text-amber-600">
-                          <Link href="/articles/13">
-                            Tập đoàn Vingroup công bố kế hoạch mở rộng đầu tư vào lĩnh vực công nghệ
-                          </Link>
-                        </h4>
-                        <p className="text-gray-600 text-sm mb-2">
-                          Vingroup dự kiến đầu tư hàng tỷ USD vào các dự án công nghệ cao trong 5 năm tới.
-                        </p>
-                        <div className="flex items-center text-xs text-gray-500">
-                          <span className="font-medium text-amber-600">Doanh nghiệp</span>
-                          <span className="mx-2">•</span>
-                          <span>4 giờ trước</span>
+              {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[1, 2, 3, 4].map((item) => (
+                    <div key={item} className="border-b pb-6 mb-6">
+                      <div className="flex flex-col md:flex-row gap-4">
+                        <Skeleton className="md:w-1/3 aspect-[4/3] rounded" />
+                        <div className="md:w-2/3 space-y-2">
+                          <Skeleton className="h-5 w-full" />
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-3/4" />
+                          <Skeleton className="h-3 w-32" />
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {latestArticles.length > 0 ? (
+                    latestArticles.map((article, index) => (
+                      <div key={article.id} className="border-b pb-6 mb-6 last:border-0 last:mb-0 last:pb-0">
+                        <div className="flex flex-col md:flex-row gap-4">
+                          <div className="md:w-1/3 aspect-[4/3]">
+                            <img
+                              src={article.thumbnail || `https://placehold.co/300x200/eee/999?text=Kinh+doanh+${index + 1}`}
+                              alt={article.title}
+                              className="w-full h-full object-cover rounded"
+                            />
+                          </div>
+                          <div className="md:w-2/3">
+                            <h4 className="text-lg font-bold mb-2 hover:text-amber-600">
+                              <Link href={`/articles/${article.id}`}>
+                                {article.title}
+                              </Link>
+                            </h4>
+                            <p className="text-gray-600 text-sm mb-2">
+                              {article.content.substring(0, 120).replace(/<[^>]*>/g, '')}...
+                            </p>
+                            <div className="flex items-center text-xs text-gray-500">
+                              <span className="font-medium text-amber-600">{article.category?.name || "Kinh doanh"}</span>
+                              <span className="mx-2">•</span>
+                              <span>{article.published_at ? formatTime(article.published_at) : formatTime(article.created_at)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-2 text-center py-10 bg-gray-50 rounded-lg">
+                      <DollarSign className="h-10 w-10 mx-auto text-gray-300 mb-2" />
+                      <p className="text-gray-500">Chưa có tin tức kinh doanh nào.</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Real Estate Section */}
@@ -170,32 +371,55 @@ export default function KinhDoanhPage() {
                 <h3 className="text-xl font-bold">Bất động sản</h3>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[1, 2, 3].map((item) => (
-                  <div key={item} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                    <div className="aspect-[4/3]">
-                      <img
-                        src={`/placeholder.svg?height=200&width=300&text=Real Estate ${item}`}
-                        alt={`Real Estate ${item}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <h4 className="font-bold mb-2 hover:text-amber-600">
-                        <Link href="/articles/14">
-                          Thị trường bất động sản phía Nam dự báo phục hồi mạnh vào cuối năm
-                        </Link>
-                      </h4>
-                      <p className="text-sm text-gray-600 mb-3">
-                        Các chuyên gia nhận định thị trường sẽ sôi động trở lại nhờ các chính sách hỗ trợ mới.
-                      </p>
-                      <div className="flex items-center text-xs text-gray-500">
-                        <span>6 giờ trước</span>
+              {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {[1, 2, 3].map((item) => (
+                    <div key={item} className="border rounded-lg overflow-hidden">
+                      <Skeleton className="aspect-[4/3] w-full" />
+                      <div className="p-4 space-y-2">
+                        <Skeleton className="h-5 w-full" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-1/2" />
+                        <Skeleton className="h-3 w-20" />
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {realEstateArticles.length > 0 ? (
+                    realEstateArticles.map((article) => (
+                      <div key={article.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                        <div className="aspect-[4/3]">
+                          <img
+                            src={article.thumbnail || "/placeholder.svg?height=200&width=300&text=Real Estate"}
+                            alt={article.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="p-4">
+                          <h4 className="font-bold mb-2 hover:text-amber-600">
+                            <Link href={`/articles/${article.id}`}>
+                              {article.title}
+                            </Link>
+                          </h4>
+                          <p className="text-sm text-gray-600 mb-3">
+                            {article.content.substring(0, 100).replace(/<[^>]*>/g, '')}...
+                          </p>
+                          <div className="flex items-center text-xs text-gray-500">
+                            <span>{article.published_at ? formatTime(article.published_at) : formatTime(article.created_at)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-3 text-center py-8 bg-gray-50 rounded-lg">
+                      <DollarSign className="h-10 w-10 mx-auto text-gray-300 mb-2" />
+                      <p className="text-gray-500">Chưa có tin tức bất động sản.</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

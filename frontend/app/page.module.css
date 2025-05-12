@@ -9,10 +9,13 @@
   position: relative;
   height: 100vh;
   width: 100%;
-  background-image: url("/placeholder.svg?height=1080&width=1920&text=ASEAN Summit");
   background-size: cover;
   background-position: center;
   margin-top: 0;
+}
+
+.heroSectionWithBg {
+  background-image: var(--bg-url);
 }
 
 /* Update the heroOverlay class to align content to the bottom left */
