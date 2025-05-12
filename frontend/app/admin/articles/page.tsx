@@ -1,94 +1,44 @@
+"use client"
+
+import { useEffect, useState, useMemo } from "react"
 import Link from "next/link"
 import { ChevronLeftIcon, ChevronRightIcon, Download, Edit, Eye, Filter, Plus, Search, Trash2 } from "lucide-react"
+import { useDispatch, useSelector } from "react-redux"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import styles from "../admin.module.css"
+import { handleGetArticles } from "@/src/thunks/article/articleThunk"
+import { AppDispatch } from "@/src/store"
+import { selectArticles, selectCurrentPage, selectIsLoading, selectTotalArticles, selectTotalPages } from "@/src/thunks/article/articleSlice"
+import userApi from "@/src/apis/user"
+import { User } from "@/src/apis/user"
 
 export default function ArticlesPage() {
-  // Mock articles data
-  const articles = [
-    {
-      id: "ART-001",
-      title: "Chính phủ công bố kế hoạch phát triển kinh tế 5 năm tới",
-      category: "Thời sự",
-      author: "Nguyễn Văn A",
-      status: "Đã xuất bản",
-      views: 12543,
-      comments: 45,
-      publishedAt: "05/04/2025",
-    },
-    {
-      id: "ART-002",
-      title: "Đội tuyển Việt Nam giành chiến thắng ấn tượng tại vòng loại World Cup",
-      category: "Thể thao",
-      author: "Trần Thị B",
-      status: "Đã xuất bản",
-      views: 10876,
-      comments: 78,
-      publishedAt: "04/04/2025",
-    },
-    {
-      id: "ART-003",
-      title: "Thị trường bất động sản phía Nam khởi sắc trong quý II",
-      category: "Kinh doanh",
-      author: "Lê Văn C",
-      status: "Đã xuất bản",
-      views: 8932,
-      comments: 23,
-      publishedAt: "03/04/2025",
-    },
-    {
-      id: "ART-004",
-      title: "Công nghệ AI đang thay đổi ngành y tế như thế nào",
-      category: "Công nghệ",
-      author: "Phạm Thị D",
-      status: "Đã xuất bản",
-      views: 7654,
-      comments: 19,
-      publishedAt: "02/04/2025",
-    },
-    {
-      id: "ART-005",
-      title: "10 điểm du lịch hấp dẫn nhất Việt Nam trong mùa hè này",
-      category: "Du lịch",
-      author: "Hoàng Văn E",
-      status: "Đã xuất bản",
-      views: 6789,
-      comments: 34,
-      publishedAt: "01/04/2025",
-    },
-    {
-      id: "ART-006",
-      title: "Dự báo tăng trưởng GDP Việt Nam năm 2025",
-      category: "Kinh tế",
-      author: "Ngô Thị F",
-      status: "Chờ duyệt",
-      views: 0,
-      comments: 0,
-      publishedAt: "-",
-    },
-    {
-      id: "ART-007",
-      title: "Những xu hướng thời trang nổi bật mùa hè 2025",
-      category: "Thời trang",
-      author: "Đỗ Văn G",
-      status: "Chờ duyệt",
-      views: 0,
-      comments: 0,
-      publishedAt: "-",
-    },
-    {
-      id: "ART-008",
-      title: "Cách phòng tránh các bệnh mùa hè thường gặp",
-      category: "Sức khỏe",
-      author: "Vũ Thị H",
-      status: "Từ chối",
-      views: 0,
-      comments: 0,
-      publishedAt: "-",
-    },
-  ]
+  const dispatch = useDispatch<AppDispatch>()
+  const articles = useSelector(selectArticles)
+  const currentPage = useSelector(selectCurrentPage)
+  const totalPages = useSelector(selectTotalPages)
+  const totalArticles = useSelector(selectTotalArticles)
+  const isLoading = useSelector(selectIsLoading)
+  const [searchQuery, setSearchQuery] = useState("")
+
+  useEffect(() => {
+    console.log('Fetching articles with page:', currentPage);
+    dispatch(handleGetArticles({ page: currentPage, per_page: 10 }))
+  }, [dispatch, currentPage])
+
+  useEffect(() => {
+    console.log('Current articles state:', { articles, totalArticles, currentPage, totalPages });
+  }, [articles, totalArticles, currentPage, totalPages])
+
+  const handleSearch = () => {
+    dispatch(handleGetArticles({ page: 1, per_page: 10, search: searchQuery }))
+  }
+
+  const handlePageChange = (page: number) => {
+    dispatch(handleGetArticles({ page, per_page: 10, search: searchQuery }))
+  }
 
   return (
     <div>
@@ -109,7 +59,14 @@ export default function ArticlesPage() {
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-              <Input type="search" placeholder="Tìm kiếm bài viết..." className="pl-8 h-9 w-[200px] md:w-[300px]" />
+              <Input
+                type="search"
+                placeholder="Tìm kiếm bài viết..."
+                className="pl-8 h-9 w-[200px] md:w-[300px]"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              />
             </div>
             <Button variant="outline" size="sm">
               <Filter className="h-4 w-4 mr-2" />
@@ -137,40 +94,53 @@ export default function ArticlesPage() {
                 <th className={styles.tableHeaderCell}>Tác giả</th>
                 <th className={styles.tableHeaderCell}>Trạng thái</th>
                 <th className={styles.tableHeaderCell}>Lượt xem</th>
-                <th className={styles.tableHeaderCell}>Bình luận</th>
                 <th className={styles.tableHeaderCell}>Ngày xuất bản</th>
                 <th className={styles.tableHeaderCell}>Hành động</th>
               </tr>
             </thead>
             <tbody>
-              {articles.map((article) => (
+              {(() => {
+                console.log('Rendering table:', { isLoading, articlesCount: articles.length });
+                if (isLoading) {
+                  return (
+                    <tr>
+                      <td colSpan={8} className="text-center py-4">Đang tải...</td>
+                    </tr>
+                  );
+                }
+                return articles.map((article) => (
                 <tr key={article.id} className={styles.tableRow}>
                   <td className={styles.tableCell}>{article.id}</td>
                   <td className={styles.tableCell}>
-                    <div className="font-medium">{article.title}</div>
+                    <div className="font-medium">{article.title || 'Không có tiêu đề'}</div>
                   </td>
                   <td className={styles.tableCell}>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {article.category}
+                      {article.category?.name || 'Chưa phân loại'}
                     </span>
                   </td>
-                  <td className={styles.tableCell}>{article.author}</td>
+                  <td className={styles.tableCell}>
+                    {article.author?.fullname || 'Không có tác giả'}
+                  </td>
                   <td className={styles.tableCell}>
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        article.status === "Đã xuất bản"
+                        article.status === "PUBLISHED"
                           ? "bg-green-100 text-green-800"
-                          : article.status === "Chờ duyệt"
+                          : article.status === "PENDING"
                             ? "bg-yellow-100 text-yellow-800"
                             : "bg-red-100 text-red-800"
                       }`}
                     >
-                      {article.status}
+                      {article.status === "PUBLISHED" ? "Đã xuất bản" : 
+                       article.status === "PENDING" ? "Chờ duyệt" :
+                       article.status === "DRAFT" ? "Bản nháp" : "Từ chối"}
                     </span>
                   </td>
-                  <td className={styles.tableCell}>{article.views.toLocaleString()}</td>
-                  <td className={styles.tableCell}>{article.comments}</td>
-                  <td className={styles.tableCell}>{article.publishedAt}</td>
+                  <td className={styles.tableCell}>{article.views?.toLocaleString() || '0'}</td>
+                  <td className={styles.tableCell}>
+                    {article.publishedAt ? new Date(article.publishedAt).toLocaleString('vi-VN') : "-"}
+                  </td>
                   <td className={styles.tableCell}>
                     <div className="flex space-x-2">
                       <Link href={`/admin/articles/${article.id}`}>
@@ -193,22 +163,55 @@ export default function ArticlesPage() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                ));
+              })()}
             </tbody>
           </table>
         </div>
         <div className={styles.tableFooter}>
-          <div className={styles.paginationInfo}>Hiển thị 1 đến 8 trong tổng số 42 bài viết</div>
+          <div className={styles.paginationInfo}>
+            Hiển thị {articles.length > 0 ? (currentPage - 1) * 10 + 1 : 0} đến {Math.min(currentPage * 10, totalArticles)} trong tổng số {totalArticles} bài viết
+          </div>
           <div className={styles.paginationControls}>
-            <button className={`${styles.paginationButton} ${styles.paginationButtonDisabled}`} disabled>
+            <button 
+              className={`${styles.paginationButton} ${currentPage === 1 ? styles.paginationButtonDisabled : ''}`}
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1 || isLoading}
+            >
               <ChevronLeftIcon className="h-4 w-4" />
             </button>
-            <button className={`${styles.paginationButton} ${styles.paginationButtonActive}`}>1</button>
-            <button className={styles.paginationButton}>2</button>
-            <button className={styles.paginationButton}>3</button>
-            <button className={styles.paginationButton}>4</button>
-            <button className={styles.paginationButton}>5</button>
-            <button className={styles.paginationButton}>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 2)
+              .map((page, index, array) => {
+                if (index > 0 && array[index - 1] !== page - 1) {
+                  return [
+                    <button key={`ellipsis-${page}`} className={styles.paginationButton} disabled>...</button>,
+                    <button
+                      key={page}
+                      className={`${styles.paginationButton} ${currentPage === page ? styles.paginationButtonActive : ''}`}
+                      onClick={() => handlePageChange(page)}
+                      disabled={isLoading}
+                    >
+                      {page}
+                    </button>
+                  ]
+                }
+                return (
+                  <button
+                    key={page}
+                    className={`${styles.paginationButton} ${currentPage === page ? styles.paginationButtonActive : ''}`}
+                    onClick={() => handlePageChange(page)}
+                    disabled={isLoading}
+                  >
+                    {page}
+                  </button>
+                )
+              })}
+            <button 
+              className={`${styles.paginationButton} ${currentPage === totalPages ? styles.paginationButtonDisabled : ''}`}
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages || isLoading}
+            >
               <ChevronRightIcon className="h-4 w-4" />
             </button>
           </div>
