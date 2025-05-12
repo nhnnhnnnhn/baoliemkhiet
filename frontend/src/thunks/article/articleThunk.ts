@@ -48,6 +48,19 @@ export const handleGetArticleById = createAsyncThunk(
   }
 );
 
+// Thunk để lấy chi tiết bài viết theo slug
+export const handleGetArticleBySlug = createAsyncThunk(
+  'article/getArticleBySlug',
+  async (slug: string, { rejectWithValue }) => {
+    try {
+      const response = await articleApi.getArticleBySlug(slug);
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Không thể lấy thông tin bài viết');
+    }
+  }
+);
+
 // Thunk để lấy bài viết được xem nhiều nhất
 export const handleGetMostViewedArticles = createAsyncThunk(
   'article/getMostViewedArticles',

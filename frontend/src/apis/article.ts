@@ -7,15 +7,19 @@ export interface Article {
   thumbnail?: string
   author_id: number
   category_id: number
-  status: 'DRAFT' | 'PUBLISHED' | 'REJECTED' | 'PENDING_REVIEW'
-  view_count: number
+  status: 'DRAFT' | 'APPROVED' | 'REJECTED' | 'PENDING'
+  view?: number
   published_at?: string
   created_at: string
   updated_at: string
+  excerpt?: string
+  slug?: string
   author?: {
     id: number
-    name: string
+    name?: string
+    fullname?: string
     email: string
+    avatar?: string
   }
   category?: {
     id: number
@@ -56,9 +60,10 @@ export interface CreateArticlePayload {
   thumbnail?: string
   authorId: number
   categoryId: number
-  status?: 'DRAFT' | 'PUBLISHED' | 'PENDING_REVIEW'
+  status?: 'DRAFT' | 'PUBLISHED' | 'PENDING' | 'APPROVED' | 'APPROVED'
   publishedAt?: string
   tags?: number[]
+  excerpt?: string
 }
 
 export interface EditArticlePayload {
@@ -67,9 +72,10 @@ export interface EditArticlePayload {
   thumbnail?: string
   authorId?: number
   categoryId?: number
-  status?: 'DRAFT' | 'PUBLISHED' | 'PENDING_REVIEW' | 'REJECTED'
+  status?: 'DRAFT' | 'APPROVED' | 'PENDING' | 'REJECTED' | 'PUBLISHED'
   publishedAt?: string
   tags?: number[]
+  excerpt?: string
 }
 
 export interface DeleteMultipleArticlesPayload {
@@ -110,6 +116,11 @@ const articleApi = {
   // Lấy thông tin bài viết theo ID
   getArticleById: async (id: number): Promise<Article> => {
     return axiosClient.get(`/articles/get/${id}`)
+  },
+
+  // Lấy thông tin bài viết theo slug
+  getArticleBySlug: async (slug: string): Promise<Article> => {
+    return axiosClient.get(`/articles/slug/${slug}`)
   },
 
   // Lấy bài viết được xem nhiều nhất

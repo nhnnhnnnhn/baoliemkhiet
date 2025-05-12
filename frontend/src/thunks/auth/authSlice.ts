@@ -200,7 +200,7 @@ const authSlice = createSlice({
             ...state.user,
             fullname: action.payload.fullname || state.user.fullname,
             email: action.payload.email || state.user.email,
-            phone: action.payload.phone || state.user.phone,
+            phone: action.payload.phone ?? state.user.phone ?? undefined,
             address: action.payload.address || state.user.address,
             bio: action.payload.bio || state.user.bio
           };

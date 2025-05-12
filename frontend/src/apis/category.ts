@@ -58,37 +58,37 @@ export interface ArticlesCountResponse {
 const categoryApi = {
   // Lấy danh sách category
   getCategories: async (params?: GetCategoriesParams): Promise<GetCategoriesResponse> => {
-    return axiosClient.get('/category/get', { params })
+    return axiosClient.get('/categories/get', { params })
   },
 
   // Lấy thông tin category theo ID
   getCategoryById: async (id: number): Promise<Category> => {
-    return axiosClient.get(`/category/get/${id}`)
+    return axiosClient.get(`/categories/get/${id}`)
   },
 
   // Tạo category mới
   createCategory: async (data: CreateCategoryPayload): Promise<Category> => {
-    return axiosClient.post('/category/create', data)
+    return axiosClient.post('/categories/create', data)
   },
 
   // Cập nhật category
   updateCategory: async (id: number, data: EditCategoryPayload): Promise<Category> => {
-    return axiosClient.patch(`/category/edit/${id}`, data)
+    return axiosClient.patch(`/categories/edit/${id}`, data)
   },
 
   // Xóa category
   deleteCategory: async (id: number): Promise<void> => {
-    return axiosClient.delete(`/category/delete/${id}`)
+    return axiosClient.delete(`/categories/delete/${id}`)
   },
 
   // Xóa nhiều category
   deleteMultipleCategories: async (data: DeleteMultipleCategoriesPayload): Promise<void> => {
-    return axiosClient.delete('/category/delete-multiple', { data })
+    return axiosClient.delete('/categories/delete-multiple', { data })
   },
 
   // Lấy số lượng bài viết theo category
   getArticlesCount: async (): Promise<ArticlesCountResponse> => {
-    return axiosClient.get('/category/articles-count')
+    return axiosClient.get('/categories/articles-count')
   }
 }
 

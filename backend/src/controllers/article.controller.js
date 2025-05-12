@@ -54,6 +54,19 @@ module.exports.getArticleById = controllerHandler(async (req, res) => {
   res.status(200).json(article);
 });
 
+// Get a single article by slug
+module.exports.getArticleBySlug = controllerHandler(async (req, res) => {
+  const { slug } = req.params;
+  if (!slug) {
+    return res.status(400).json({ message: "Missing article slug" });
+  }
+  const article = await service.getArticleBySlug(slug);
+  if (!article) {
+    return res.status(404).json({ message: "Article not found" });
+  }
+  res.status(200).json(article);
+});
+
 // Get most 5 viewed articles
 module.exports.getMostViewedArticles = controllerHandler(async (req, res) => {
   const { timePeriod } = req.query;

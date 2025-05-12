@@ -65,8 +65,8 @@ axiosClient.interceptors.response.use(
       data: response.data
     });
     
-    // Trả về nguyên response để component có thể xử lý data
-    return response;
+    // Trả về response.data để các API service có thể sử dụng trực tiếp
+    return response.data;
   },
   async (error) => {
     const originalRequest = error.config;

@@ -34,7 +34,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
-import { format } from "date-fns"
+import { format, isValid, parseISO } from "date-fns"
 import styles from "../admin.module.css"
 
 export default function ArticlesPage() {
@@ -127,14 +127,17 @@ export default function ArticlesPage() {
     switch (status) {
       case 'PUBLISHED':
         return 'Đã xuất bản'
+      case 'APPROVED': 
+        return 'Đã duyệt'  
       case 'DRAFT':
         return 'Bản nháp'
-      case 'PENDING_REVIEW':
+      case 'PENDING':
         return 'Chờ duyệt'
       case 'REJECTED':
-        return 'Từ chối'
+        return 'Đã từ chối'
       default:
-        return status
+        console.log('Trạng thái không xác định:', status);
+        return 'Không xác định'
     }
   }
   
@@ -143,9 +146,11 @@ export default function ArticlesPage() {
     switch (status) {
       case 'PUBLISHED':
         return 'bg-green-100 text-green-800'
+      case 'APPROVED': 
+        return 'bg-green-100 text-green-800'  // Thêm trường hợp APPROVED
       case 'DRAFT':
         return 'bg-gray-100 text-gray-800'
-      case 'PENDING_REVIEW':
+      case 'PENDING':
         return 'bg-yellow-100 text-yellow-800'
       case 'REJECTED':
         return 'bg-red-100 text-red-800'
@@ -241,32 +246,54 @@ export default function ArticlesPage() {
                       <div className="font-medium">{article.title}</div>
                     </td>
                     <td className={styles.tableCell}>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {article.category?.name || 'Không có danh mục'}
-                      </span>
+                      {article.category?.name || 'Chưa phân loại'}
                     </td>
-                    <td className={styles.tableCell}>{article.author?.name || 'Không xác định'}</td>
                     <td className={styles.tableCell}>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(article.status)}`}
-                      >
+                      {article.author?.fullname || article.author?.name || 'Không xác định'}
+                    </td>
+                    <td className={styles.tableCell}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(article.status)}`}>
                         {getStatusDisplay(article.status)}
                       </span>
                     </td>
-                    <td className={styles.tableCell}>{article.view_count ? article.view_count.toLocaleString() : '0'}</td>
+                    <td className={styles.tableCell}>{article.view ? article.view.toLocaleString() : '0'}</td>
                     <td className={styles.tableCell}>0</td>
                     <td className={styles.tableCell}>
-                      {article.published_at ? format(new Date(article.published_at), 'dd/MM/yyyy') : '-'}
+                      {article.published_at 
+                        ? (() => {
+                            try {
+                              // Kiểm tra xem chuỗi ngày có hợp lệ không
+                              const date = new Date(article.published_at);
+                              return !isNaN(date.getTime()) 
+                                ? format(date, 'dd/MM/yyyy') 
+                                : 'Ngày không hợp lệ';
+                            } catch (error) {
+                              console.error('Lỗi xử lý ngày:', article.published_at, error);
+                              return 'Ngày không hợp lệ';
+                            }
+                          })() 
+                        : (article.status as string) === 'APPROVED' || (article.status as string) === 'PUBLISHED' 
+                          ? format(new Date(), 'dd/MM/yyyy') // Nếu đã duyệt nhưng không có ngày, hiển thị ngày hiện tại
+                          : '-'}
                     </td>
                     <td className={styles.tableCell}>
-                      <div className="flex space-x-2">
-                        <Link href={`/admin/articles/${article.id}`}>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <div className="flex items-center space-x-1">
+                        <Link href={article.slug ? `/article/${article.slug}` : '#'} target="_blank" onClick={e => {
+                          if (!article.slug) {
+                            e.preventDefault();
+                            toast({
+                              title: "Lỗi",
+                              description: "Bài viết không có slug hoặc chưa được xuất bản",
+                              variant: "destructive"
+                            });
+                          }
+                        }}>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Xem bài viết">
                             <Eye className="h-4 w-4" />
                           </Button>
                         </Link>
                         <Link href={`/admin/articles/${article.id}/edit`}>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Chỉnh sửa bài viết">
                             <Edit className="h-4 w-4" />
                           </Button>
                         </Link>
@@ -276,6 +303,7 @@ export default function ArticlesPage() {
                           className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                           onClick={() => openDeleteDialog(article.id)}
                           disabled={isDeletingArticle}
+                          aria-label="Xóa bài viết"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -300,6 +328,7 @@ export default function ArticlesPage() {
               className={`${styles.paginationButton} ${currentPage <= 1 ? styles.paginationButtonDisabled : ''}`} 
               disabled={currentPage <= 1 || isLoading}
               onClick={() => handlePageChange(currentPage - 1)}
+              aria-label="Trang trước"
             >
               <ChevronLeftIcon className="h-4 w-4" />
             </button>
@@ -312,6 +341,8 @@ export default function ArticlesPage() {
                   className={`${styles.paginationButton} ${page === currentPage ? styles.paginationButtonActive : ''}`}
                   onClick={() => handlePageChange(page)}
                   disabled={isLoading}
+                  aria-label={`Trang ${page}`}
+                  aria-current={page === currentPage ? 'page' : undefined}
                 >
                   {page}
                 </button>
@@ -322,6 +353,7 @@ export default function ArticlesPage() {
               className={`${styles.paginationButton} ${currentPage >= totalPages ? styles.paginationButtonDisabled : ''}`} 
               disabled={currentPage >= totalPages || isLoading}
               onClick={() => handlePageChange(currentPage + 1)}
+              aria-label="Trang tiếp theo"
             >
               <ChevronRightIcon className="h-4 w-4" />
             </button>

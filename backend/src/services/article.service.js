@@ -112,9 +112,71 @@ module.exports.getArticleById = async (id) => {
   const article = await prisma.article.findUnique({
     where: {
       id: Number(id),
-      isPublish: true,
+      // Đã bỏ điều kiện isPublish: true để có thể xem tất cả bài viết từ trang admin
+    },
+    include: {
+      author: {
+        select: {
+          id: true,
+          fullname: true,
+          avatar: true,
+        },
+      },
+      category: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      articleTags: {
+        include: {
+          tag: true,
+        },
+      },
     },
   });
+  return article;
+};
+
+// Get a single article by slug
+module.exports.getArticleBySlug = async (slug) => {
+  const article = await prisma.article.findFirst({
+    where: {
+      slug: slug,
+      isPublish: true, // Chỉ lấy bài viết đã được xuất bản để hiển thị cho người dùng
+    },
+    include: {
+      author: {
+        select: {
+          id: true,
+          fullname: true,
+          avatar: true,
+          bio: true, // Thêm tiểu sử tác giả
+        },
+      },
+      category: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+        },
+      },
+      articleTags: {
+        include: {
+          tag: true,
+        },
+      },
+    },
+  });
+  
+  // Nếu tìm thấy bài viết, tăng lượt xem
+  if (article) {
+    await prisma.article.update({
+      where: { id: article.id },
+      data: { view: { increment: 1 } },
+    });
+  }
+  
   return article;
 };
 

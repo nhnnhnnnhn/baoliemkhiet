@@ -1,123 +1,20 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { format, parseISO, isValid } from "date-fns"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { MessageSquare, ThumbsUp, Share2, Bookmark, Facebook, Twitter, AlertTriangle } from "lucide-react"
+import { MessageSquare, ThumbsUp, Share2, Bookmark, Facebook, Twitter, AlertTriangle, Loader2 } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
 import { ChatbotButton } from "@/components/chatbot-button"
+import { useAppDispatch, useAppSelector } from "@/src/store"
+import { handleGetArticleBySlug, handleGetRelatedArticles } from "@/src/thunks/article/articleThunk"
+import { selectSelectedArticle, selectRelatedArticles, selectIsLoading } from "@/src/thunks/article/articleSlice"
 
-// Giả lập dữ liệu bài viết
-const getArticleData = (slug: string) => {
-  return {
-    id: "article123", // Added article ID
-    title: "Việt Nam đạt thỏa thuận hợp tác kinh tế mới với các nước ASEAN",
-    publishDate: "15/04/2025",
-    publishTime: "08:30",
-    category: "Kinh doanh",
-    author: {
-      name: "Nguyễn Văn A",
-      avatar: "/placeholder.svg?height=80&width=80",
-      bio: "Phóng viên kinh tế với hơn 10 năm kinh nghiệm theo dõi thị trường Đông Nam Á",
-      username: "nguyenvanA",
-    },
-    content: [
-      {
-        type: "text",
-        value:
-          "Hà Nội - Trong khuôn khổ Hội nghị cấp cao ASEAN lần thứ 42, Việt Nam đã đạt được thỏa thuận hợp tác kinh tế mới với các nước thành viên, mở ra cơ hội phát triển mới cho khu vực.",
-      },
-      {
-        type: "text",
-        value:
-          "Theo thỏa thuận mới, các nước ASEAN sẽ tăng cường hợp tác trong lĩnh vực công nghệ cao, chuyển đổi số và phát triển bền vững. Đây được xem là bước tiến quan trọng trong việc thúc đẩy tăng trưởng kinh tế khu vực sau đại dịch.",
-      },
-      {
-        type: "image",
-        url: "/placeholder.svg?height=500&width=800",
-        caption: "Đại diện các nước ASEAN tại lễ ký kết thỏa thuận hợp tác kinh tế mới",
-      },
-      {
-        type: "text",
-        value:
-          "Thủ tướng Chính phủ nhấn mạnh tầm quan trọng của việc tăng cường kết nối kinh tế khu vực trong bối cảnh thế giới đang đối mặt với nhiều thách thức. 'Chúng ta cần đoàn kết và hợp tác chặt chẽ hơn nữa để vượt qua khó khăn, tạo động lực mới cho tăng trưởng kinh tế khu vực', Thủ tướng phát biểu.",
-      },
-      {
-        type: "text",
-        value:
-          "Các chuyên gia kinh tế đánh giá cao thỏa thuận này và cho rằng đây là cơ hội để Việt Nam mở rộng thị trường xuất khẩu, thu hút đầu tư và nâng cao vị thế trong khu vực.",
-      },
-      {
-        type: "image",
-        url: "/placeholder.svg?height=500&width=800",
-        caption: "Biểu đồ tăng trưởng kinh tế của các nước ASEAN giai đoạn 2020-2025",
-      },
-      {
-        type: "text",
-        value:
-          "Theo số liệu thống kê, kim ngạch thương mại giữa Việt Nam và các nước ASEAN đã tăng 15% trong năm 2024, đạt 80 tỷ USD. Với thỏa thuận mới, con số này dự kiến sẽ tăng lên 100 tỷ USD vào năm 2026.",
-      },
-      {
-        type: "text",
-        value:
-          "Bên cạnh đó, thỏa thuận cũng đề cập đến việc thúc đẩy hợp tác trong lĩnh vực an ninh mạng, một vấn đề ngày càng được quan tâm trong kỷ nguyên số. Các nước sẽ chia sẻ kinh nghiệm, công nghệ và thông tin để bảo vệ hệ thống thông tin và dữ liệu quan trọng.",
-      },
-      {
-        type: "text",
-        value:
-          "Dự kiến, các dự án hợp tác cụ thể sẽ được triển khai từ quý III năm 2025, với tổng vốn đầu tư lên đến 5 tỷ USD từ các quốc gia thành viên và đối tác quốc tế.",
-      },
-    ],
-    comments: [
-      {
-        user: {
-          name: "Trần Văn B",
-          avatar: "/placeholder.svg?height=40&width=40",
-        },
-        date: "15/04/2025",
-        time: "10:15",
-        content: "Tin tức rất hữu ích. Mong rằng thỏa thuận này sẽ mang lại nhiều cơ hội cho doanh nghiệp Việt Nam.",
-        likes: 15,
-      },
-      {
-        user: {
-          name: "Lê Thị C",
-          avatar: "/placeholder.svg?height=40&width=40",
-        },
-        date: "15/04/2025",
-        time: "11:30",
-        content:
-          "Tôi quan tâm đến các dự án hợp tác cụ thể. Bài viết có thể cung cấp thêm thông tin chi tiết về các lĩnh vực ưu tiên không?",
-        likes: 8,
-      },
-      {
-        user: {
-          name: "Phạm Văn D",
-          avatar: "/placeholder.svg?height=40&width=40",
-        },
-        date: "15/04/2025",
-        time: "13:45",
-        content:
-          "Đây là một bước tiến quan trọng cho ASEAN. Tôi hy vọng các nước sẽ thực hiện nghiêm túc các cam kết đã đưa ra.",
-        likes: 12,
-      },
-    ],
-    relatedArticles: [
-      {
-        title: "ASEAN và EU ký kết hiệp định thương mại tự do",
-        slug: "asean-eu-ky-ket-hiep-dinh-thuong-mai-tu-do",
-        thumbnail: "/placeholder.svg?height=200&width=300",
-        category: "Kinh doanh",
-        publishDate: "10/04/2025",
-      },
-      {
-        title: "Việt Nam tăng 5 bậc trong bảng xếp hạng môi trường kinh doanh toàn cầu",
-        slug: "viet-nam-tang-5-bac-trong-bang-xep-hang-moi-truong-kinh-doanh",
-        thumbnail: "/placeholder.svg?height=200&width=300",
-        category: "Kinh doanh",
-        publishDate: "08/04/2025",
-      },
       {
         title: "Doanh nghiệp công nghệ Việt Nam đón đầu xu hướng AI",
         slug: "doanh-nghiep-cong-nghe-viet-nam-don-dau-xu-huong-ai",

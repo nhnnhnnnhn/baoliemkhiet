@@ -57,8 +57,8 @@ export default function CategoriesClientPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<CategoryType | null>(null)
-  const [newCategory, setNewCategory] = useState({ name: "", slug: "" })
-  const [editedCategory, setEditedCategory] = useState({ name: "", slug: "" })
+  const [newCategory, setNewCategory] = useState({ name: "", slug: "", description: "" })
+  const [editedCategory, setEditedCategory] = useState({ name: "", slug: "", description: "" })
   const [searchQuery, setSearchQuery] = useState("")
 
   // Fetch categories when component mounts
@@ -79,7 +79,7 @@ export default function CategoriesClientPage() {
         description: "Danh mục mới đã được tạo thành công.",
       })
       setIsAddModalOpen(false)
-      setNewCategory({ name: "", slug: "" })
+      setNewCategory({ name: "", slug: "", description: "" })
       dispatch(clearCreateCategoryState())
     } else if (createCategoryError) {
       toast({
@@ -100,7 +100,7 @@ export default function CategoriesClientPage() {
       })
       setIsEditModalOpen(false)
       setSelectedCategory(null)
-      setEditedCategory({ name: "", slug: "" })
+      setEditedCategory({ name: "", slug: "", description: "" })
       dispatch(clearUpdateCategoryState())
     } else if (updateCategoryError) {
       toast({
@@ -150,7 +150,11 @@ export default function CategoriesClientPage() {
 
   const handleEditCategory = (category: CategoryType) => {
     setSelectedCategory(category)
-    setEditedCategory({ name: category.name, slug: category.slug })
+    setEditedCategory({ 
+      name: category.name, 
+      slug: category.slug, 
+      description: category.description || "" 
+    })
     setIsEditModalOpen(true)
   }
 
@@ -164,7 +168,8 @@ export default function CategoriesClientPage() {
     
     dispatch(handleCreateCategory({
       name: newCategory.name,
-      slug: newCategory.slug
+      slug: newCategory.slug,
+      description: newCategory.description || newCategory.name // Sử dụng name làm mô tả mặc định nếu không có
     }))
   }
 
@@ -175,7 +180,8 @@ export default function CategoriesClientPage() {
       id: selectedCategory.id,
       data: {
         name: editedCategory.name,
-        slug: editedCategory.slug
+        slug: editedCategory.slug,
+        description: editedCategory.description || editedCategory.name // Sử dụng name làm mô tả mặc định nếu không có
       }
     }))
   }
@@ -289,6 +295,7 @@ export default function CategoriesClientPage() {
                     setNewCategory({
                       name,
                       slug: generateSlug(name),
+                      description: newCategory.description
                     })
                   }}
                   placeholder="Nhập tên danh mục"
@@ -349,6 +356,7 @@ export default function CategoriesClientPage() {
                     setEditedCategory({
                       name,
                       slug: generateSlug(name),
+                      description: editedCategory.description
                     })
                   }}
                   placeholder="Nhập tên danh mục"
