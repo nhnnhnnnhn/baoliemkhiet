@@ -6,28 +6,28 @@ const authMiddleware = require("../middlewares/auth.middleware");
 // Add tag to article
 router.post(
   "/articles/:articleId/tags",
-  authMiddleware,
+  authMiddleware(),
   articleTagController.addTagToArticle
 );
 
 // Remove tag from article
 router.delete(
   "/articles/:articleId/tags/:tagId",
-  authMiddleware,
+  authMiddleware(),
   articleTagController.removeTagFromArticle
 );
 
 // Get article tags
 router.get(
   "/articles/:articleId/tags",
-  authMiddleware,
+  authMiddleware(),
   articleTagController.getArticleTags
 );
 
 // Update article tags
 router.put(
   "/articles/:articleId/tags",
-  authMiddleware,
+  authMiddleware(),
   articleTagController.updateArticleTags
 );
 

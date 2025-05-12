@@ -2,6 +2,7 @@ const { PrismaClient, CommentStatus } = require("@prisma/client");
 const prisma = new PrismaClient();
 const extractJSON = require("../utils/extractJson.util");
 const deepseek = require("../deepseek/deepseek.js").deepseek;
+const sendNotification = require("../websocket").sendNotification;
 
 async function createComment(user_id, article_id, content) {
   const user = await prisma.user.findUnique({
@@ -42,6 +43,20 @@ async function createComment(user_id, article_id, content) {
     status = CommentStatus.REJECTED_BY_AI;
   }
   const commentId = comment.id;
+  if (status == CommentStatus.REJECTED_BY_AI) {
+    const notification = {
+      receiver_id: user_id,
+      content: "Your comment has been rejected",
+      type: "COMMENT",
+      article_id: article_id,
+    };
+    await sendNotification(
+      notification.receiver_id,
+      notification.content,
+      notification.type,
+      notification.article_id
+    );
+  }
 
   const updateComment = await prisma.comment.update({
     where: { id: commentId },
@@ -61,7 +76,7 @@ async function getComments(article_id) {
   }
 
   const comments = await prisma.comment.findMany({
-    where: { articleId: article_id },
+    where: { articleId: article_id, status: CommentStatus.APPROVED },
     orderBy: { createdAt: "desc" },
   });
   return comments;

@@ -4,15 +4,19 @@ const authMiddleware = require("../middlewares/auth.middleware");
 const router = express.Router();
 
 // POST /api/comments
-router.post("/", authMiddleware, commentController.createComment);
+router.post("/", authMiddleware(), commentController.createComment);
 
 // GET /api/comments/:article_id
-router.get("/:article_id", authMiddleware, commentController.getComments);
+router.get("/:article_id", authMiddleware(), commentController.getComments);
 
 // PUT /api/comments/:comment_id
-router.put("/:comment_id", authMiddleware, commentController.updateComment);
+router.put("/:comment_id", authMiddleware(), commentController.updateComment);
 
 // DELETE /api/comments/:comment_id
-router.delete("/:comment_id", authMiddleware, commentController.deleteComment);
+router.delete(
+  "/:comment_id",
+  authMiddleware(),
+  commentController.deleteComment
+);
 
 module.exports = router;

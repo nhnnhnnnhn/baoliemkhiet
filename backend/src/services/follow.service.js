@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const sendNotification = require("../websocket").sendNotification;
 
 async function createFollow(followerId, journalistId) {
   // Check if follower exists
@@ -35,6 +36,18 @@ async function createFollow(followerId, journalistId) {
       journalistId,
     },
   });
+  const notification = {
+    receiver_id: journalistId,
+    content: `${follower.fullname} has followed you`,
+    type: "FOLLOW",
+    article_id: null,
+  };
+  await sendNotification(
+    notification.receiver_id,
+    notification.content,
+    notification.type,
+    notification.article_id
+  );
   return follow;
 }
 

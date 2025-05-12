@@ -6,21 +6,21 @@ const router = express.Router();
 // GET /api/dashboard/statistic
 router.get(
   "/statistic",
-  authMiddleware,
+  authMiddleware(),
   dashboardController.getStatisticByUserId
 );
 
 // GET /api/dashboard/view-week
 router.get(
   "/view-week",
-  authMiddleware,
+  authMiddleware(),
   dashboardController.getViewByWeekInMonth
 );
 
 // GET /api/dashboard/most-viewed-articles
 router.get(
   "/most-viewed-articles",
-  authMiddleware,
+  authMiddleware(),
   dashboardController.getMostViewedArticles
 );
 

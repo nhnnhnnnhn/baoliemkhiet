@@ -7,7 +7,7 @@ const router = express.Router();
 // POST /api/files/upload
 router.post(
   "/upload",
-  authMiddleware,
+  authMiddleware(),
   fileService.upload.single("file"),
   fileController.uploadFile
 );
