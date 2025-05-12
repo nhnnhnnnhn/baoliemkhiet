@@ -4,18 +4,22 @@ const tagController = require("../controllers/tag.controller");
 const authMiddleware = require("../middlewares/auth.middleware");
 
 // Create a new tag - needs auth and admin role
-router.post("/", authMiddleware, tagController.createTag);
+router.post("/", authMiddleware(), tagController.createTag);
 
 // Delete a tag - needs auth and admin role
-router.delete("/:id", authMiddleware, tagController.deleteTag);
+router.delete("/:id", authMiddleware(), tagController.deleteTag);
 
 // Get all tags - public access
-router.get("/", tagController.getAllTags);
+router.get("/", authMiddleware(), tagController.getAllTags);
 
 // Get tag details - public access
-router.get("/:id", tagController.getTagDetails);
+router.get("/:id", authMiddleware(), tagController.getTagDetails);
 
 // Get tags of an article - public access
-router.get("/article/:articleId", tagController.getArticleTags);
+router.get(
+  "/article/:articleId",
+  authMiddleware(),
+  tagController.getArticleTags
+);
 
 module.exports = router;

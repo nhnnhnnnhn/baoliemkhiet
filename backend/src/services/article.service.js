@@ -33,6 +33,7 @@ module.exports.createArticle = async (
         where: { id: authorId },
       });
       if (user) {
+        // Send notification to the admin
         const notification = {
           receiver_id: 1,
           content: `An article "${title}" of "${user.fullname}" is pending for review.`,
@@ -44,6 +45,19 @@ module.exports.createArticle = async (
           notification.content,
           notification.type,
           notification.article_id
+        );
+        // Send notification to the author
+        const author_notification = {
+          receiver_id: authorId,
+          content: `Your article "${title}" is pending for review.`,
+          type: "ARTICLE_STATUS",
+          article_id: article.id,
+        };
+        await sendNotification(
+          author_notification.receiver_id,
+          author_notification.content,
+          author_notification.type,
+          author_notification.article_id
         );
       }
     }
@@ -755,6 +769,60 @@ cron.schedule("*/5 * * * *", async () => {
         data: { isPublish: true },
       });
       console.log(`Article ${article.id} published`);
+      const user = await prisma.user.findUnique({
+        where: { id: article.authorId },
+      });
+      if (user) {
+        const notification = {
+          receiver_id: article.authorId,
+          content: `Your article "${article.title}" has been published.`,
+          type: "ARTICLE_STATUS",
+          article_id: article.id,
+        };
+        await sendNotification(
+          notification.receiver_id,
+          notification.content,
+          notification.type,
+          notification.article_id
+        );
+
+        const followers = await prisma.follow.findMany({
+          where: {
+            journalistId: user.id,
+          },
+        });
+        for (const follower of followers) {
+          const notification = {
+            receiver_id: follower.followerId,
+            content: `The article "${article.title}" of "${user.fullname}" has been published.`,
+            type: "ARTICLE_STATUS",
+            article_id: article.id,
+          };
+          await sendNotification(
+            notification.receiver_id,
+            notification.content,
+            notification.type,
+            notification.article_id
+          );
+        }
+      }
+      const admin = await prisma.user.findUnique({
+        where: { id: 1 },
+      });
+      if (admin) {
+        const notification = {
+          receiver_id: admin.id,
+          content: `The article "${article.title}" has been published.`,
+          type: "ARTICLE_STATUS",
+          article_id: article.id,
+        };
+        await sendNotification(
+          notification.receiver_id,
+          notification.content,
+          notification.type,
+          notification.article_id
+        );
+      }
     }
   } catch (error) {
     console.error("Error in scheduled task:", error.message);

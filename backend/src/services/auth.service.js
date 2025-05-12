@@ -13,12 +13,20 @@ async function loginUser(email, password) {
   if (!isPasswordValid) {
     throw new Error("Invalid password");
   }
-  accessToken = jwt.sign({ id: user.id }, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: "1h",
-  });
-  refreshToken = jwt.sign({ id: user.id }, process.env.REFRESH_TOKEN_SECRET, {
-    expiresIn: "30d",
-  });
+  accessToken = jwt.sign(
+    { id: user.id, role: user.role },
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: "1h",
+    }
+  );
+  refreshToken = jwt.sign(
+    { id: user.id, role: user.role },
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: "30d",
+    }
+  );
   await prisma.jwtToken.create({
     data: {
       token: refreshToken,
@@ -37,10 +45,18 @@ async function loginUser(email, password) {
   };
 }
 
-async function registerUser(email, password, fullname, bio, avatar, role, otp, action) {
+async function registerUser(
+  email,
+  password,
+  fullname,
+  bio,
+  avatar,
+  role,
+  otp,
+  action
+) {
   const verify = await verifyOtp(email, otp, action);
-  
-  
+
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
     throw new Error("Email already exists");
@@ -84,7 +100,7 @@ async function changePassword(email, oldPassword, newPassword) {
       userId: user.id,
     },
   });
-  
+
   await prisma.user.update({
     where: { email },
     data: { password: hashedPassword },
