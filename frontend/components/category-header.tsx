@@ -10,6 +10,8 @@ interface CategoryHeaderProps {
   textColor: string
   tabs?: { value: string; label: string }[]
   defaultTab?: string
+  activeTab?: string
+  onTabChange?: (value: string) => void
 }
 
 export function CategoryHeader({
@@ -20,6 +22,8 @@ export function CategoryHeader({
   textColor,
   tabs = [],
   defaultTab = "all",
+  activeTab,
+  onTabChange,
 }: CategoryHeaderProps) {
   return (
     <>
@@ -49,7 +53,12 @@ export function CategoryHeader({
       {tabs.length > 0 && (
         <div className="border-b border-gray-200 bg-white shadow-sm">
           <div className="container mx-auto px-4">
-            <Tabs defaultValue={defaultTab} className="py-2">
+            <Tabs 
+              defaultValue={defaultTab} 
+              value={activeTab} 
+              onValueChange={onTabChange}
+              className="py-2"
+            >
               <TabsList className="bg-transparent h-auto p-0 w-full justify-start space-x-8 overflow-x-auto flex-nowrap">
                 {tabs.map((tab) => (
                   <TabsTrigger

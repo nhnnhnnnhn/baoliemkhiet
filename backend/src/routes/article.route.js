@@ -4,47 +4,56 @@ const router = express.Router();
 const controller = require('../controllers/article.controller');
 const authMiddleware = require('../middlewares/auth.middleware');
 
-// Create a new article
+// === API công khai (public) - Không yêu cầu xác thực ===
+
+// Get all articles (public)
+router.get('/get', controller.getAllArticles);
+
+// Get all posted articles (public)
+router.get('/get-posted', controller.getAllPostedArticles);
+
+// Get a single article by ID (public)
+router.get('/get/:id', controller.getArticleById);
+
+// Get most 5 viewed articles (public)
+router.get('/most-viewed', controller.getMostViewedArticles);
+
+// Get articles by categorys (public)
+router.get('/get-category/:categoryId', controller.getArticlesByCategory);
+
+// Get articles by author (public)
+router.get('/get-author/:authorId', controller.getArticlesByAuthor);
+
+// Get most 5 liked articles (public)
+router.get('/most-liked', controller.getMostLikedArticles);
+
+// Get articles by status - chỉ cho phép xem bài đã PUBLISHED
+router.get('/get-status/:status', (req, res, next) => {
+  if (req.params.status === 'PUBLISHED') {
+    return controller.getArticlesByStatus(req, res, next);
+  }
+  return authMiddleware(req, res, () => controller.getArticlesByStatus(req, res, next));
+});
+
+// Get articles by tag (public)
+router.get('/get-tag/:tagId', controller.getArticlesByTag);
+
+// Get articles by date range (public)
+router.get('/get-date-range', controller.getArticlesByDateRange);
+
+// Get related articles (public)
+router.get('/related/:id', controller.getRelatedArticles);
+
+// Search articles (public)
+router.get('/search', controller.searchArticles);
+
+// === API được bảo vệ - Yêu cầu xác thực ===
+
+// Create a new article (protected)
 router.post('/create/', authMiddleware, controller.createArticle);
 
-// Get all articles
-router.get('/get', authMiddleware, controller.getAllArticles);
-
-// Get all posted articles
-router.get('/get-posted', authMiddleware, controller.getAllPostedArticles);
-
-// Get a single article by ID
-router.get('/get/:id', authMiddleware, controller.getArticleById);
-
-// Get most 5 viewed articles
-router.get('/most-viewed', authMiddleware, controller.getMostViewedArticles);
-
-// Get articles by categorys
-router.get('/get-category/:categoryId', authMiddleware, controller.getArticlesByCategory);
-
-// Get articles by author
-router.get('/get-author/:authorId', authMiddleware, controller.getArticlesByAuthor);
-
-// Get most 5 liked articles
-router.get('/most-liked', authMiddleware, controller.getMostLikedArticles);
-
-// Get articles by status
-router.get('/get-status/:status', authMiddleware, controller.getArticlesByStatus);
-
-// Get articles by tag
-router.get('/get-tag/:tagId', authMiddleware, controller.getArticlesByTag);
-
-// Get articles by date range
-router.get('/get-date-range', authMiddleware, controller.getArticlesByDateRange);
-
-// Get related articles
-router.get('/related/:id', authMiddleware, controller.getRelatedArticles);
-
-// Get Statistics
+// Get Statistics (protected)
 router.get('/statistics', authMiddleware, controller.getStatistics);
-
-// Search articles
-router.get('/search', authMiddleware, controller.searchArticles);
 
 // Edit an article
 router.patch('/edit/:id', authMiddleware, controller.editArticle);

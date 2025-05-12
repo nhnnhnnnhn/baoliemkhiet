@@ -1,14 +1,105 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Save } from "lucide-react"
+import { ArrowLeft, Loader2, Save } from "lucide-react"
+import { useAppDispatch, useAppSelector } from "@/src/store"
+import { handleCreateArticle } from "@/src/thunks/article/articleThunk"
+import {
+  selectIsCreatingArticle,
+  selectCreateArticleSuccess,
+  selectCreateArticleError,
+  clearCreateArticleState
+} from "@/src/thunks/article/articleSlice"
+import { handleGetCategories } from "@/src/thunks/category/categoryThunk"
+import { selectCategories } from "@/src/thunks/category/categorySlice"
+import { handleGetTags } from "@/src/thunks/tag/tagThunk"
+import { selectTags } from "@/src/thunks/tag/tagSlice"
+import { toast } from "@/components/ui/use-toast"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { MultiSelect } from "../../../../components/ui/multi-select"
+import { Spinner } from "../../../../components/ui/spinner"
 import styles from "../../admin.module.css"
 
 export default function AddArticlePage() {
+  const router = useRouter()
+  const dispatch = useAppDispatch()
+  
+  // Redux selectors
+  const categories = useAppSelector(selectCategories)
+  const tags = useAppSelector(selectTags)
+  const isCreatingArticle = useAppSelector(selectIsCreatingArticle)
+  const createArticleSuccess = useAppSelector(selectCreateArticleSuccess)
+  const createArticleError = useAppSelector(selectCreateArticleError)
+  
+  // State for form fields
+  const [title, setTitle] = useState('')
+  const [excerpt, setExcerpt] = useState('')
+  const [content, setContent] = useState('')
+  const [status, setStatus] = useState<'PUBLISHED' | 'DRAFT' | 'PENDING_REVIEW'>('DRAFT')
+  const [categoryId, setCategoryId] = useState<string>('')
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [thumbnailUrl, setThumbnailUrl] = useState('')
+  
+  // Fetch categories and tags on component mount
+  useEffect(() => {
+    dispatch(handleGetCategories({}))
+    dispatch(handleGetTags({}))
+  }, [dispatch])
+  
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!title || !content || !categoryId) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng điền đầy đủ thông tin bắt buộc",
+        variant: "destructive"
+      })
+      return
+    }
+    
+    const tagIds = selectedTags.map(id => parseInt(id))
+    
+    dispatch(handleCreateArticle({
+      title,
+      content,
+      thumbnail: thumbnailUrl || undefined,
+      authorId: 1, // Hiện tại gán cứng ID người dùng, sau này lấy từ auth state
+      categoryId: parseInt(categoryId),
+      status: status,
+      tags: tagIds
+    }))
+  }
+  
+  // Handle success/error
+  useEffect(() => {
+    if (createArticleSuccess) {
+      toast({
+        title: "Thành công",
+        description: "Đã tạo bài viết mới thành công",
+        variant: "success"
+      })
+      dispatch(clearCreateArticleState())
+      router.push('/admin/articles')
+    }
+    
+    if (createArticleError) {
+      toast({
+        title: "Lỗi",
+        description: createArticleError,
+        variant: "destructive"
+      })
+      dispatch(clearCreateArticleState())
+    }
+  }, [createArticleSuccess, createArticleError, dispatch, router])
   return (
     <div>
       {/* Page Header */}
@@ -31,14 +122,23 @@ export default function AddArticlePage() {
             </div>
           </div>
         </div>
-        <Button>
-          <Save className="h-4 w-4 mr-2" />
-          Lưu bài viết
+        <Button onClick={handleSubmit} disabled={isCreatingArticle}>
+          {isCreatingArticle ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Đang lưu...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4 mr-2" />
+              Lưu bài viết
+            </>
+          )}
         </Button>
       </div>
 
       {/* Add Article Form */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
           <div className={styles.chartCard}>
             <div className={styles.chartHeader}>
@@ -47,16 +147,38 @@ export default function AddArticlePage() {
             <div className="p-6">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="title">Tiêu đề</Label>
-                  <Input id="title" placeholder="Nhập tiêu đề bài viết" className="mt-1" />
+                  <Label htmlFor="title">Tiêu đề <span className="text-red-500">*</span></Label>
+                  <Input 
+                    id="title" 
+                    placeholder="Nhập tiêu đề bài viết" 
+                    className="mt-1" 
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
+                  />
                 </div>
                 <div>
                   <Label htmlFor="excerpt">Tóm tắt</Label>
-                  <Textarea id="excerpt" placeholder="Nhập tóm tắt bài viết" className="mt-1" rows={3} />
+                  <Textarea 
+                    id="excerpt" 
+                    placeholder="Nhập tóm tắt bài viết" 
+                    className="mt-1" 
+                    rows={3} 
+                    value={excerpt}
+                    onChange={(e) => setExcerpt(e.target.value)}
+                  />
                 </div>
                 <div>
-                  <Label htmlFor="content">Nội dung</Label>
-                  <Textarea id="content" placeholder="Nhập nội dung bài viết" className="mt-1 font-mono" rows={20} />
+                  <Label htmlFor="content">Nội dung <span className="text-red-500">*</span></Label>
+                  <Textarea 
+                    id="content" 
+                    placeholder="Nhập nội dung bài viết" 
+                    className="mt-1 font-mono" 
+                    rows={20} 
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    required
+                  />
                 </div>
               </div>
             </div>
@@ -72,52 +194,78 @@ export default function AddArticlePage() {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="status">Trạng thái</Label>
-                  <Select>
+                  <Select value={status} onValueChange={(value: 'PUBLISHED' | 'DRAFT' | 'PENDING_REVIEW') => setStatus(value)}>
                     <SelectTrigger id="status" className="mt-1">
                       <SelectValue placeholder="Chọn trạng thái" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="published">Đã xuất bản</SelectItem>
-                      <SelectItem value="pending">Chờ duyệt</SelectItem>
-                      <SelectItem value="draft">Bản nháp</SelectItem>
+                      <SelectItem value="PUBLISHED">Đã xuất bản</SelectItem>
+                      <SelectItem value="PENDING_REVIEW">Chờ duyệt</SelectItem>
+                      <SelectItem value="DRAFT">Bản nháp</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="category">Chuyên mục</Label>
-                  <Select>
+                  <Label htmlFor="category">Chuyên mục <span className="text-red-500">*</span></Label>
+                  <Select value={categoryId} onValueChange={(value) => setCategoryId(value)}>
                     <SelectTrigger id="category" className="mt-1">
                       <SelectValue placeholder="Chọn chuyên mục" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="thoi-su">Thời sự</SelectItem>
-                      <SelectItem value="the-gioi">Thế giới</SelectItem>
-                      <SelectItem value="kinh-doanh">Kinh doanh</SelectItem>
-                      <SelectItem value="cong-nghe">Công nghệ</SelectItem>
-                      <SelectItem value="the-thao">Thể thao</SelectItem>
-                      <SelectItem value="du-lich">Du lịch</SelectItem>
-                      <SelectItem value="suc-khoe">Sức khỏe</SelectItem>
+                      {categories.length === 0 ? (
+                        <SelectItem value="loading" disabled>
+                          <Spinner size="sm" /> Đang tải...
+                        </SelectItem>
+                      ) : (
+                        categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id.toString()}>
+                            {category.name}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
                   <Label htmlFor="tags">Thẻ</Label>
-                  <Input id="tags" placeholder="Nhập các thẻ, phân cách bằng dấu phẩy" className="mt-1" />
+                  <MultiSelect
+                    options={tags.map(tag => ({
+                      label: tag.name,
+                      value: tag.id.toString()
+                    }))}
+                    selected={selectedTags}
+                    onChange={setSelectedTags}
+                    placeholder="Chọn thẻ"
+                    className="mt-1"
+                  />
                 </div>
                 <div>
-                  <Label htmlFor="featuredImage">Ảnh đ��i diện</Label>
-                  <Input id="featuredImage" type="file" className="mt-1" />
+                  <Label htmlFor="thumbnailUrl">Ảnh đại diện (URL)</Label>
+                  <Input 
+                    id="thumbnailUrl" 
+                    placeholder="Nhập URL ảnh đại diện" 
+                    className="mt-1" 
+                    value={thumbnailUrl}
+                    onChange={(e) => setThumbnailUrl(e.target.value)}
+                  />
                 </div>
                 <div className="pt-4 border-t border-gray-200">
-                  <Button variant="outline" className="w-full">
-                    Xem trước
+                  <Button type="submit" className="w-full" disabled={isCreatingArticle}>
+                    {isCreatingArticle ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Đang lưu...
+                      </>
+                    ) : (
+                      'Lưu bài viết'
+                    )}
                   </Button>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </form>
     </div>
   )
 }

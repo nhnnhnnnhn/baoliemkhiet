@@ -1,94 +1,158 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import Link from "next/link"
-import { ChevronLeftIcon, ChevronRightIcon, Download, Edit, Eye, Filter, Plus, Search, Trash2 } from "lucide-react"
+import { ChevronLeftIcon, ChevronRightIcon, Download, Edit, Eye, Filter, Plus, RefreshCw, Search, Trash2 } from "lucide-react"
+import { useAppDispatch, useAppSelector } from "@/src/store"
+import {
+  handleGetArticles,
+  handleDeleteArticle,
+  handleDeleteMultipleArticles
+} from "@/src/thunks/article/articleThunk"
+import {
+  selectArticles,
+  selectTotalArticles,
+  selectCurrentPage,
+  selectTotalPages,
+  selectIsLoading,
+  selectError,
+  selectDeleteArticleSuccess,
+  selectDeleteArticleError,
+  selectIsDeletingArticle,
+  clearDeleteArticleState
+} from "@/src/thunks/article/articleSlice"
+import { toast } from "@/components/ui/use-toast"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog"
+import { Skeleton } from "@/components/ui/skeleton"
+import { format } from "date-fns"
 import styles from "../admin.module.css"
 
 export default function ArticlesPage() {
-  // Mock articles data
-  const articles = [
-    {
-      id: "ART-001",
-      title: "Chính phủ công bố kế hoạch phát triển kinh tế 5 năm tới",
-      category: "Thời sự",
-      author: "Nguyễn Văn A",
-      status: "Đã xuất bản",
-      views: 12543,
-      comments: 45,
-      publishedAt: "05/04/2025",
-    },
-    {
-      id: "ART-002",
-      title: "Đội tuyển Việt Nam giành chiến thắng ấn tượng tại vòng loại World Cup",
-      category: "Thể thao",
-      author: "Trần Thị B",
-      status: "Đã xuất bản",
-      views: 10876,
-      comments: 78,
-      publishedAt: "04/04/2025",
-    },
-    {
-      id: "ART-003",
-      title: "Thị trường bất động sản phía Nam khởi sắc trong quý II",
-      category: "Kinh doanh",
-      author: "Lê Văn C",
-      status: "Đã xuất bản",
-      views: 8932,
-      comments: 23,
-      publishedAt: "03/04/2025",
-    },
-    {
-      id: "ART-004",
-      title: "Công nghệ AI đang thay đổi ngành y tế như thế nào",
-      category: "Công nghệ",
-      author: "Phạm Thị D",
-      status: "Đã xuất bản",
-      views: 7654,
-      comments: 19,
-      publishedAt: "02/04/2025",
-    },
-    {
-      id: "ART-005",
-      title: "10 điểm du lịch hấp dẫn nhất Việt Nam trong mùa hè này",
-      category: "Du lịch",
-      author: "Hoàng Văn E",
-      status: "Đã xuất bản",
-      views: 6789,
-      comments: 34,
-      publishedAt: "01/04/2025",
-    },
-    {
-      id: "ART-006",
-      title: "Dự báo tăng trưởng GDP Việt Nam năm 2025",
-      category: "Kinh tế",
-      author: "Ngô Thị F",
-      status: "Chờ duyệt",
-      views: 0,
-      comments: 0,
-      publishedAt: "-",
-    },
-    {
-      id: "ART-007",
-      title: "Những xu hướng thời trang nổi bật mùa hè 2025",
-      category: "Thời trang",
-      author: "Đỗ Văn G",
-      status: "Chờ duyệt",
-      views: 0,
-      comments: 0,
-      publishedAt: "-",
-    },
-    {
-      id: "ART-008",
-      title: "Cách phòng tránh các bệnh mùa hè thường gặp",
-      category: "Sức khỏe",
-      author: "Vũ Thị H",
-      status: "Từ chối",
-      views: 0,
-      comments: 0,
-      publishedAt: "-",
-    },
-  ]
+  const dispatch = useAppDispatch()
+  
+  // Redux selectors
+  const articles = useAppSelector(selectArticles)
+  const totalArticles = useAppSelector(selectTotalArticles)
+  const currentPage = useAppSelector(selectCurrentPage)
+  const totalPages = useAppSelector(selectTotalPages)
+  const isLoading = useAppSelector(selectIsLoading)
+  const error = useAppSelector(selectError)
+  const isDeletingArticle = useAppSelector(selectIsDeletingArticle)
+  const deleteArticleSuccess = useAppSelector(selectDeleteArticleSuccess)
+  const deleteArticleError = useAppSelector(selectDeleteArticleError)
+  
+  // Local state
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedArticleId, setSelectedArticleId] = useState<number | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [itemsPerPage] = useState(10)
+  
+  // Fetch articles on component mount
+  useEffect(() => {
+    dispatch(handleGetArticles({}))
+  }, [dispatch])
+  
+  // Handle search
+  const handleSearch = () => {
+    dispatch(handleGetArticles({ search: searchQuery }))
+  }
+  
+  // Handle keypress for search
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch()
+    }
+  }
+  
+  // Handle delete success/error
+  useEffect(() => {
+    if (deleteArticleSuccess) {
+      toast({
+        title: "Thành công",
+        description: "Đã xóa bài viết thành công",
+        variant: "success"
+      })
+      dispatch(clearDeleteArticleState())
+      setIsDeleteDialogOpen(false)
+    }
+    
+    if (deleteArticleError) {
+      toast({
+        title: "Lỗi",
+        description: deleteArticleError,
+        variant: "destructive"
+      })
+      dispatch(clearDeleteArticleState())
+    }
+  }, [deleteArticleSuccess, deleteArticleError, dispatch])
+  
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    dispatch(handleGetArticles({ page, limit: itemsPerPage }))
+  }
+  
+  // Open delete confirmation dialog
+  const openDeleteDialog = (id: number) => {
+    setSelectedArticleId(id)
+    setIsDeleteDialogOpen(true)
+  }
+  
+  // Confirm delete article
+  const confirmDeleteArticle = () => {
+    if (!selectedArticleId) return
+    
+    // API yêu cầu ID là số nguyên
+    const articleId = Number(selectedArticleId)
+    const action = handleDeleteArticle(articleId)
+    dispatch(action)
+  }
+  
+  // Handle refresh
+  const handleRefresh = () => {
+    dispatch(handleGetArticles({}))
+  }
+  
+  // Mapping status values to Vietnamese display text
+  const getStatusDisplay = (status: string) => {
+    switch (status) {
+      case 'PUBLISHED':
+        return 'Đã xuất bản'
+      case 'DRAFT':
+        return 'Bản nháp'
+      case 'PENDING_REVIEW':
+        return 'Chờ duyệt'
+      case 'REJECTED':
+        return 'Từ chối'
+      default:
+        return status
+    }
+  }
+  
+  // Get CSS class for status badges
+  const getStatusClass = (status: string) => {
+    switch (status) {
+      case 'PUBLISHED':
+        return 'bg-green-100 text-green-800'
+      case 'DRAFT':
+        return 'bg-gray-100 text-gray-800'
+      case 'PENDING_REVIEW':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'REJECTED':
+        return 'bg-red-100 text-red-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
 
   return (
     <div>
@@ -109,15 +173,22 @@ export default function ArticlesPage() {
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-              <Input type="search" placeholder="Tìm kiếm bài viết..." className="pl-8 h-9 w-[200px] md:w-[300px]" />
+              <Input 
+                type="search" 
+                placeholder="Tìm kiếm bài viết..." 
+                className="pl-8 h-9 w-[200px] md:w-[300px]" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
+              />
             </div>
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              Lọc
+            <Button variant="outline" size="sm" onClick={handleSearch}>
+              <Search className="h-4 w-4 mr-2" />
+              Tìm kiếm
             </Button>
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Xuất
+            <Button variant="outline" size="sm" onClick={handleRefresh}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Làm mới
             </Button>
             <Link href="/admin/articles/add">
               <Button size="sm">
@@ -143,76 +214,139 @@ export default function ArticlesPage() {
               </tr>
             </thead>
             <tbody>
-              {articles.map((article) => (
-                <tr key={article.id} className={styles.tableRow}>
-                  <td className={styles.tableCell}>{article.id}</td>
-                  <td className={styles.tableCell}>
-                    <div className="font-medium">{article.title}</div>
-                  </td>
-                  <td className={styles.tableCell}>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {article.category}
-                    </span>
-                  </td>
-                  <td className={styles.tableCell}>{article.author}</td>
-                  <td className={styles.tableCell}>
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        article.status === "Đã xuất bản"
-                          ? "bg-green-100 text-green-800"
-                          : article.status === "Chờ duyệt"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {article.status}
-                    </span>
-                  </td>
-                  <td className={styles.tableCell}>{article.views.toLocaleString()}</td>
-                  <td className={styles.tableCell}>{article.comments}</td>
-                  <td className={styles.tableCell}>{article.publishedAt}</td>
-                  <td className={styles.tableCell}>
-                    <div className="flex space-x-2">
-                      <Link href={`/admin/articles/${article.id}`}>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <Link href={`/admin/articles/${article.id}/edit`}>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </td>
+              {isLoading ? (
+                // Loading skeleton
+                Array(5).fill(0).map((_, index) => (
+                  <tr key={index} className={styles.tableRow}>
+                    <td className={styles.tableCell}><Skeleton className="h-4 w-10" /></td>
+                    <td className={styles.tableCell}><Skeleton className="h-4 w-full" /></td>
+                    <td className={styles.tableCell}><Skeleton className="h-4 w-20" /></td>
+                    <td className={styles.tableCell}><Skeleton className="h-4 w-20" /></td>
+                    <td className={styles.tableCell}><Skeleton className="h-4 w-20" /></td>
+                    <td className={styles.tableCell}><Skeleton className="h-4 w-10" /></td>
+                    <td className={styles.tableCell}><Skeleton className="h-4 w-10" /></td>
+                    <td className={styles.tableCell}><Skeleton className="h-4 w-20" /></td>
+                    <td className={styles.tableCell}><Skeleton className="h-4 w-20" /></td>
+                  </tr>
+                ))
+              ) : articles.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="text-center py-4">Không có dữ liệu</td>
                 </tr>
-              ))}
+              ) : (
+                articles.map((article) => (
+                  <tr key={article.id} className={styles.tableRow}>
+                    <td className={styles.tableCell}>{article.id}</td>
+                    <td className={styles.tableCell}>
+                      <div className="font-medium">{article.title}</div>
+                    </td>
+                    <td className={styles.tableCell}>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {article.category?.name || 'Không có danh mục'}
+                      </span>
+                    </td>
+                    <td className={styles.tableCell}>{article.author?.name || 'Không xác định'}</td>
+                    <td className={styles.tableCell}>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(article.status)}`}
+                      >
+                        {getStatusDisplay(article.status)}
+                      </span>
+                    </td>
+                    <td className={styles.tableCell}>{article.view_count ? article.view_count.toLocaleString() : '0'}</td>
+                    <td className={styles.tableCell}>0</td>
+                    <td className={styles.tableCell}>
+                      {article.published_at ? format(new Date(article.published_at), 'dd/MM/yyyy') : '-'}
+                    </td>
+                    <td className={styles.tableCell}>
+                      <div className="flex space-x-2">
+                        <Link href={`/admin/articles/${article.id}`}>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <Link href={`/admin/articles/${article.id}/edit`}>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => openDeleteDialog(article.id)}
+                          disabled={isDeletingArticle}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
         <div className={styles.tableFooter}>
-          <div className={styles.paginationInfo}>Hiển thị 1 đến 8 trong tổng số 42 bài viết</div>
+          <div className={styles.paginationInfo}>
+            {isLoading ? (
+              <Skeleton className="h-4 w-40" />
+            ) : (
+              `Hiển thị ${(currentPage - 1) * itemsPerPage + 1} đến ${Math.min(currentPage * itemsPerPage, totalArticles)} trong tổng số ${totalArticles} bài viết`
+            )}
+          </div>
           <div className={styles.paginationControls}>
-            <button className={`${styles.paginationButton} ${styles.paginationButtonDisabled}`} disabled>
+            <button 
+              className={`${styles.paginationButton} ${currentPage <= 1 ? styles.paginationButtonDisabled : ''}`} 
+              disabled={currentPage <= 1 || isLoading}
+              onClick={() => handlePageChange(currentPage - 1)}
+            >
               <ChevronLeftIcon className="h-4 w-4" />
             </button>
-            <button className={`${styles.paginationButton} ${styles.paginationButtonActive}`}>1</button>
-            <button className={styles.paginationButton}>2</button>
-            <button className={styles.paginationButton}>3</button>
-            <button className={styles.paginationButton}>4</button>
-            <button className={styles.paginationButton}>5</button>
-            <button className={styles.paginationButton}>
+            
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const page = i + 1;
+              return (
+                <button 
+                  key={page}
+                  className={`${styles.paginationButton} ${page === currentPage ? styles.paginationButtonActive : ''}`}
+                  onClick={() => handlePageChange(page)}
+                  disabled={isLoading}
+                >
+                  {page}
+                </button>
+              );
+            })}
+            
+            <button 
+              className={`${styles.paginationButton} ${currentPage >= totalPages ? styles.paginationButtonDisabled : ''}`} 
+              disabled={currentPage >= totalPages || isLoading}
+              onClick={() => handlePageChange(currentPage + 1)}
+            >
               <ChevronRightIcon className="h-4 w-4" />
             </button>
           </div>
         </div>
+        
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Xác nhận xóa bài viết</DialogTitle>
+              <DialogDescription>
+                Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeletingArticle}>
+                Hủy
+              </Button>
+              <Button variant="destructive" onClick={confirmDeleteArticle} disabled={isDeletingArticle}>
+                {isDeletingArticle ? 'Đang xóa...' : 'Xóa bài viết'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )
