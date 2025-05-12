@@ -59,7 +59,14 @@ axiosClient.interceptors.request.use(
 // Add a response interceptor
 axiosClient.interceptors.response.use(
   (response) => {
-    return response.data; // Return the data directly
+    console.log('Axios response interceptor - raw response:', {
+      url: response.config.url,
+      status: response.status,
+      data: response.data
+    });
+    
+    // Trả về nguyên response để component có thể xử lý data
+    return response;
   },
   async (error) => {
     const originalRequest = error.config;
