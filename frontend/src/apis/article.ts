@@ -118,11 +118,6 @@ const articleApi = {
     return axiosClient.get(`/articles/get/${id}`)
   },
 
-  // Lấy thông tin bài viết theo slug
-  getArticleBySlug: async (slug: string): Promise<Article> => {
-    return axiosClient.get(`/articles/slug/${slug}`)
-  },
-
   // Lấy bài viết được xem nhiều nhất
   getMostViewedArticles: async (timePeriod: string): Promise<Article[]> => {
     return axiosClient.get('/articles/most-viewed', { params: { timePeriod } })

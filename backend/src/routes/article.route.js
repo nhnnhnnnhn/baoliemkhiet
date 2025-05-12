@@ -15,9 +15,6 @@ router.get('/get-posted', controller.getAllPostedArticles);
 // Get a single article by ID (public)
 router.get('/get/:id', controller.getArticleById);
 
-// Get a single article by slug (public)
-router.get('/slug/:slug', controller.getArticleBySlug);
-
 // Get most 5 viewed articles (public)
 router.get('/most-viewed', controller.getMostViewedArticles);
 

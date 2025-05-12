@@ -5,7 +5,6 @@ import {
   handleGetArticles,
   handleGetPostedArticles,
   handleGetArticleById,
-  handleGetArticleBySlug,
   handleGetMostViewedArticles,
   handleGetArticlesByCategory,
   handleGetArticlesByAuthor,
@@ -230,20 +229,6 @@ const articleSlice = createSlice({
         state.selectedArticle = action.payload;
       })
       .addCase(handleGetArticleById.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
-      })
-      
-      // Xử lý lấy chi tiết bài viết theo slug
-      .addCase(handleGetArticleBySlug.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(handleGetArticleBySlug.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.selectedArticle = action.payload;
-      })
-      .addCase(handleGetArticleBySlug.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       })
