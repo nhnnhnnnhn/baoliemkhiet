@@ -73,9 +73,12 @@ export default function AddArticlePage() {
     // Xử lý ngày xuất bản
     let publishDateValue: string | undefined = undefined;
     if (status === 'APPROVED') {
-      // Nếu chọn "Bây giờ", lấy thời gian hiện tại
+      // Nếu chọn "Bây giờ", lấy thời gian hiện tại và đảm bảo định dạng chuẩn ISO
       if (useCurrentDate) {
-        publishDateValue = new Date().toISOString()
+        const now = new Date();
+        // Đảm bảo rằng ngày được tạo đúng định dạng ISO8601 đầy đủ
+        publishDateValue = now.toISOString();
+        console.log('Sử dụng thời gian hiện tại:', publishDateValue);
       } 
       // Nếu chọn một ngày cụ thể, sử dụng ngày đó
       else if (publishDate) {
@@ -114,11 +117,8 @@ export default function AddArticlePage() {
       // Nếu tạo bài viết thành công và có id
       const article = createArticleSuccess as any;
       if (article && typeof article === 'object' && article.id) {
-        // Nếu trạng thái là APPROVED, gọi hàm duyệt bài
-        if (status === 'APPROVED') {
-          // Gọi API duyệt bài viết để đặt isPublish = true
-          dispatch(handleApproveArticle(article.id))
-        }
+        // Không cần gọi handleApproveArticle nữa vì khi tạo bài viết
+        // với status=APPROVED, backend đã tự động đặt isPublish=true
         
         toast({
           title: "Thành công",

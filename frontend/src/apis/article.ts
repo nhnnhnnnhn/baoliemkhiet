@@ -7,13 +7,14 @@ export interface Article {
   thumbnail?: string
   author_id: number
   category_id: number
-  status: 'DRAFT' | 'APPROVED' | 'REJECTED' | 'PENDING'
+  status: 'DRAFT' | 'APPROVED' | 'REJECTED' | 'PENDING' | 'PUBLISHED'
   view?: number
   published_at?: string
   created_at: string
   updated_at: string
   excerpt?: string
   slug?: string
+  isPublish?: boolean
   author?: {
     id: number
     name?: string

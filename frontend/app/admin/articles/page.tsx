@@ -259,35 +259,26 @@ export default function ArticlesPage() {
                     <td className={styles.tableCell}>{article.view ? article.view.toLocaleString() : '0'}</td>
                     <td className={styles.tableCell}>0</td>
                     <td className={styles.tableCell}>
-                      {article.published_at 
+                      {article.isPublish 
                         ? (() => {
                             try {
-                              // Kiểm tra xem chuỗi ngày có hợp lệ không
+                              // Hiển thị ngày nếu có, nếu không thì chỉ hiển thị "\u0110\u00e3 xu\u1ea5t b\u1ea3n"
+                              if (!article.published_at) return 'Đã xuất bản';
+                              
                               const date = new Date(article.published_at);
                               return !isNaN(date.getTime()) 
                                 ? format(date, 'dd/MM/yyyy') 
-                                : 'Ngày không hợp lệ';
+                                : 'Đã xuất bản';
                             } catch (error) {
                               console.error('Lỗi xử lý ngày:', article.published_at, error);
-                              return 'Ngày không hợp lệ';
+                              return 'Đã xuất bản';
                             }
                           })() 
-                        : (article.status as string) === 'APPROVED' || (article.status as string) === 'PUBLISHED' 
-                          ? format(new Date(), 'dd/MM/yyyy') // Nếu đã duyệt nhưng không có ngày, hiển thị ngày hiện tại
-                          : '-'}
+                        : 'Chưa xuất bản'}
                     </td>
                     <td className={styles.tableCell}>
                       <div className="flex items-center space-x-1">
-                        <Link href={article.slug ? `/article/${article.slug}` : '#'} target="_blank" onClick={e => {
-                          if (!article.slug) {
-                            e.preventDefault();
-                            toast({
-                              title: "Lỗi",
-                              description: "Bài viết không có slug hoặc chưa được xuất bản",
-                              variant: "destructive"
-                            });
-                          }
-                        }}>
+                        <Link href={`/admin/articles/${article.id}`} target="_blank" aria-label="Xem chi tiết bài viết">
                           <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Xem bài viết">
                             <Eye className="h-4 w-4" />
                           </Button>

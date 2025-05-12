@@ -1,5 +1,8 @@
+"use client"
+
 import Image from "next/image"
 import Link from "next/link"
+import { useState, useEffect } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -7,134 +10,250 @@ import { Separator } from "@/components/ui/separator"
 import { MessageSquare, ThumbsUp, Share2, Bookmark, Facebook, Twitter, AlertTriangle } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
 import { ChatbotButton } from "@/components/chatbot-button"
+import articleApi from "@/src/apis/article"
 
-// Giả lập dữ liệu bài viết
-const getArticleData = (slug: string) => {
+// Helper function để định dạng ngày tháng an toàn
+const formatDate = (dateString: string | null | undefined) => {
+  if (!dateString) return '';
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    
+    return date.toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  } catch (error) {
+    console.error('Lỗi định dạng ngày:', error);
+    return '';
+  }
+};
+
+// Helper function để định dạng giờ an toàn
+const formatTime = (dateString: string | null | undefined) => {
+  if (!dateString) return '';
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    
+    return date.toLocaleTimeString('vi-VN', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (error) {
+    console.error('Lỗi định dạng giờ:', error);
+    return '';
+  }
+};
+
+// Cấu trúc dữ liệu bài viết cho giao diện
+interface ArticleUI {
+  id: string | number;
+  title: string;
+  publishDate: string;
+  publishTime: string;
+  category: string;
+  author: {
+    name: string;
+    avatar: string;
+    bio: string;
+    username: string;
+    id?: number;
+  };
+  content: Array<{type: string; value: string; url?: string; caption?: string}>;
+  stats: {
+    views: number;
+    shares: number;
+    likes: number;
+    comments: number;
+  };
+  tags: Array<{id: number; name: string}>;
+  comments: Array<{
+    user: {
+      name: string;
+      avatar: string;
+    };
+    content: string;
+    date: string;
+    time: string;
+    likes: number;
+  }>;
+  relatedArticles: Array<{
+    slug: string;
+    title: string;
+    publishDate: string;
+    category: string;
+    thumbnail: string;
+  }>;
+}
+
+// Hàm tạo bài viết demo khi chưa có dữ liệu từ API hoặc lỗi
+const createEmptyArticle = (): ArticleUI => {
   return {
-    id: "article123", // Added article ID
-    title: "Việt Nam đạt thỏa thuận hợp tác kinh tế mới với các nước ASEAN",
-    publishDate: "15/04/2025",
-    publishTime: "08:30",
-    category: "Kinh doanh",
+    id: "",
+    title: "Bài viết đang được tải...",
+    publishDate: formatDate(new Date().toISOString()),
+    publishTime: formatTime(new Date().toISOString()),
+    category: "Tin tức",
     author: {
-      name: "Nguyễn Văn A",
+      name: "Tác giả",
       avatar: "/placeholder.svg?height=80&width=80",
-      bio: "Phóng viên kinh tế với hơn 10 năm kinh nghiệm theo dõi thị trường Đông Nam Á",
-      username: "nguyenvanA",
+      bio: "Báo Liêm Khiết",
+      username: "tacgia",
     },
     content: [
       {
         type: "text",
-        value:
-          "Hà Nội - Trong khuôn khổ Hội nghị cấp cao ASEAN lần thứ 42, Việt Nam đã đạt được thỏa thuận hợp tác kinh tế mới với các nước thành viên, mở ra cơ hội phát triển mới cho khu vực.",
-      },
-      {
-        type: "text",
-        value:
-          "Theo thỏa thuận mới, các nước ASEAN sẽ tăng cường hợp tác trong lĩnh vực công nghệ cao, chuyển đổi số và phát triển bền vững. Đây được xem là bước tiến quan trọng trong việc thúc đẩy tăng trưởng kinh tế khu vực sau đại dịch.",
-      },
-      {
-        type: "image",
-        url: "/placeholder.svg?height=500&width=800",
-        caption: "Đại diện các nước ASEAN tại lễ ký kết thỏa thuận hợp tác kinh tế mới",
-      },
-      {
-        type: "text",
-        value:
-          "Thủ tướng Chính phủ nhấn mạnh tầm quan trọng của việc tăng cường kết nối kinh tế khu vực trong bối cảnh thế giới đang đối mặt với nhiều thách thức. 'Chúng ta cần đoàn kết và hợp tác chặt chẽ hơn nữa để vượt qua khó khăn, tạo động lực mới cho tăng trưởng kinh tế khu vực', Thủ tướng phát biểu.",
-      },
-      {
-        type: "text",
-        value:
-          "Các chuyên gia kinh tế đánh giá cao thỏa thuận này và cho rằng đây là cơ hội để Việt Nam mở rộng thị trường xuất khẩu, thu hút đầu tư và nâng cao vị thế trong khu vực.",
-      },
-      {
-        type: "image",
-        url: "/placeholder.svg?height=500&width=800",
-        caption: "Biểu đồ tăng trưởng kinh tế của các nước ASEAN giai đoạn 2020-2025",
-      },
-      {
-        type: "text",
-        value:
-          "Theo số liệu thống kê, kim ngạch thương mại giữa Việt Nam và các nước ASEAN đã tăng 15% trong năm 2024, đạt 80 tỷ USD. Với thỏa thuận mới, con số này dự kiến sẽ tăng lên 100 tỷ USD vào năm 2026.",
-      },
-      {
-        type: "text",
-        value:
-          "Bên cạnh đó, thỏa thuận cũng đề cập đến việc thúc đẩy hợp tác trong lĩnh vực an ninh mạng, một vấn đề ngày càng được quan tâm trong kỷ nguyên số. Các nước sẽ chia sẻ kinh nghiệm, công nghệ và thông tin để bảo vệ hệ thống thông tin và dữ liệu quan trọng.",
-      },
-      {
-        type: "text",
-        value:
-          "Dự kiến, các dự án hợp tác cụ thể sẽ được triển khai từ quý III năm 2025, với tổng vốn đầu tư lên đến 5 tỷ USD từ các quốc gia thành viên và đối tác quốc tế.",
-      },
+        value: "Nội dung bài viết đang được tải, vui lòng đợi trong giây lát...",
+      }
     ],
-    comments: [
-      {
-        user: {
-          name: "Trần Văn B",
-          avatar: "/placeholder.svg?height=40&width=40",
-        },
-        date: "15/04/2025",
-        time: "10:15",
-        content: "Tin tức rất hữu ích. Mong rằng thỏa thuận này sẽ mang lại nhiều cơ hội cho doanh nghiệp Việt Nam.",
-        likes: 15,
-      },
-      {
-        user: {
-          name: "Lê Thị C",
-          avatar: "/placeholder.svg?height=40&width=40",
-        },
-        date: "15/04/2025",
-        time: "11:30",
-        content:
-          "Tôi quan tâm đến các dự án hợp tác cụ thể. Bài viết có thể cung cấp thêm thông tin chi tiết về các lĩnh vực ưu tiên không?",
-        likes: 8,
-      },
-      {
-        user: {
-          name: "Phạm Văn D",
-          avatar: "/placeholder.svg?height=40&width=40",
-        },
-        date: "15/04/2025",
-        time: "13:45",
-        content:
-          "Đây là một bước tiến quan trọng cho ASEAN. Tôi hy vọng các nước sẽ thực hiện nghiêm túc các cam kết đã đưa ra.",
-        likes: 12,
-      },
-    ],
-    relatedArticles: [
-      {
-        title: "ASEAN và EU ký kết hiệp định thương mại tự do",
-        slug: "asean-eu-ky-ket-hiep-dinh-thuong-mai-tu-do",
-        thumbnail: "/placeholder.svg?height=200&width=300",
-        category: "Kinh doanh",
-        publishDate: "10/04/2025",
-      },
-      {
-        title: "Việt Nam tăng 5 bậc trong bảng xếp hạng môi trường kinh doanh toàn cầu",
-        slug: "viet-nam-tang-5-bac-trong-bang-xep-hang-moi-truong-kinh-doanh",
-        thumbnail: "/placeholder.svg?height=200&width=300",
-        category: "Kinh doanh",
-        publishDate: "08/04/2025",
-      },
-      {
-        title: "Doanh nghiệp công nghệ Việt Nam đón đầu xu hướng AI",
-        slug: "doanh-nghiep-cong-nghe-viet-nam-don-dau-xu-huong-ai",
-        thumbnail: "/placeholder.svg?height=200&width=300",
-        category: "Công nghệ",
-        publishDate: "12/04/2025",
-      },
-    ],
+    stats: {
+      views: 0,
+      shares: 0,
+      likes: 0,
+      comments: 0,
+    },
+    tags: [],
+    comments: [],
+    relatedArticles: []
   }
 }
 
 export default function ArticlePage({ params }: { params: { slug: string } }) {
-  const article = getArticleData(params.slug)
+  const [article, setArticle] = useState<ArticleUI>(createEmptyArticle())
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
+  // Fetch dữ liệu bài viết từ API
+  useEffect(() => {
+    const fetchArticle = async () => {
+      try {
+        setIsLoading(true)
+        // Yêu cầu API lấy bài viết theo ID (nếu là số) hoặc theo slug
+        const articleId = !isNaN(Number(params.slug)) ? Number(params.slug) : null
+        if (!articleId) {
+          throw new Error('ID bài viết không hợp lệ')
+        }
+        
+        const response = await articleApi.getArticleById(articleId)
+        
+        // Kiểm tra trạng thái xuất bản của bài viết (isPublish)
+        if (!response.isPublish) {
+          setError('Bài viết này chưa được xuất bản hoặc không tồn tại.')
+          setIsLoading(false)
+          return
+        }
+        
+        // Xử lý nội dung bài viết
+        const processedContent = [];
+        if (response.content) {
+          // Tách nội dung HTML thành các đoạn văn và hình ảnh
+          const contentParts = response.content.split(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/g);
+          
+          for (let i = 0; i < contentParts.length; i++) {
+            if (contentParts[i].trim()) {
+              processedContent.push({
+                type: 'text',
+                value: contentParts[i].trim()
+              });
+            }
+            
+            // Nếu có image URL và caption (tương ứng với các nhóm bắt trong regex)
+            if (i+1 < contentParts.length && contentParts[i+1]?.includes('http')) {
+              processedContent.push({
+                type: 'image',
+                value: '', // Thêm trường value trống để phù hợp với interface
+                url: contentParts[i+1] || '/placeholder.svg?height=500&width=800',
+                caption: contentParts[i+2] || 'Hình minh họa'
+              });
+              i += 2; // Bỏ qua 2 phần tử đã sử dụng (url và caption)
+            }
+          }
+        } else {
+          // Nếu không có nội dung, thêm một thông báo mặc định
+          processedContent.push({
+            type: 'text',
+            value: 'Nội dung bài viết đang được cập nhật...'
+          });
+        }
+        
+        // Tạo bài viết với dữ liệu từ API
+        const articleData: ArticleUI = {
+          id: response.id.toString(),
+          title: response.title,
+          publishDate: formatDate(response.published_at) || new Date().toLocaleDateString('vi-VN'),
+          publishTime: formatTime(response.published_at) || new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+          category: response.category?.name || 'Tin tức',
+          content: processedContent.length > 0 ? processedContent : [{ type: 'text', value: response.content || 'Nội dung đang được cập nhật' }],
+          author: {
+            id: response.author_id,
+            name: response.author?.name || 'Tác giả',
+            avatar: response.author?.avatar || '/placeholder.svg?height=80&width=80',
+            bio: response.author?.fullname ? `${response.author.fullname} - Phóng viên Báo Liêm Khiết` : 'Phóng viên Báo Liêm Khiết',
+            username: response.author?.name?.toLowerCase().replace(/\s+/g, '') || 'tacgia'
+          },
+          stats: {
+            views: response.view || 0,
+            likes: 0, // Chưa có API
+            shares: 0, // Chưa có API
+            comments: 0  // Chưa có API
+          },
+          tags: response.tags || [], 
+          comments: [], // Sẽ triển khai API comments sau
+          relatedArticles: [] // Sẽ triển khai API bài viết liên quan sau
+        };
+        
+        // Tạm thời thêm dữ liệu mẫu cho phần bình luận và bài viết liên quan
+        articleData.comments = [
+          {
+            user: { name: 'Người đọc', avatar: '/placeholder.svg?height=40&width=40' },
+            content: 'Bài viết rất hay và bổ ích!',
+            date: new Date().toLocaleDateString('vi-VN'),
+            time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+            likes: 5
+          }
+        ];
+        
+        // Gọi API để lấy các bài viết liên quan trong cùng danh mục
+        try {
+          const relatedArticlesData = await articleApi.getArticlesByCategory(response.category_id || 1);
+          
+          // Lọc chỉ lấy các bài viết khác (không lấy bài viết hiện tại)
+          const otherArticles = relatedArticlesData
+            .filter(item => item.id !== response.id && item.isPublish)
+            .slice(0, 3); // Chỉ lấy tối đa 3 bài
+          
+          articleData.relatedArticles = otherArticles.map(item => ({
+            slug: item.id.toString(),
+            title: item.title,
+            publishDate: formatDate(item.published_at) || '',
+            category: item.category?.name || 'Tin tức', 
+            thumbnail: item.thumbnail || '/placeholder.svg?height=200&width=300'
+          }));
+        } catch (error) {
+          console.log('Không thể lấy bài viết liên quan:', error);
+        }
+        
+        setArticle(articleData)
+        console.log('Dữ liệu bài viết:', articleData);
+        setError(null)
+      } catch (err) {
+        console.error('Lỗi khi lấy dữ liệu bài viết:', err)
+        setError('Không thể tải bài viết. Vui lòng thử lại sau.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    fetchArticle()
+  }, [params.slug])
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeader variant="solid" />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Breadcrumb */}
         <div className="text-sm text-gray-500 mb-4">
@@ -253,7 +372,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
 
           {/* Comments List */}
           <div className="space-y-6">
-            {article.comments.map((comment, index) => (
+            {article.comments.map((comment: any, index: number) => (
               <div key={index} className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
                 <div className="flex justify-between mb-2">
                   <div className="flex items-center gap-2">
@@ -289,7 +408,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
         <div>
           <h2 className="text-2xl font-bold mb-6">Bài viết bạn có thể quan tâm</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {article.relatedArticles.map((relatedArticle, index) => (
+            {article.relatedArticles.map((relatedArticle: any, index: number) => (
               <Card key={index} className="overflow-hidden">
                 <div className="relative h-48 w-full">
                   <Image

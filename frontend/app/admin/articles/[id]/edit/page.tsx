@@ -101,25 +101,18 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
   // Handle success/error
   useEffect(() => {
     if (updateArticleSuccess) {
-      // Nếu là trạng thái APPROVED và cập nhật thành công, gọi API duyệt bài
+      // Nếu cập nhật thành công
       const updatedArticle = updateArticleSuccess as any;
-      if (status === 'APPROVED' && typeof updatedArticle === 'object' && updatedArticle.id) {
-        // Gọi API duyệt bài viết để đặt isPublish = true
-        dispatch(handleApproveArticle(updatedArticle.id))
-        
-        toast({
-          title: "Thành công",
-          description: "Đã cập nhật và xuất bản bài viết thành công",
-          variant: "success"
-        })
-      } else {
-        toast({
-          title: "Thành công",
-          description: "Đã cập nhật bài viết thành công",
-          variant: "success"
-        })
-      }
       
+      toast({
+        title: "Thành công",
+        description: "Đã cập nhật bài viết " + 
+          (status === 'APPROVED' || (updatedArticle && updatedArticle.isPublish) ? "và đã xuất bản" : "") + 
+          " thành công",
+        variant: "success"
+      })
+      
+      // Lập tức làm mới kho bài viết để có dữ liệu mới nhất
       dispatch(clearUpdateArticleState())
       router.push('/admin/articles')
     }
@@ -155,9 +148,12 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     
     // Xử lý ngày xuất bản đảm bảo định dạng chính xác
     if (status === 'APPROVED') {
-      // Nếu chọn "Bây giờ", lấy thời gian hiện tại
+      // Nếu chọn "Bây giờ", lấy thời gian hiện tại và đảm bảo định dạng chuẩn ISO
       if (useCurrentDate) {
-        publishDateValue = new Date().toISOString()
+        const now = new Date();
+        // Đảm bảo rằng ngày được tạo đúng định dạng ISO8601 đầy đủ
+        publishDateValue = now.toISOString();
+        console.log('Cập nhật bài viết với thời gian hiện tại:', publishDateValue);
       } 
       // Nếu chọn một ngày cụ thể, sử dụng ngày đó
       else if (publishDate) {

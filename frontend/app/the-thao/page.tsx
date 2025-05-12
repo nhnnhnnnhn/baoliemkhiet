@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { Activity, Calendar, Award, ChevronRight, Clock, User, ArrowRight, Trophy } from "lucide-react"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
+import { formatDateTime, sortByLatest, sortByViews } from "@/src/utils/date-helpers"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -17,8 +18,8 @@ import { CategoryHeader } from "@/components/category-header"
 import articleApi from "@/src/apis/article"
 import { Article } from "@/src/apis/article"
 
-// ID danh mục Thể thao
-const CATEGORY_ID = 5
+// ID danh mục Thể thao - đã xác định từ cơ sở dữ liệu
+const CATEGORY_ID = 6 // Xác nhận: category_id của Thể thao là 6
 
 export default function TheThaoPage() {
   const [articles, setArticles] = useState<Article[]>([])
@@ -28,30 +29,31 @@ export default function TheThaoPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
-  // Format thời gian
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString)
-    return format(date, "dd/MM/yyyy HH:mm", { locale: vi })
+  // Format thời gian sử dụng hàm helper
+  const formatTime = (dateString: string | null | undefined) => {
+    return formatDateTime(dateString)
   }
 
   // Lấy bài viết nổi bật
   useEffect(() => {
     const fetchFeaturedArticles = async () => {
       try {
-        const response = await articleApi.getArticles({
-          category_id: CATEGORY_ID,
-          limit: 1,
-          page: 1,
-          status: "PUBLISHED",
-          sort: "view_count",
-          order: "desc"
-        })
+        // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
+        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
         
-        if (response && response.articles) {
-          setFeaturedArticles(response.articles)
-        } else {
-          setFeaturedArticles([])
-        }
+        // Lọc các bài viết đã xuất bản (isPublish=true)
+        const publishedArticles = articles.filter(article => article.isPublish)
+        
+        // Sắp xếp theo lượt xem để lấy bài nổi bật sử dụng hàm helper
+        const sortedArticles = sortByViews(publishedArticles)
+        
+        // Lấy bài nổi bật nhất
+        const topArticle = sortedArticles.length > 0 ? [sortedArticles[0]] : []
+        
+        setFeaturedArticles(topArticle)
+        
+        // Ghi log để debug
+        console.log(`Đã tìm thấy ${publishedArticles.length} bài viết thuộc danh mục Thể thao (ID: ${CATEGORY_ID})`)
       } catch (error) {
         console.error("Error fetching featured articles:", error)
         setFeaturedArticles([])
@@ -66,20 +68,23 @@ export default function TheThaoPage() {
     const fetchLatestArticles = async () => {
       try {
         setLoading(true)
-        const response = await articleApi.getArticles({
-          category_id: CATEGORY_ID,
-          limit: 6,
-          page: 1,
-          status: "PUBLISHED",
-          sort: "published_at",
-          order: "desc"
+        // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
+        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        
+        // Lọc các bài viết đã xuất bản (isPublish=true)
+        const publishedArticles = articles.filter(article => article.isPublish)
+        
+        // Sắp xếp theo thời gian xuất bản mới nhất
+        const sortedArticles = [...publishedArticles].sort((a, b) => {
+          const dateA = new Date(a.published_at || a.created_at)
+          const dateB = new Date(b.published_at || b.created_at)
+          return dateB.getTime() - dateA.getTime()
         })
         
-        if (response && response.articles) {
-          setLatestArticles(response.articles)
-        } else {
-          setLatestArticles([])
-        }
+        // Lấy 6 bài viết mới nhất
+        const latestArticles = sortedArticles.slice(0, 6)
+        
+        setLatestArticles(latestArticles)
         setLoading(false)
       } catch (error) {
         console.error("Error fetching latest articles:", error)
@@ -97,31 +102,33 @@ export default function TheThaoPage() {
       try {
         setLoading(true)
         
-        const params: {
-          category_id: number,
-          page: number,
-          limit: number,
-          status: string,
-          sort: string,
-          order: "asc" | "desc"
-        } = {
-          category_id: CATEGORY_ID,
-          page,
-          limit: 10,
-          status: "PUBLISHED",
-          sort: "published_at",
-          order: "desc"
-        }
+        // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
+        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
         
-        const response = await articleApi.getArticles(params)
+        // Lọc các bài viết đã xuất bản (isPublish=true)
+        const publishedArticles = articles.filter(article => article.isPublish)
+                
+        // Sắp xếp theo thời gian xuất bản mới nhất
+        const sortedArticles = [...publishedArticles].sort((a, b) => {
+          const dateA = new Date(a.published_at || a.created_at)
+          const dateB = new Date(b.published_at || b.created_at)
+          return dateB.getTime() - dateA.getTime()
+        })
         
-        if (response && response.articles) {
-          setArticles(response.articles)
-          setTotalPages(Math.ceil((response.totalArticles || 0) / 10))
-        } else {
-          setArticles([])
-          setTotalPages(0)
-        }
+        // Tính toán phân trang thủ công
+        const limit = 10
+        const start = (page - 1) * limit
+        const end = start + limit
+        const paginatedArticles = sortedArticles.slice(start, end)
+        
+        // Cập nhật state với dữ liệu đã lọc
+        const totalResults = sortedArticles.length
+        setArticles(paginatedArticles || [])
+        setTotalPages(Math.ceil(totalResults / limit) || 1)
+        
+        // Ghi log để debug
+        console.log(`Đang hiển thị ${paginatedArticles.length} bài viết Thể thao (trang ${page}/${Math.ceil(totalResults / limit) || 1})`)
+        
         setLoading(false)
       } catch (error) {
         console.error("Error fetching articles:", error)

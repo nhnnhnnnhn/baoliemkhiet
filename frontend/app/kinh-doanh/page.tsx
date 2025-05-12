@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { ChevronRightIcon, TrendingUp, DollarSign, BarChart3 } from "lucide-react"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
+import { formatDateTime, sortByLatest, sortByViews } from "@/src/utils/date-helpers"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -17,8 +18,8 @@ import { CategoryHeader } from "@/components/category-header"
 import articleApi from "@/src/apis/article"
 import { Article } from "@/src/apis/article"
 
-// ID danh mục Kinh doanh - cần thay thế bằng ID thực tế từ cơ sở dữ liệu
-const CATEGORY_ID = 3 // Giả định ID danh mục Kinh doanh là 3
+// ID danh mục Kinh doanh - đã xác định từ cơ sở dữ liệu
+const CATEGORY_ID = 7 // Xác nhận: category_id của Kinh doanh là 4
 
 export default function KinhDoanhPage() {
   const [activeTab, setActiveTab] = useState("all")
@@ -40,20 +41,22 @@ export default function KinhDoanhPage() {
   useEffect(() => {
     const fetchFeaturedArticles = async () => {
       try {
-        const response = await articleApi.getArticles({
-          category_id: CATEGORY_ID,
-          limit: 1,
-          page: 1,
-          status: "PUBLISHED",
-          sort: "view_count",
-          order: "desc"
-        })
+        // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
+        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
         
-        if (response && response.articles) {
-          setFeaturedArticles(response.articles)
-        } else {
-          setFeaturedArticles([])
-        }
+        // Lọc các bài viết đã xuất bản (isPublish=true)
+        const publishedArticles = articles.filter(article => article.isPublish)
+        
+        // Sắp xếp theo lượt xem để lấy bài nổi bật
+        const sortedArticles = [...publishedArticles].sort((a, b) => (b.view || 0) - (a.view || 0))
+        
+        // Lấy bài nổi bật nhất
+        const topArticle = sortedArticles.length > 0 ? [sortedArticles[0]] : []
+        
+        setFeaturedArticles(topArticle)
+        
+        // Ghi log để debug
+        console.log(`Đã tìm thấy ${publishedArticles.length} bài viết thuộc danh mục Kinh doanh (ID: ${CATEGORY_ID})`)
       } catch (error) {
         console.error("Error fetching featured articles:", error)
         setFeaturedArticles([])
@@ -68,20 +71,23 @@ export default function KinhDoanhPage() {
     const fetchLatestArticles = async () => {
       try {
         setLoading(true)
-        const response = await articleApi.getArticles({
-          category_id: CATEGORY_ID,
-          limit: 4,
-          page: 1,
-          status: "PUBLISHED",
-          sort: "published_at",
-          order: "desc"
+        // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
+        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        
+        // Lọc các bài viết đã xuất bản (isPublish=true)
+        const publishedArticles = articles.filter(article => article.isPublish)
+        
+        // Sắp xếp theo thời gian xuất bản mới nhất
+        const sortedArticles = [...publishedArticles].sort((a, b) => {
+          const dateA = new Date(a.published_at || a.created_at)
+          const dateB = new Date(b.published_at || b.created_at)
+          return dateB.getTime() - dateA.getTime()
         })
         
-        if (response && response.articles) {
-          setLatestArticles(response.articles)
-        } else {
-          setLatestArticles([])
-        }
+        // Lấy 4 bài viết mới nhất
+        const latestArticles = sortedArticles.slice(0, 4)
+        
+        setLatestArticles(latestArticles)
         setLoading(false)
       } catch (error) {
         console.error("Error fetching latest articles:", error)
@@ -97,21 +103,31 @@ export default function KinhDoanhPage() {
   useEffect(() => {
     const fetchRealEstateArticles = async () => {
       try {
-        const response = await articleApi.getArticles({
-          category_id: CATEGORY_ID,
-          limit: 3,
-          page: 1,
-          status: "PUBLISHED",
-          sort: "published_at",
-          order: "desc",
-          tag_id: 2 // Giả sử tag_id 2 là bất động sản
+        // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
+        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        
+        // Lọc các bài viết đã xuất bản (isPublish=true)
+        const publishedArticles = articles.filter(article => article.isPublish)
+        
+        // Lọc các bài viết có tag bất động sản
+        const realEstateArticles = publishedArticles.filter(article => {
+          if (article.tags && article.tags.length > 0) {
+            // Giả sử tag_id 2 là bất động sản hoặc có tag liên quan đến đất đai
+            return article.tags.some(tag => tag.id === 2 || 
+              tag.name.toLowerCase().includes('bất động sản') || 
+              tag.name.toLowerCase().includes('nhà đất'))
+          }
+          return false
         })
         
-        if (response && response.articles) {
-          setRealEstateArticles(response.articles)
-        } else {
-          setRealEstateArticles([])
-        }
+        // Sắp xếp theo thời gian xuất bản mới nhất và giới hạn 3 bài
+        const sortedArticles = [...realEstateArticles].sort((a, b) => {
+          const dateA = new Date(a.published_at || a.created_at)
+          const dateB = new Date(b.published_at || b.created_at)
+          return dateB.getTime() - dateA.getTime()
+        }).slice(0, 3)
+        
+        setRealEstateArticles(sortedArticles)
       } catch (error) {
         console.error("Error fetching real estate articles:", error)
         setRealEstateArticles([])
@@ -127,28 +143,40 @@ export default function KinhDoanhPage() {
       try {
         setLoading(true)
         
-        const params: any = {
-          category_id: CATEGORY_ID,
-          page,
-          limit: 10,
-          status: "PUBLISHED",
-          sort: "published_at",
-          order: "desc"
-        }
+        // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
+        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
         
+        // Lọc các bài viết đã xuất bản (isPublish=true)
+        let filteredArticles = articles.filter(article => article.isPublish)
+        
+        // Lọc theo tab nếu không phải "all"
         if (activeTab !== "all") {
-          params.tag = activeTab
+          filteredArticles = filteredArticles.filter(article => {
+            // Lọc theo tag nếu có
+            if (article.tags && article.tags.length > 0) {
+              return article.tags.some(tag => tag.slug === activeTab)
+            }
+            return false
+          })
         }
         
-        const response = await articleApi.getArticles(params)
+        // Sắp xếp theo thời gian xuất bản mới nhất sử dụng hàm helper
+        const sortedArticles = sortByLatest(filteredArticles)
         
-        if (response && response.articles) {
-          setArticles(response.articles)
-          setTotalPages(Math.ceil((response.totalArticles || 0) / 10))
-        } else {
-          setArticles([])
-          setTotalPages(0)
-        }
+        // Tính toán phân trang thủ công
+        const limit = 10
+        const start = (page - 1) * limit
+        const end = start + limit
+        const paginatedArticles = sortedArticles.slice(start, end)
+        
+        // Cập nhật state với dữ liệu đã lọc
+        const totalResults = sortedArticles.length
+        setArticles(paginatedArticles || [])
+        setTotalPages(Math.ceil(totalResults / limit) || 1)
+        
+        // Ghi log để debug
+        console.log(`Đang hiển thị ${paginatedArticles.length} bài viết Kinh doanh (trang ${page}/${Math.ceil(totalResults / limit) || 1})`)
+        
         setLoading(false)
       } catch (error) {
         console.error("Error fetching articles:", error)

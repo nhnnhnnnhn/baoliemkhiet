@@ -20,7 +20,11 @@ import { SafeLink } from "@/components/safe-link"
 // Thêm import cho UserNav component
 import { UserNav } from "@/components/user-nav"
 
-export function SiteHeader() {
+export interface SiteHeaderProps {
+  variant?: 'transparent' | 'solid'
+}
+
+export function SiteHeader({ variant = 'transparent' }: SiteHeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false)
   const isLoggedIn = useAppSelector(selectIsLoggedIn)
 
@@ -42,7 +46,7 @@ export function SiteHeader() {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-white shadow-md" : "bg-transparent"
+        isScrolled || variant === 'solid' ? "bg-white shadow-md" : "bg-transparent"
       }`}
     >
       <div className="container mx-auto px-4">

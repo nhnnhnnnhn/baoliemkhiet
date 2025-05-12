@@ -200,8 +200,18 @@ export default function Home() {
                     </p>
                     <span className={styles.newsTime}>
                       {article.published_at 
-                        ? new Date(article.published_at).toLocaleDateString('vi-VN')
-                        : new Date(article.created_at).toLocaleDateString('vi-VN')}
+                        ? (() => {
+                            try {
+                              const date = new Date(article.published_at);
+                              return !isNaN(date.getTime())
+                                ? date.toLocaleDateString('vi-VN')
+                                : 'Chưa xuất bản';
+                            } catch (error) {
+                              console.error('Lỗi xử lý ngày xuất bản:', article.published_at, error);
+                              return 'Chưa xuất bản';
+                            }
+                          })()
+                        : 'Chưa xuất bản'}
                     </span>
                   </div>
                 </div>
@@ -271,11 +281,25 @@ export default function Home() {
                             {article.title}
                           </Link>
                         </h3>
-                        <span className={styles.categorySubDate}>
-                          {article.published_at 
-                            ? new Date(article.published_at).toLocaleDateString('vi-VN')
-                            : new Date(article.created_at).toLocaleDateString('vi-VN')}
-                        </span>
+                        <p className={styles.featuredMeta}>
+                          <span>{article.category?.name || 'Tin tức'}</span> · 
+                          <span>
+                            {article.published_at 
+                              ? (() => {
+                                  try {
+                                    const date = new Date(article.published_at);
+                                    return !isNaN(date.getTime()) 
+                                      ? date.toLocaleDateString('vi-VN')
+                                      : 'Chưa xuất bản';
+                                  } catch (error) {
+                                    console.error('Lỗi định dạng ngày:', error);
+                                    return 'Chưa xuất bản';
+                                  }
+                                })()
+                              : 'Chưa xuất bản'
+                            }
+                          </span>
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -459,7 +483,7 @@ export default function Home() {
                     <h3 className={styles.trendingTitle}>
                       <Link href={`/article/${article.id}`}>{article.title}</Link>
                     </h3>
-                    <span className={styles.trendingViews}>{article.view_count || 0} lượt đọc</span>
+                    <span className={styles.trendingViews}>{article.view || 0} lượt đọc</span>
                   </div>
                 </div>
               ))

@@ -33,7 +33,7 @@ export default function ThoiSuPage() {
   const [totalArticles, setTotalArticles] = useState(0)
   
   // ID của danh mục Thời sự
-  const CATEGORY_ID = 1 // Giả sử category_id của Thời sự là 1
+  const CATEGORY_ID = 2 // Thông tin xác nhận: category_id của Thời sự là 2
   
   // Lấy dữ liệu bài viết khi component được mount hoặc tab thay đổi
   useEffect(() => {
@@ -41,36 +41,37 @@ export default function ThoiSuPage() {
       try {
         setIsLoading(true)
         
-        // Chuẩn bị tham số API dựa trên tab hiện tại
-        const params: any = {
-          category_id: CATEGORY_ID,
-          page,
-          limit: 10,
-          status: 'PUBLISHED',
-        }
+        // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
+        // Đảm bảo chỉ lấy những bài viết đã được xuất bản (isPublish=true)
+        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
         
-        // Nếu có sub-category (tab khác all)
-        if (currentTab !== 'all') {
-          // Giả sử backend có hỗ trợ tham số subcategory
-          params.subcategory = currentTab
-        }
+        // Lọc các bài viết đã xuất bản (isPublish=true)
+        const publishedArticles = articles.filter(article => article.isPublish)
         
-        const response = await articleApi.getArticles(params)
+        // Tính toán phân trang thủ công
+        const limit = 10
+        const start = (page - 1) * limit
+        const end = start + limit
+        const paginatedArticles = publishedArticles.slice(start, end)
         
-        // Cập nhật state với dữ liệu từ API
-        setArticles(response.articles || [])
-        setTotalPages(response.totalPages || 1)
-        setTotalArticles(response.totalArticles || 0)
+        // Cập nhật state với dữ liệu đã lọc
+        const totalResults = publishedArticles.length
+        setArticles(paginatedArticles || [])
+        setTotalPages(Math.ceil(totalResults / limit) || 1)
+        setTotalArticles(totalResults || 0)
         
         // Lấy bài viết nổi bật (bài đầu tiên)
-        if (response.articles && response.articles.length > 0 && page === 1) {
-          setFeaturedArticle(response.articles[0])
+        if (paginatedArticles.length > 0 && page === 1) {
+          setFeaturedArticle(paginatedArticles[0])
           
           // Loại bỏ bài nổi bật khỏi danh sách bài viết thường
-          setArticles(response.articles.slice(1))
+          setArticles(paginatedArticles.slice(1))
         } else if (page === 1) {
           setFeaturedArticle(null)
         }
+        
+        // Ghi log để debug
+        console.log(`Đã tìm thấy ${publishedArticles.length} bài viết thuộc danh mục Thời sự (ID: ${CATEGORY_ID})`)
         
         setError(null)
       } catch (err) {
