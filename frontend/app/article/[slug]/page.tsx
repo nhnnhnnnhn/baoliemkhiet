@@ -30,6 +30,8 @@ import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { Comment } from "@/src/apis/comment"
 import articleApi from "@/src/apis/article"
+import commentApi from "@/src/apis/comment"
+import reportApi from "@/src/apis/report"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -171,6 +173,19 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [commentToDelete, setCommentToDelete] = useState<Comment | null>(null)
   
+  // States for report dialog
+  const [reportDialogOpen, setReportDialogOpen] = useState(false)
+  const [commentToReport, setCommentToReport] = useState<Comment | null>(null)
+  const [reportReason, setReportReason] = useState("")
+  const [isReporting, setIsReporting] = useState(false)
+  const [reportedComments, setReportedComments] = useState<number[]>([]) // Track reported comments
+  
+  // States for article report dialog
+  const [articleReportDialogOpen, setArticleReportDialogOpen] = useState(false)
+  const [articleReportReason, setArticleReportReason] = useState("")
+  const [isReportingArticle, setIsReportingArticle] = useState(false)
+  const [articleReported, setArticleReported] = useState(false)
+  
   const router = useRouter()
   const dispatch = useAppDispatch()
   const { toast } = useToast()
@@ -189,6 +204,36 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
   // User authentication
   const isAuthenticated = useAppSelector(selectIsLoggedIn)
   const currentUser = useAppSelector(selectCurrentUser)
+  
+  // Load reported comments from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedReportedComments = localStorage.getItem('reportedComments')
+      if (savedReportedComments) {
+        try {
+          const parsed = JSON.parse(savedReportedComments)
+          if (Array.isArray(parsed)) {
+            setReportedComments(parsed)
+          }
+        } catch (error) {
+          console.error('Failed to parse reported comments from localStorage:', error)
+        }
+      }
+      
+      // Check if this article has been reported
+      const isArticleReported = localStorage.getItem(`reported-article-${article.id}`) === 'true'
+      if (isArticleReported) {
+        setArticleReported(true)
+      }
+    }
+  }, [article.id])
+
+  // Save reported comments to localStorage when they change
+  useEffect(() => {
+    if (typeof window !== 'undefined' && reportedComments.length > 0) {
+      localStorage.setItem('reportedComments', JSON.stringify(reportedComments))
+    }
+  }, [reportedComments])
   
   // Fetch dữ liệu bài viết từ API
   useEffect(() => {
@@ -492,6 +537,90 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
     }
   }
 
+  // Handle reporting a comment
+  const handleReportComment = async () => {
+    if (!commentToReport || !reportReason || !isAuthenticated || !currentUser?.id) return
+    
+    try {
+      setIsReporting(true)
+      
+      await commentApi.reportComment({
+        reportedBy: currentUser.id,
+        commentId: commentToReport.id,
+        reason: reportReason
+      })
+      
+      // Add comment to reported comments list
+      setReportedComments(prev => [...prev, commentToReport.id])
+      
+      // Show more prominent success notification
+      toast({
+        title: "Báo cáo thành công!",
+        description: `Bình luận đã được báo cáo với lý do: ${reportReason}. Người quản trị sẽ xem xét báo cáo của bạn.`,
+        variant: "success",
+        duration: 5000 // Show for 5 seconds
+      })
+      
+      // Reset states
+      setReportDialogOpen(false)
+      setCommentToReport(null)
+      setReportReason("")
+    } catch (error) {
+      console.error("Failed to report comment:", error)
+      toast({
+        title: "Lỗi",
+        description: "Không thể báo cáo bình luận. Vui lòng thử lại sau.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsReporting(false)
+    }
+  }
+
+  // Handle article reporting
+  const handleReportArticle = async () => {
+    if (!articleReportReason || !isAuthenticated || !currentUser?.id) return
+    
+    try {
+      setIsReportingArticle(true)
+      
+      await reportApi.createArticleReport({
+        reportedBy: currentUser.id,
+        articleId: Number(article.id),
+        reason: articleReportReason
+      })
+      
+      // Mark article as reported 
+      setArticleReported(true)
+      
+      // Save to localStorage to remember this article was reported
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`reported-article-${article.id}`, 'true')
+      }
+      
+      // Show success notification
+      toast({
+        title: "Báo cáo thành công!",
+        description: `Bài viết đã được báo cáo với lý do: ${articleReportReason}. Người quản trị sẽ xem xét báo cáo của bạn.`,
+        variant: "success",
+        duration: 5000 // Show for 5 seconds
+      })
+      
+      // Reset states
+      setArticleReportDialogOpen(false)
+      setArticleReportReason("")
+    } catch (error) {
+      console.error("Failed to report article:", error)
+      toast({
+        title: "Lỗi",
+        description: "Không thể báo cáo bài viết. Vui lòng thử lại sau.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsReportingArticle(false)
+    }
+  }
+
   return (
     <>
       <SiteHeader variant="solid" />
@@ -542,9 +671,28 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
               <Bookmark size={16} />
               <span className="hidden sm:inline">Lưu</span>
             </Button>
-            <Button variant="outline" size="sm" className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-2"
+              onClick={() => {
+                if (!isAuthenticated) {
+                  toast({
+                    title: "Cần đăng nhập",
+                    description: "Bạn cần đăng nhập để báo cáo bài viết.",
+                    variant: "default"
+                  });
+                  router.push('/auth/login');
+                  return;
+                }
+                setArticleReportDialogOpen(true);
+              }}
+              disabled={articleReported}
+            >
               <AlertTriangle className="h-4 w-4" />
-              <Link href={`/user/reports/add?articleId=${article.id}`}>Báo cáo</Link>
+              <span className="hidden sm:inline">
+                {articleReported ? "Đã báo cáo" : "Báo cáo"}
+              </span>
             </Button>
           </div>
         </div>
@@ -688,7 +836,14 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
                   </Button>
                 </div>
                 {comments.map((comment) => (
-                  <div key={comment.id} className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
+                  <div 
+                    key={comment.id} 
+                    className={`bg-white p-4 rounded-lg border ${
+                      reportedComments.includes(comment.id) 
+                      ? 'border-amber-300 bg-amber-50' 
+                      : 'border-gray-100'
+                    } shadow-sm`}
+                  >
                     {/* Chế độ xem */}
                     {editingCommentId !== comment.id ? (
                       <>
@@ -738,12 +893,35 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
                             <span>Thích</span>
                           </button>
                           {isAuthenticated && (
-                            <button className="flex items-center gap-1 hover:text-blue-600">
-                              <MessageSquare size={16} />
-                              <span>Trả lời</span>
+                            <button 
+                              className={`flex items-center gap-1 ${
+                                reportedComments.includes(comment.id) 
+                                ? 'text-amber-600 font-medium' 
+                                : 'hover:text-red-600'
+                              }`}
+                              onClick={() => {
+                                if (!reportedComments.includes(comment.id)) {
+                                  setReportDialogOpen(true)
+                                  setCommentToReport(comment)
+                                } else {
+                                  toast({
+                                    title: "Đã báo cáo",
+                                    description: "Bạn đã báo cáo bình luận này rồi.",
+                                    variant: "default"
+                                  })
+                                }
+                              }}
+                            >
+                              <AlertTriangle size={16} />
+                              <span>{reportedComments.includes(comment.id) ? "Đã báo cáo" : "Báo cáo"}</span>
                             </button>
                           )}
                         </div>
+                        {reportedComments.includes(comment.id) && (
+                          <div className="mt-2 text-xs text-amber-600 bg-amber-50 p-2 rounded-md border border-amber-200">
+                            Bình luận này đã được báo cáo và đang chờ xem xét.
+                          </div>
+                        )}
                       </>
                     ) : (
                       /* Chế độ chỉnh sửa */
@@ -856,6 +1034,80 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
               className="bg-red-500 hover:bg-red-600"
             >
               Xóa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Report Comment Dialog */}
+      <AlertDialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Báo cáo bình luận</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn muốn báo cáo bình luận này vì lý do gì?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="my-4">
+            <select 
+              className="w-full p-2 border border-gray-300 rounded-md"
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+            >
+              <option value="" disabled>Chọn lý do...</option>
+              <option value="spam">Spam</option>
+              <option value="hate_speech">Ngôn từ gây thù hận</option>
+              <option value="misinformation">Thông tin sai lệch</option>
+              <option value="harassment">Quấy rối</option>
+              <option value="other">Lý do khác</option>
+            </select>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleReportComment}
+              className="bg-amber-500 hover:bg-amber-600"
+              disabled={!reportReason || isReporting}
+            >
+              {isReporting ? "Đang gửi..." : "Báo cáo"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Report Article Dialog */}
+      <AlertDialog open={articleReportDialogOpen} onOpenChange={setArticleReportDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Báo cáo bài viết</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn muốn báo cáo bài viết này vì lý do gì?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="my-4">
+            <select 
+              className="w-full p-2 border border-gray-300 rounded-md"
+              value={articleReportReason}
+              onChange={(e) => setArticleReportReason(e.target.value)}
+            >
+              <option value="" disabled>Chọn lý do...</option>
+              <option value="spam">Spam</option>
+              <option value="hate_speech">Ngôn từ gây thù hận</option>
+              <option value="misinformation">Thông tin sai lệch</option>
+              <option value="harassment">Quấy rối</option>
+              <option value="inappropriate">Nội dung không phù hợp</option>
+              <option value="violence">Bạo lực</option>
+              <option value="other">Lý do khác</option>
+            </select>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleReportArticle}
+              className="bg-amber-500 hover:bg-amber-600"
+              disabled={!articleReportReason || isReportingArticle}
+            >
+              {isReportingArticle ? "Đang gửi..." : "Báo cáo"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

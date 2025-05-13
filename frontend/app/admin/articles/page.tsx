@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import Link from "next/link"
 import { ChevronLeftIcon, ChevronRightIcon, Download, Edit, Eye, Filter, Plus, RefreshCw, Search, Trash2 } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "@/src/store"
@@ -22,6 +22,7 @@ import {
   clearDeleteArticleState
 } from "@/src/thunks/article/articleSlice"
 import { toast } from "@/components/ui/use-toast"
+import { useSearchParams } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -39,6 +40,9 @@ import styles from "../admin.module.css"
 
 export default function ArticlesPage() {
   const dispatch = useAppDispatch()
+  const searchParams = useSearchParams()
+  const highlightedArticleId = searchParams.get('highlight')
+  const highlightedRowRef = useRef<HTMLTableRowElement>(null)
   
   // Redux selectors
   const articles = useAppSelector(selectArticles)
@@ -56,6 +60,33 @@ export default function ArticlesPage() {
   const [selectedArticleId, setSelectedArticleId] = useState<number | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [itemsPerPage] = useState(10)
+  
+  // Add highlight styles to the document
+  useEffect(() => {
+    const highlightStyles = `
+      @keyframes highlightAnimation {
+        0% { background-color: rgba(59, 130, 246, 0.4); }
+        50% { background-color: rgba(59, 130, 246, 0.6); }
+        100% { background-color: transparent; }
+      }
+      
+      .highlight-row {
+        background-color: rgba(59, 130, 246, 0.15);
+      }
+      
+      .highlight-animation {
+        animation: highlightAnimation 2s ease-in-out;
+      }
+    `;
+
+    const styleEl = document.createElement('style');
+    styleEl.innerHTML = highlightStyles;
+    document.head.appendChild(styleEl);
+
+    return () => {
+      document.head.removeChild(styleEl);
+    };
+  }, []);
   
   // Fetch articles on component mount
   useEffect(() => {
@@ -159,6 +190,26 @@ export default function ArticlesPage() {
     }
   }
 
+  // Handle highlighting the reported article
+  useEffect(() => {
+    if (highlightedArticleId && highlightedRowRef.current) {
+      // Scroll to the highlighted row
+      highlightedRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      
+      // Add highlight animation
+      highlightedRowRef.current.classList.add('highlight-animation')
+      
+      // Remove the animation class after it completes
+      const timer = setTimeout(() => {
+        if (highlightedRowRef.current) {
+          highlightedRowRef.current.classList.remove('highlight-animation')
+        }
+      }, 2000)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [highlightedArticleId, articles])
+
   return (
     <div>
       {/* Page Header */}
@@ -240,7 +291,11 @@ export default function ArticlesPage() {
                 </tr>
               ) : (
                 articles.map((article) => (
-                  <tr key={article.id} className={styles.tableRow}>
+                  <tr 
+                    key={article.id} 
+                    className={`${styles.tableRow} ${highlightedArticleId && article.id.toString() === highlightedArticleId ? 'highlight-row' : ''}`}
+                    ref={highlightedArticleId && article.id.toString() === highlightedArticleId ? highlightedRowRef : null}
+                  >
                     <td className={styles.tableCell}>{article.id}</td>
                     <td className={styles.tableCell}>
                       <div className="font-medium">{article.title}</div>

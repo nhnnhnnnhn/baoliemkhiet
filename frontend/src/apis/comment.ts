@@ -52,6 +52,12 @@ export interface EditCommentPayload {
   status?: 'PENDING' | 'APPROVED' | 'REJECTED_BY_AI' | 'REJECTED_BY_REPORT'
 }
 
+export interface CommentReportParams {
+  reportedBy: number;
+  commentId: number;
+  reason: string;
+}
+
 const commentApi = {
   // Get comments for an article (approved or all depending on user role)
   getComments: async (articleId: number, page = 1, limit = 10): Promise<Comment[] | GetCommentsResponse> => {
@@ -135,6 +141,21 @@ const commentApi = {
       return;
     } catch (error) {
       console.error('Delete comment error:', error);
+      throw error;
+    }
+  },
+  
+  // Report comment
+  reportComment: async (params: CommentReportParams): Promise<any> => {
+    try {
+      console.log(`Reporting comment ${params.commentId} with reason: ${params.reason}`);
+      
+      const response = await axiosClient.post(`/reports/create`, params);
+      console.log('Report comment response:', response);
+      
+      return response.data || response;
+    } catch (error) {
+      console.error('Report comment error:', error);
       throw error;
     }
   }
