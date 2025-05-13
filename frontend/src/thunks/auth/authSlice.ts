@@ -154,7 +154,7 @@ const authSlice = createSlice({
       })
       // Get Profile
       .addCase(handleGetProfile.pending, (state) => {
-        state.isLoggedIn = false;
+        // Don't change the isLoggedIn state here to prevent flashing
       })
       .addCase(handleGetProfile.fulfilled, (state, action) => {
         const { data } = action.payload;
@@ -167,10 +167,15 @@ const authSlice = createSlice({
           state.accessToken = null;
         }
       })
-      .addCase(handleGetProfile.rejected, (state) => {
-        state.isLoggedIn = false;
-        state.user = null;
-        state.accessToken = null;
+      .addCase(handleGetProfile.rejected, (state, action: any) => {
+        // Only log out on auth errors (401, 403)
+        // For other errors (network, server issues), maintain the logged-in state
+        if (action.payload?.status === 401 || action.payload?.status === 403) {
+          state.isLoggedIn = false;
+          state.user = null; 
+          state.accessToken = null;
+        }
+        // For other error types, maintain the current login state
       })
       // Change Password
       .addCase(handleChangePassword.pending, (state) => {
@@ -200,7 +205,7 @@ const authSlice = createSlice({
             ...state.user,
             fullname: action.payload.fullname || state.user.fullname,
             email: action.payload.email || state.user.email,
-            phone: action.payload.phone ?? state.user.phone ?? undefined,
+            phone: action.payload.phone || state.user.phone || undefined,
             address: action.payload.address || state.user.address,
             bio: action.payload.bio || state.user.bio
           };
@@ -219,7 +224,21 @@ const authSlice = createSlice({
       })
       .addCase(handleGetUserById.fulfilled, (state, action) => {
         state.loadingUserDetails = false;
-        state.selectedUser = action.payload;
+        
+        if (action.payload) {
+          // Convert all potential null string properties to undefined
+          const processedUser = {
+            ...action.payload,
+            phone: action.payload.phone || undefined,
+            address: action.payload.address || undefined,
+            bio: action.payload.bio || undefined,
+            avatar: action.payload.avatar || undefined
+          };
+          state.selectedUser = processedUser;
+        } else {
+          state.selectedUser = null;
+        }
+        
         state.userDetailsError = null;
       })
       .addCase(handleGetUserById.rejected, (state, action: any) => {

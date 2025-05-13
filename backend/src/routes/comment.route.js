@@ -7,7 +7,7 @@ const router = express.Router();
 router.post("/", authMiddleware(), commentController.createComment);
 
 // GET /api/comments/:article_id
-router.get("/:article_id", authMiddleware(), commentController.getComments);
+router.get("/:article_id", commentController.getComments);
 
 // PUT /api/comments/:comment_id
 router.put("/:comment_id", authMiddleware(), commentController.updateComment);

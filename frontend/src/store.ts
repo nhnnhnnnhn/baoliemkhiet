@@ -5,6 +5,7 @@ import userReducer from './thunks/user/userSlice';
 import tagReducer from './thunks/tag/tagSlice';
 import categoryReducer from './thunks/category/categorySlice';
 import articleReducer from './thunks/article/articleSlice';
+import commentReducer from './thunks/comment/commentSlice';
 
 const store = configureStore({
   reducer: {
@@ -13,6 +14,7 @@ const store = configureStore({
     tag: tagReducer,
     category: categoryReducer,
     article: articleReducer,
+    comment: commentReducer,
   },
 });
 

@@ -3,10 +3,14 @@ const controllerHandler = require("../utils/controllerHandler");
 
 const createComment = controllerHandler(async (req, res) => {
   const user_id = Number(req.user.id);
-  const { article_id, content } = req.body;
+  const { articleId, authorId, content } = req.body;
+  
+  console.log("Request body:", req.body);
+  console.log("User from token:", req.user);
+  
   const comment = await commentService.createComment(
     user_id,
-    Number(article_id),
+    Number(articleId),
     content
   );
   res.status(201).json(comment);
