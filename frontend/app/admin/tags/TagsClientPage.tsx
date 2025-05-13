@@ -200,7 +200,6 @@ export default function TagsClientPage() {
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">ID</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Tên thẻ</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Slug</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Số bài viết</th>
                 <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Thao tác</th>
               </tr>
@@ -217,7 +216,6 @@ export default function TagsClientPage() {
                 <tr key={tag.id}>
                   <td className="whitespace-nowrap px-4 py-2 text-sm">{tag.id}</td>
                   <td className="whitespace-nowrap px-4 py-2 text-sm font-medium">{tag.name}</td>
-                  <td className="whitespace-nowrap px-4 py-2 text-sm text-muted-foreground">{tag.slug}</td>
                   <td className="whitespace-nowrap px-4 py-2 text-sm text-muted-foreground">{tag.count || 0}</td>
                   <td className="whitespace-nowrap px-4 py-2 text-right text-sm">
                     <Button
