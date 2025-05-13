@@ -19,25 +19,33 @@ const processQueue = (error: any = null, token: string | null = null) => {
   failedQueue = [];
 };
 
+// Tạo axios client với baseURL
 const axiosClient = axios.create({
-  baseURL: 'http://localhost:3000/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
-  timeout: 10000, // Set timeout to 10 seconds
+  timeout: 10000, // 10 seconds
 });
 
-// Add a request interceptor to handle errors
-axiosClient.interceptors.request.use(
-  (config) => {
-    // Reset error message on new request
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+// Thêm timeout dài hơn cho các request upload file
+export const axiosUploadClient = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
+  timeout: 60000, // 60 seconds
+});
+
+// Log request config in development
+if (process.env.NODE_ENV === 'development') {
+  axiosClient.interceptors.request.use(request => {
+    console.log('Axios request config:', {
+      url: request.url,
+      method: request.method,
+      headers: request.headers,
+      data: request.data
+    });
+    return request;
+  });
+}
 
 // Add a request interceptor for authentication
 axiosClient.interceptors.request.use(
@@ -59,12 +67,6 @@ axiosClient.interceptors.request.use(
 // Add a response interceptor
 axiosClient.interceptors.response.use(
   (response) => {
-    console.log('Axios response interceptor - raw response:', {
-      url: response.config.url,
-      status: response.status,
-      data: response.data
-    });
-    
     // Trả về response.data để các API service có thể sử dụng trực tiếp
     return response.data;
   },
@@ -99,7 +101,7 @@ axiosClient.interceptors.response.use(
         }
         
         const response = await axios.post(
-          'http://localhost:3000/api/auth/refresh-token', 
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/auth/refresh-token`, 
           { refreshToken },
           { headers: { 'Content-Type': 'application/json' } }
         );
@@ -115,20 +117,25 @@ axiosClient.interceptors.response.use(
         return axiosClient(originalRequest);
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
         
-        // Thông báo cho các request đang đợi rằng refresh token đã thất bại
-        processQueue(refreshError, null);
-        isRefreshing = false;
-        
-        // Nếu refresh token thất bại và không đang trong quá trình kiểm tra đăng nhập, chuyển hướng
-        if (!window.location.pathname.startsWith('/auth/')) {
-          setTimeout(() => {
-            window.location.href = '/auth/login';
-          }, 100);
+        // Chỉ xóa token và redirect khi không phải trong quá trình tự động refresh
+        const refreshAttemptFromAuthProvider = localStorage.getItem('refreshAttemptInProgress');
+        if (refreshAttemptFromAuthProvider !== 'true') {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          
+          // Thông báo cho các request đang đợi rằng refresh token đã thất bại
+          processQueue(refreshError, null);
+          
+          // Nếu refresh token thất bại và không đang trong quá trình kiểm tra đăng nhập, chuyển hướng
+          if (!window.location.pathname.startsWith('/auth/')) {
+            setTimeout(() => {
+              window.location.href = '/auth/login';
+            }, 100);
+          }
         }
         
+        isRefreshing = false;
         return Promise.reject(refreshError);
       }
     }
@@ -143,8 +150,10 @@ axiosClient.interceptors.response.use(
       errorMessage = error.message;
     }
     
-    console.error('API Error:', errorMessage);
-    return Promise.reject(errorMessage);
+    return Promise.reject({
+      ...error,
+      message: errorMessage,
+    });
   }
 );
 

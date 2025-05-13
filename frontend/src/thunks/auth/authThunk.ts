@@ -101,7 +101,19 @@ export const handleGetProfile = createAsyncThunk(
       const response = await authApi.getProfile();
       return response;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to get profile');
+      // Return the error status to allow auth provider to make decisions
+      if (error.response) {
+        return rejectWithValue({
+          message: error.response.data?.message || 'Failed to get profile',
+          status: error.response.status
+        });
+      }
+      
+      // For network errors or other non-response errors, don't trigger a logout
+      return rejectWithValue({
+        message: error.message || 'Failed to get profile',
+        status: 'NETWORK_ERROR'
+      });
     }
   }
 );
