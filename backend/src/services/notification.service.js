@@ -2,44 +2,63 @@ const { PrismaClient, NotificationType } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 async function createNotification(receiver_id, content, type) {
+  console.log(`[NOTIFICATION SERVICE] Creating notification for user ${receiver_id}:`, { content, type });
+  
   const user = await prisma.user.findUnique({
     where: { id: receiver_id },
   });
   if (!user) {
+    console.error(`[NOTIFICATION SERVICE] User ${receiver_id} not found`);
     throw new Error("User not found");
   }
 
   if (!Object.values(NotificationType).includes(type)) {
+    console.error(`[NOTIFICATION SERVICE] Invalid notification type: ${type}`);
     throw new Error("Invalid notification type");
   }
 
-  const notification = await prisma.notification.create({
-    data: {
-      receiver_id,
-      content,
-      type,
-    },
-  });
-  return notification;
+  try {
+    const notification = await prisma.notification.create({
+      data: {
+        receiver_id,
+        content,
+        type,
+      },
+    });
+    console.log(`[NOTIFICATION SERVICE] Notification created with ID: ${notification.id}`);
+    return notification;
+  } catch (error) {
+    console.error(`[NOTIFICATION SERVICE] Error creating notification:`, error);
+    throw error;
+  }
 }
 
 async function getNotifications(receiver_id) {
+  console.log(`[NOTIFICATION SERVICE] Getting notifications for user: ${receiver_id}`);
+  
   const user = await prisma.user.findUnique({
     where: { id: receiver_id },
   });
-  console.log("receiver_id", receiver_id);
+  console.log("[NOTIFICATION SERVICE] receiver_id", receiver_id);
 
   if (!user) {
+    console.error(`[NOTIFICATION SERVICE] User ${receiver_id} not found`);
     throw new Error("User not found");
   }
 
-  const notifications = await prisma.notification.findMany({
-    where: { receiver_id },
-    orderBy: { created_at: "desc" },
-  });
-  return {
-    data: notifications,
-  };
+  try {
+    const notifications = await prisma.notification.findMany({
+      where: { receiver_id },
+      orderBy: { created_at: "desc" },
+    });
+    console.log(`[NOTIFICATION SERVICE] Found ${notifications.length} notifications for user ${receiver_id}`);
+    return {
+      data: notifications,
+    };
+  } catch (error) {
+    console.error(`[NOTIFICATION SERVICE] Error getting notifications:`, error);
+    throw error;
+  }
 }
 
 async function markNotificationAsRead(notification_id) {
@@ -87,19 +106,28 @@ async function markAllNotificationsAsRead(receiver_id) {
 }
 
 async function getUnreadNotificationCount(receiver_id) {
+  console.log(`[NOTIFICATION SERVICE] Getting unread count for user: ${receiver_id}`);
+  
   const user = await prisma.user.findUnique({
     where: { id: receiver_id },
   });
   if (!user) {
+    console.error(`[NOTIFICATION SERVICE] User ${receiver_id} not found`);
     throw new Error("User not found");
   }
 
-  const count = await prisma.notification.count({
-    where: { receiver_id, is_read: false },
-  });
-  return {
-    data: count,
-  };
+  try {
+    const count = await prisma.notification.count({
+      where: { receiver_id, is_read: false },
+    });
+    console.log(`[NOTIFICATION SERVICE] Unread count for user ${receiver_id}: ${count}`);
+    return {
+      data: count,
+    };
+  } catch (error) {
+    console.error(`[NOTIFICATION SERVICE] Error getting unread count:`, error);
+    throw error;
+  }
 }
 
 module.exports = {

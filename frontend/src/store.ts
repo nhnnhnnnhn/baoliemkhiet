@@ -6,6 +6,7 @@ import tagReducer from './thunks/tag/tagSlice';
 import categoryReducer from './thunks/category/categorySlice';
 import articleReducer from './thunks/article/articleSlice';
 import commentReducer from './thunks/comment/commentSlice';
+import notificationReducer from './thunks/notification/notificationSlice';
 
 const store = configureStore({
   reducer: {
@@ -15,6 +16,7 @@ const store = configureStore({
     category: categoryReducer,
     article: articleReducer,
     comment: commentReducer,
+    notification: notificationReducer,
   },
 });
 

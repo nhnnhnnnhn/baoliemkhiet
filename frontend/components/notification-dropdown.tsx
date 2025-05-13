@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Bell } from "lucide-react"
+import { Bell, MessageSquare, UserPlus, Heart, FileEdit, Trash2, Check } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -9,224 +10,279 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import notificationApi from "@/src/apis/notification"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { useToast } from "@/hooks/use-toast"
+import { useAppDispatch, useAppSelector } from "@/src/store"
+import { 
+  handleGetNotifications, 
+  handleMarkAsRead, 
+  handleMarkAllAsRead,
+  handleGetUnreadCount,
+  handleDeleteNotification
+} from "@/src/thunks/notification/notificationThunk"
+import {
+  selectNotifications,
+  selectUnreadCount,
+  selectNotificationLoading,
+  selectDeletingNotification,
+  selectMarkingAsRead,
+  selectMarkingAllAsRead
+} from "@/src/thunks/notification/notificationSlice"
 import { initializeSocket, disconnectSocket } from "@/src/apis/socket"
-
-interface Notification {
-  id: number
-  content: string
-  article_id?: number
-  is_read: boolean
-  created_at: string
-  read_at?: string
-  type: "MESSAGE" | "COMMENT" | "LIKE" | "FOLLOW" | "ARTICLE_STATUS"
-}
-
-interface NotificationPayload {
-  receiver_id: number
-  content: string
-  type: "MESSAGE" | "COMMENT" | "LIKE" | "FOLLOW" | "ARTICLE_STATUS"
-  article_id?: number
-}
+import { formatDistanceToNow } from "date-fns"
+import { vi } from "date-fns/locale"
+import { Notification } from "@/src/apis/notification"
 
 export function NotificationDropdown() {
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+  const dispatch = useAppDispatch()
+  const { toast } = useToast()
   const [open, setOpen] = useState(false)
-
-  const fetchNotifications = async () => {
-    setLoading(true)
-    try {
-      const response = await notificationApi.getNotifications()
-      if (response?.data) {
-        setNotifications(response.data)
-      }
-    } catch (error) {
-      console.error("Failed to fetch notifications:", error)
-      setNotifications([])
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchUnreadCount = async () => {
-    try {
-      const response = await notificationApi.getUnreadCount()
-      if (response?.count?.data !== undefined) {
-        setUnreadCount(response.count.data)
-      }
-    } catch (error) {
-      console.error("Failed to fetch unread count:", error)
-      setUnreadCount(0)
-    }
-  }
-
-  const markAsRead = async (notificationId: number) => {
-    try {
-      await notificationApi.markAsRead(notificationId)
-      setNotifications((prevNotifications) =>
-        prevNotifications.map((notification) =>
-          notification.id === notificationId ? { ...notification, is_read: true } : notification,
-        ),
-      )
-      setUnreadCount((prev) => Math.max(0, prev - 1))
-    } catch (error) {
-      console.error("Failed to mark notification as read:", error)
-    }
-  }
-
-  const markAllAsRead = async () => {
-    try {
-      const response = await notificationApi.markAllAsRead()
-      setNotifications((prevNotifications) =>
-        prevNotifications.map((notification) => ({
-          ...notification,
-          is_read: true,
-        })),
-      )
-      setUnreadCount(0)
-    } catch (error) {
-      console.error("Failed to mark all notifications as read:", error)
-    }
-  }
+  
+  const notifications = useAppSelector(selectNotifications)
+  const unreadCount = useAppSelector(selectUnreadCount)
+  const loading = useAppSelector(selectNotificationLoading)
+  const deleting = useAppSelector(selectDeletingNotification)
+  const markingAsRead = useAppSelector(selectMarkingAsRead)
+  const markingAllAsRead = useAppSelector(selectMarkingAllAsRead)
 
   // Initialize socket connection and handle notifications
   useEffect(() => {
     const token = localStorage.getItem("accessToken")
-    console.log("Token:", token)
-
     if (!token) return
 
+    console.log("[NOTIFICATION] Initializing socket connection");
     const socket = initializeSocket(token)
 
     // Listen for new notifications
     socket.on("connect", () => {
+      console.log("[NOTIFICATION] Socket connected successfully");
+      
       socket.on("notification", (notification) => {
-        notification.created_at = new Date().toISOString()
-        notification.is_read = false
-        console.log("New notification:", notification)
-        setNotifications((prev) => [notification, ...prev])
-        setUnreadCount((prev) => prev + 1)
+        console.log("[NOTIFICATION] Received notification via socket:", notification);
+        // Reload notifications when a new one arrives
+        dispatch(handleGetNotifications())
+        dispatch(handleGetUnreadCount())
       })
     })
 
     return () => {
+      console.log("[NOTIFICATION] Disconnecting socket");
       disconnectSocket()
     }
-  }, [])
+  }, [dispatch])
 
   // Initial load of notifications and unread count
   useEffect(() => {
-    const loadInitialData = async () => {
-      await Promise.all([fetchUnreadCount(), fetchNotifications()])
-    }
-    loadInitialData()
-  }, [])
+    console.log("[NOTIFICATION] Initial load of notifications");
+    dispatch(handleGetNotifications())
+    dispatch(handleGetUnreadCount())
+    
+    // Set up polling for new notifications every 10 seconds (reduced from 30 seconds)
+    const intervalId = setInterval(() => {
+      console.log("[NOTIFICATION] Polling for new notifications");
+      dispatch(handleGetNotifications())
+      dispatch(handleGetUnreadCount())
+    }, 10000) // Changed from 30000 to 10000
+    
+    return () => clearInterval(intervalId)
+  }, [dispatch])
 
   // Fetch notifications when dropdown is opened
   useEffect(() => {
     if (open) {
-      fetchNotifications()
-      fetchUnreadCount()
+      dispatch(handleGetNotifications())
+      dispatch(handleGetUnreadCount())
     }
-  }, [open])
+  }, [open, dispatch])
 
-  // Format the created_at date
-  const formatDate = (dateString: string) => {
-    try {
-      if (!dateString) return "Không có dữ liệu"
-
-      const date = new Date(dateString)
-      if (isNaN(date.getTime())) return "Không có dữ liệu"
-
-      const formatter = new Intl.DateTimeFormat("vi-VN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: "Asia/Ho_Chi_Minh",
+  const handleNotificationClick = (notification: Notification) => {
+    if (!notification.is_read) {
+      dispatch(handleMarkAsRead(notification.id))
+    }
+    
+    // Navigate based on notification type
+    if (notification.article_id) {
+      router.push(`/article/${notification.article_id}`)
+      setOpen(false)
+    }
+  }
+  
+  const handleMarkRead = (e: React.MouseEvent, notification: Notification) => {
+    e.stopPropagation()
+    if (!notification.is_read) {
+      dispatch(handleMarkAsRead(notification.id))
+        .unwrap()
+        .then(() => {
+          toast({
+            title: "Đã đánh dấu đã đọc",
+            description: "Thông báo đã được đánh dấu là đã đọc",
+            variant: "default",
+          })
+        })
+        .catch((error) => {
+          toast({
+            title: "Lỗi",
+            description: "Không thể đánh dấu thông báo. Vui lòng thử lại sau.",
+            variant: "destructive",
+          })
+        })
+    }
+  }
+  
+  const handleDeleteNotif = (e: React.MouseEvent, notification: Notification) => {
+    e.stopPropagation()
+    dispatch(handleDeleteNotification(notification.id))
+      .unwrap()
+      .then(() => {
+        toast({
+          title: "Đã xóa thông báo",
+          description: "Thông báo đã được xóa thành công",
+          variant: "default",
+        })
       })
-
-      return formatter.format(date)
-    } catch (error) {
-      console.error("Error formatting date:", error)
-      return "Không có dữ liệu"
+      .catch((error) => {
+        toast({
+          title: "Lỗi",
+          description: "Không thể xóa thông báo. Vui lòng thử lại sau.",
+          variant: "destructive",
+        })
+      })
+  }
+  
+  const handleMarkAllRead = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dispatch(handleMarkAllAsRead())
+      .unwrap()
+      .then(() => {
+        toast({
+          title: "Đã đánh dấu tất cả đã đọc",
+          description: "Tất cả thông báo đã được đánh dấu là đã đọc",
+          variant: "default",
+        })
+      })
+      .catch((error) => {
+        toast({
+          title: "Lỗi",
+          description: "Không thể đánh dấu tất cả thông báo. Vui lòng thử lại sau.",
+          variant: "destructive",
+        })
+      })
+  }
+  
+  // Get icon based on notification type
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case "COMMENT":
+        return <MessageSquare className="h-5 w-5 text-blue-500" />
+      case "LIKE":
+        return <Heart className="h-5 w-5 text-red-500" />
+      case "FOLLOW":
+        return <UserPlus className="h-5 w-5 text-green-500" />
+      case "ARTICLE_STATUS":
+        return <FileEdit className="h-5 w-5 text-amber-500" />
+      default:
+        return <Bell className="h-5 w-5 text-gray-500" />
     }
   }
 
   return (
-    <DropdownMenu modal={false}>
+    <DropdownMenu onOpenChange={setOpen} open={open}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <span className="absolute top-0 right-0 h-4 w-4 rounded-full bg-red-600 text-xs font-medium text-white flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-xs font-medium text-white flex items-center justify-center">
               {unreadCount}
             </span>
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-80" align="end" sideOffset={5} collisionPadding={10} forceMount>
+      <DropdownMenuContent className="w-80" align="end" forceMount>
         <DropdownMenuLabel className="flex items-center justify-between">
-          <span>Thông báo</span>
+          <span>Thông báo {unreadCount > 0 && `(${unreadCount} chưa đọc)`}</span>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                markAllAsRead()
-              }}
+              onClick={handleMarkAllRead}
+              disabled={markingAllAsRead}
               className="h-auto text-xs px-2"
             >
-              Đánh dấu tất cả đã đọc
+              {markingAllAsRead ? "Đang xử lý..." : "Đánh dấu tất cả đã đọc"}
             </Button>
           )}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <div className="max-h-[300px] overflow-y-auto py-1">
-          {loading ? (
-            <div className="px-2 py-4 text-center text-sm text-muted-foreground">Đang tải thông báo...</div>
-          ) : notifications && notifications.length > 0 ? (
-            notifications.map((notification) => (
-              <DropdownMenuItem
-                key={notification.id}
-                className={`${notification.is_read ? "" : "bg-muted/50"} py-2`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  if (!notification.is_read) {
-                    markAsRead(notification.id)
-                  }
-                  // Add navigation logic here if needed
-                  // For example: router.push(`/article/${notification.article_id}`);
-                }}
-              >
-                <div className="flex items-start gap-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="/placeholder.svg" alt="" />
-                    <AvatarFallback>N</AvatarFallback>
-                  </Avatar>
-                  <div className="grid gap-1">
-                    <div className="text-sm">{notification.content}</div>
-                    <div className="text-xs text-muted-foreground">{formatDate(notification.created_at)}</div>
+        
+        <ScrollArea className="h-80">
+          <DropdownMenuGroup>
+            {loading ? (
+              <div className="p-4 text-center text-muted-foreground">Đang tải...</div>
+            ) : notifications.length === 0 ? (
+              <div className="p-4 text-center text-muted-foreground">
+                Không có thông báo
+              </div>
+            ) : (
+              notifications.map((notification) => (
+                <DropdownMenuItem
+                  key={notification.id}
+                  className={`p-3 cursor-pointer flex flex-col items-start ${
+                    !notification.is_read ? "bg-muted/50" : ""
+                  }`}
+                  onClick={() => handleNotificationClick(notification)}
+                >
+                  <div className="flex items-start gap-2 w-full">
+                    {getNotificationIcon(notification.type)}
+                    <div className="flex-1">
+                      <p className="text-sm font-medium leading-none mb-1">
+                        {notification.content}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(notification.created_at), {
+                          addSuffix: true,
+                          locale: vi
+                        })}
+                      </p>
+                    </div>
+                    
+                    {/* Action buttons */}
+                    <div className="flex items-center gap-1 ml-auto flex-shrink-0">
+                      {!notification.is_read && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6"
+                          onClick={(e) => handleMarkRead(e, notification)}
+                          title="Đánh dấu đã đọc"
+                          disabled={markingAsRead}
+                        >
+                          <Check className="h-4 w-4 text-green-500" />
+                        </Button>
+                      )}
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6"
+                        onClick={(e) => handleDeleteNotif(e, notification)}
+                        title="Xóa thông báo"
+                        disabled={deleting}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </DropdownMenuItem>
-            ))
-          ) : (
-            <div className="px-2 py-4 text-center text-sm text-muted-foreground">Không có thông báo mới</div>
-          )}
-        </div>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild></DropdownMenuItem>
+                </DropdownMenuItem>
+              ))
+            )}
+          </DropdownMenuGroup>
+        </ScrollArea>
       </DropdownMenuContent>
     </DropdownMenu>
   )
