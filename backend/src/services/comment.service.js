@@ -11,15 +11,17 @@ async function createComment(user_id, article_id, content) {
     const userId = Number(user_id);
     const articleId = Number(article_id);
 
-    console.log(`[DEBUG] Creating comment for user ${userId} on article ${articleId}`);
+    console.log(
+      `[DEBUG] Creating comment for user ${userId} on article ${articleId}`
+    );
 
     // Kiểm tra user
     const user = await prisma.user.findFirst({
       where: {
-        id: userId
-      }
+        id: userId,
+      },
     });
-    
+
     if (!user) {
       throw new Error("User not found");
     }
@@ -27,19 +29,19 @@ async function createComment(user_id, article_id, content) {
     // Kiểm tra article
     const article = await prisma.article.findFirst({
       where: {
-        id: articleId
+        id: articleId,
       },
       include: {
         author: {
           select: {
             id: true,
             fullname: true,
-            email: true
-          }
-        }
-      }
+            email: true,
+          },
+        },
+      },
     });
-    
+
     if (!article) {
       throw new Error("Article not found");
     }
@@ -57,20 +59,20 @@ async function createComment(user_id, article_id, content) {
 
     // Biến để lưu trạng thái cuối cùng
     let finalStatus = CommentStatus.PENDING;
-    
+
     try {
       // Gọi deepseek (bọc trong try/catch riêng để không ảnh hưởng đến việc tạo comment)
       const response = await deepseek(content);
       if (response) {
         const jsonResponse = await extractJSON(response);
-        console.log('Deepseek response:', jsonResponse);
-        
+        console.log("Deepseek response:", jsonResponse);
+
         if (!jsonResponse.data.detect) {
           finalStatus = CommentStatus.APPROVED;
         } else if (jsonResponse.data.detect == true) {
           finalStatus = CommentStatus.REJECTED_BY_AI;
         }
-        
+
         // Xử lý thông báo nếu bị từ chối
         if (finalStatus === CommentStatus.REJECTED_BY_AI) {
           try {
@@ -92,14 +94,17 @@ async function createComment(user_id, article_id, content) {
         }
       }
     } catch (deepseekError) {
-      console.error("Error with deepseek API, defaulting to PENDING status:", deepseekError);
+      console.error(
+        "Error with deepseek API, defaulting to PENDING status:",
+        deepseekError
+      );
       // Không ném lỗi, để tiếp tục xử lý và tạo comment thành công
     }
 
     // Cập nhật trạng thái của comment
     const updateComment = await prisma.comment.update({
-      where: { 
-        id: comment.id 
+      where: {
+        id: comment.id,
       },
       data: {
         status: finalStatus,
@@ -110,57 +115,64 @@ async function createComment(user_id, article_id, content) {
             id: true,
             fullname: true,
             email: true,
-            avatar: true
-          }
-        }
-      }
+            avatar: true,
+          },
+        },
+      },
     });
-    
+
     // Gửi thông báo đến admin
     try {
       // Lấy thông tin bài viết để đưa vào thông báo
       const articleInfo = await prisma.article.findUnique({
         where: { id: articleId },
-        select: { 
+        select: {
           title: true,
-          author_id: true 
-        }
+          author_id: true,
+        },
       });
-      
+
       const articleTitle = articleInfo?.title || `Bài viết #${articleId}`;
-      const commenterName = user.fullname || user.email || `Người dùng #${userId}`;
+      const commenterName =
+        user.fullname || user.email || `Người dùng #${userId}`;
       const authorId = articleInfo?.author_id;
-      
+
       // Tìm tất cả admin users
       const admins = await prisma.user.findMany({
         where: {
-          role: "ADMIN"
-        }
+          role: "ADMIN",
+        },
       });
-      
-      console.log(`[DEBUG] Found ${admins.length} admins:`, admins.map(a => a.id));
-      
+
+      console.log(
+        `[DEBUG] Found ${admins.length} admins:`,
+        admins.map((a) => a.id)
+      );
+
       // Notification content
       const notificationContent = `${commenterName} đã bình luận về "${articleTitle}"`;
       console.log(`[DEBUG] Notification content: "${notificationContent}"`);
-      
+
       // Tạo danh sách người nhận (đảm bảo không trùng lặp)
       const recipientIds = new Set();
-      
+
       // 1. Thêm các admin vào danh sách người nhận
       if (admins.length > 0) {
         for (const admin of admins) {
           recipientIds.add(admin.id);
         }
       }
-      
+
       // 2. Thêm tác giả bài viết vào danh sách người nhận (nếu không phải là người comment)
       if (authorId && authorId !== userId) {
         recipientIds.add(authorId);
       }
-      
-      console.log(`[DEBUG] Recipients for notification:`, Array.from(recipientIds));
-      
+
+      console.log(
+        `[DEBUG] Recipients for notification:`,
+        Array.from(recipientIds)
+      );
+
       // Gửi thông báo cho tất cả người nhận
       for (const recipientId of recipientIds) {
         try {
@@ -173,14 +185,17 @@ async function createComment(user_id, article_id, content) {
             articleId
           );
         } catch (wsError) {
-          console.error(`Failed to send notification to user ${recipientId}:`, wsError);
+          console.error(
+            `Failed to send notification to user ${recipientId}:`,
+            wsError
+          );
         }
       }
     } catch (notifError) {
       console.error("Failed to send notifications:", notifError);
       // Không throw error để không ảnh hưởng đến việc tạo comment
     }
-    
+
     return updateComment;
   } catch (error) {
     console.error("Error in createComment:", error);
@@ -196,31 +211,31 @@ async function getComments(article_id) {
     // Kiểm tra article
     const article = await prisma.article.findFirst({
       where: {
-        id: articleId
+        id: articleId,
       },
       include: {
         author: {
           select: {
             id: true,
             fullname: true,
-            email: true
-          }
-        }
-      }
+            email: true,
+          },
+        },
+      },
     });
-    
+
     if (!article) {
       throw new Error("Article not found");
     }
 
     // Lấy các comment của article
     const comments = await prisma.comment.findMany({
-      where: { 
+      where: {
         articleId: articleId,
-        status: CommentStatus.APPROVED 
+        status: CommentStatus.APPROVED,
       },
-      orderBy: { 
-        createdAt: "desc" 
+      orderBy: {
+        createdAt: "desc",
       },
       include: {
         user: {
@@ -228,12 +243,12 @@ async function getComments(article_id) {
             id: true,
             fullname: true,
             email: true,
-            avatar: true
-          }
-        }
-      }
+            avatar: true,
+          },
+        },
+      },
     });
-    
+
     return comments;
   } catch (error) {
     console.error("Error in getComments:", error);
@@ -249,33 +264,33 @@ async function updateComment(comment_id, content) {
     // Kiểm tra comment
     const comment = await prisma.comment.findFirst({
       where: {
-        id: commentId
+        id: commentId,
       },
       include: {
         user: {
           select: {
             id: true,
             fullname: true,
-            email: true
-          }
+            email: true,
+          },
         },
         article: {
           select: {
             id: true,
-            title: true
-          }
-        }
-      }
+            title: true,
+          },
+        },
+      },
     });
-    
+
     if (!comment) {
       throw new Error("Comment not found");
     }
 
     // Cập nhật nội dung comment
     const updatedComment = await prisma.comment.update({
-      where: { 
-        id: commentId 
+      where: {
+        id: commentId,
       },
       data: {
         content: content,
@@ -288,7 +303,7 @@ async function updateComment(comment_id, content) {
     if (!response) {
       throw new Error("No response from Python script");
     }
-    
+
     // Xử lý phản hồi
     const jsonResponse = await extractJSON(response);
     console.log(jsonResponse.data.detect);
@@ -302,8 +317,8 @@ async function updateComment(comment_id, content) {
 
     // Cập nhật trạng thái
     const updateCommentStatus = await prisma.comment.update({
-      where: { 
-        id: commentId 
+      where: {
+        id: commentId,
       },
       data: {
         status: status,
@@ -314,46 +329,49 @@ async function updateComment(comment_id, content) {
             id: true,
             fullname: true,
             email: true,
-            avatar: true
-          }
-        }
-      }
+            avatar: true,
+          },
+        },
+      },
     });
-    
+
     // Gửi thông báo đến admin khi comment được cập nhật
     try {
       // Chỉ gửi thông báo nếu comment được phê duyệt
       if (status === CommentStatus.APPROVED) {
         const articleId = comment.article.id;
         const articleTitle = comment.article.title || `Bài viết #${articleId}`;
-        const commenterName = comment.user.fullname || comment.user.email || `Người dùng #${comment.user.id}`;
+        const commenterName =
+          comment.user.fullname ||
+          comment.user.email ||
+          `Người dùng #${comment.user.id}`;
         const authorId = comment.article.author_id;
-        
+
         // Tìm tất cả admin users
         const admins = await prisma.user.findMany({
           where: {
-            role: "ADMIN"
-          }
+            role: "ADMIN",
+          },
         });
-        
+
         // Notification content
         const notificationContent = `${commenterName} đã cập nhật bình luận về "${articleTitle}"`;
-        
+
         // Tạo danh sách người nhận (đảm bảo không trùng lặp)
         const recipientIds = new Set();
-        
+
         // 1. Thêm các admin vào danh sách người nhận
         if (admins.length > 0) {
           for (const admin of admins) {
             recipientIds.add(admin.id);
           }
         }
-        
+
         // 2. Thêm tác giả bài viết vào danh sách người nhận (nếu không phải là người comment)
         if (authorId && authorId !== comment.user.id) {
           recipientIds.add(authorId);
         }
-        
+
         // Gửi thông báo cho tất cả người nhận
         for (const recipientId of recipientIds) {
           // Chỉ sử dụng sendNotification vì hàm này đã lưu vào DB
@@ -365,7 +383,10 @@ async function updateComment(comment_id, content) {
               articleId
             );
           } catch (wsError) {
-            console.error(`Failed to send notification to user ${recipientId}:`, wsError);
+            console.error(
+              `Failed to send notification to user ${recipientId}:`,
+              wsError
+            );
           }
         }
       }
@@ -373,7 +394,7 @@ async function updateComment(comment_id, content) {
       console.error("Failed to send notifications:", notifError);
       // Không throw error để không ảnh hưởng đến việc cập nhật comment
     }
-    
+
     return updateCommentStatus;
   } catch (error) {
     console.error("Error in updateComment:", error);
@@ -389,21 +410,21 @@ async function deleteComment(comment_id) {
     // Kiểm tra comment
     const comment = await prisma.comment.findFirst({
       where: {
-        id: commentId
-      }
+        id: commentId,
+      },
     });
-    
+
     if (!comment) {
       throw new Error("Comment not found");
     }
 
     // Xóa comment
     const deletedComment = await prisma.comment.delete({
-      where: { 
-        id: commentId 
+      where: {
+        id: commentId,
       },
     });
-    
+
     return deletedComment;
   } catch (error) {
     console.error("Error in deleteComment:", error);
@@ -411,9 +432,18 @@ async function deleteComment(comment_id) {
   }
 }
 
+async function getAllComment() {
+  return await prisma.comment.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
 module.exports = {
   createComment,
   getComments,
   updateComment,
   deleteComment,
+  getAllComment,
 };

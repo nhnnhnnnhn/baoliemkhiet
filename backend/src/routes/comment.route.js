@@ -19,4 +19,7 @@ router.delete(
   commentController.deleteComment
 );
 
+// GET /api/comments
+router.get("/", authMiddleware(), commentController.getAllComments);
+
 module.exports = router;
