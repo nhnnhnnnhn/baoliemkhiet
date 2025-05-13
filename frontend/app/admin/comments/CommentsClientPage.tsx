@@ -1,128 +1,151 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Check, X, Eye, AlertCircle, RefreshCw } from "lucide-react"
+import { useState, useEffect } from "react";
+import { Check, X, Eye, AlertCircle, RefreshCw } from "lucide-react";
+import commentApi from "@/src/apis/comment";
+import type {
+  Comment as ApiComment,
+  GetCommentsResponse,
+} from "@/src/apis/comment";
+import { format } from "date-fns";
 
-interface Comment {
-  id: number
+interface Comment
+  extends Omit<
+    ApiComment,
+    "createdAt" | "updatedAt" | "articleId" | "userId" | "user"
+  > {
   author: {
-    name: string
-    username: string
-  }
-  content: string
-  articleTitle: string
-  date: string
-  status: "PENDING" | "APPROVED" | "REJECTED_BY_AI" | "REJECTED_BY_REPORT"
+    name: string;
+    username: string;
+  };
+  article: {
+    id: number;
+    title: string;
+  };
+  date: string;
 }
 
 export default function CommentsClientPage() {
-  const [comments, setComments] = useState<Comment[]>([
-    {
-      id: 1,
-      author: {
-        name: "Nguyễn Văn A",
-        username: "nguyenvana",
-      },
-      content: "Bài viết rất hay và bổ ích. Tôi đã học được nhiều điều từ bài viết này.",
-      articleTitle: "Việt Nam vô địch SEA Games 2023",
-      date: "15/05/2023 - 10:30",
-      status: "PENDING",
-    },
-    {
-      id: 2,
-      author: {
-        name: "Trần Thị B",
-        username: "tranthib",
-      },
-      content: "Tôi không đồng ý với quan điểm này. Cần phải xem xét kỹ hơn.",
-      articleTitle: "Kinh tế Việt Nam tăng trưởng mạnh trong quý 2/2023",
-      date: "14/05/2023 - 15:45",
-      status: "PENDING",
-    },
-    {
-      id: 3,
-      author: {
-        name: "Lê Văn C",
-        username: "levanc",
-      },
-      content: "Cảm ơn tác giả đã chia sẻ thông tin hữu ích. Mong có thêm nhiều bài viết như thế này.",
-      articleTitle: "Cách phòng tránh bệnh mùa hè hiệu quả",
-      date: "13/05/2023 - 09:15",
-      status: "PENDING",
-    },
-  ])
+  const [comments, setComments] = useState<Comment[]>([]);
 
-  const [selectedComment, setSelectedComment] = useState<Comment | null>(null)
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
-  const [actionType, setActionType] = useState<"approve" | "hide" | "delete" | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalComments] = useState(24)
-  const commentsPerPage = 10
+  const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [actionType, setActionType] = useState<"approve" | "delete" | null>(
+    null
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalComments, setTotalComments] = useState(0);
+  const commentsPerPage = 10;
+
+  const fetchComments = async () => {
+    setIsLoading(true);
+    try {
+      const response = await commentApi.getAllComments(
+        currentPage,
+        commentsPerPage
+      );
+
+      const AllComments = await commentApi.getAllComments(1, 9999);
+
+      // Handle both array and paginated response formats
+      const commentsData = Array.isArray(response)
+        ? response
+        : (response as GetCommentsResponse).comments || [];
+
+      const total = Array.isArray(AllComments) ? AllComments.length : 0;
+
+      const formattedComments: Comment[] = commentsData.map((comment) => ({
+        id: comment.id,
+        content: comment.content,
+        status: comment.status,
+        author: {
+          name: comment.user?.fullname || "Unknown",
+          username: comment.user?.email?.split("@")[0] || "unknown",
+        },
+        article: {
+          id: comment.article?.id || 0,
+          title: comment.article?.title || "Unknown Article",
+        },
+        date: format(new Date(comment.createdAt), "dd/MM/yyyy - HH:mm"),
+      }));
+      setComments(formattedComments);
+      setTotalComments(total);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchComments();
+  }, [currentPage]);
 
   const handleView = (comment: Comment) => {
-    setSelectedComment(comment)
-    setIsViewModalOpen(true)
-  }
+    setSelectedComment(comment);
+    setIsViewModalOpen(true);
+  };
 
-  const handleAction = (comment: Comment, action: "approve" | "hide" | "delete") => {
-    setSelectedComment(comment)
-    setActionType(action)
-    setIsConfirmModalOpen(true)
-  }
+  const handleAction = (comment: Comment, action: "approve" | "delete") => {
+    setSelectedComment(comment);
+    setActionType(action);
+    setIsConfirmModalOpen(true);
+  };
 
-  const confirmAction = () => {
-    if (!selectedComment || !actionType) return
+  const confirmAction = async () => {
+    if (!selectedComment || !actionType) return;
 
-    setIsLoading(true)
-
-    // Simulate API call
-    setTimeout(() => {
+    setIsLoading(true);
+    try {
       if (actionType === "delete") {
-        setComments(comments.filter((c) => c.id !== selectedComment.id))
+        await commentApi.deleteComment(0, selectedComment.id); // articleId is not needed for delete
+        setComments(comments.filter((c) => c.id !== selectedComment.id));
       } else if (actionType === "approve") {
-        setComments(comments.map((c) => (c.id === selectedComment.id ? { ...c, status: "APPROVED" as const } : c)))
-      } else if (actionType === "hide") {
+        await commentApi.updateComment(0, selectedComment.id, {
+          content: selectedComment.content,
+          status: "APPROVED",
+        });
         setComments(
-          comments.map((c) => (c.id === selectedComment.id ? { ...c, status: "REJECTED_BY_REPORT" as const } : c)),
-        )
+          comments.map((c) =>
+            c.id === selectedComment.id ? { ...c, status: "APPROVED" } : c
+          )
+        );
       }
+    } catch (error) {
+      console.error("Error performing action:", error);
+    }
 
-      setIsLoading(false)
-      setIsConfirmModalOpen(false)
-      setSelectedComment(null)
-      setActionType(null)
-    }, 500)
-  }
+    setIsLoading(false);
+    setIsConfirmModalOpen(false);
+    setSelectedComment(null);
+    setActionType(null);
+  };
 
   const handleRefresh = () => {
-    setIsLoading(true)
-    // Simulate API call to refresh data
-    setTimeout(() => {
-      setIsLoading(false)
-    }, 500)
-  }
-
-  const handlePagination = (direction: "prev" | "next") => {
-    if (direction === "prev" && currentPage > 1) {
-      setCurrentPage(currentPage - 1)
-    } else if (direction === "next" && currentPage < Math.ceil(totalComments / commentsPerPage)) {
-      setCurrentPage(currentPage + 1)
-    }
-  }
+    fetchComments();
+  };
 
   return (
     <div className="space-y-6">
+      <h1 className="text-3xl font-bold tracking-tight text-black mb-6">
+        Quản lý bình luận
+      </h1>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Quản lý bình luận</h1>
+        <h2 className="text-2xl font-bold tracking-tight">
+          Danh sách bình luận
+        </h2>
         <div className="flex items-center gap-2">
           <button
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             onClick={handleRefresh}
             disabled={isLoading}
           >
-            {isLoading ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+            {isLoading ? (
+              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="mr-2 h-4 w-4" />
+            )}
             Làm mới
           </button>
         </div>
@@ -132,11 +155,18 @@ export default function CommentsClientPage() {
         <div className="p-4">
           <div className="grid gap-4">
             {comments.map((comment) => (
-              <div key={comment.id} className="flex items-center gap-4 rounded-md border p-4">
+              <div
+                key={comment.id}
+                className="flex items-center gap-4 rounded-md border p-4"
+              >
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <div className="font-medium">{comment.author.name}</div>
-                    <div className="text-sm text-muted-foreground">@{comment.author.username}</div>
+                    <div className="font-medium text-black">
+                      {comment.author.name}
+                    </div>
+                    <div className="text-sm text-black">
+                      @{comment.author.username}
+                    </div>
                     {comment.status === "PENDING" && (
                       <span className="rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800">
                         Chờ duyệt
@@ -158,15 +188,20 @@ export default function CommentsClientPage() {
                       </span>
                     )}
                   </div>
-                  <div className="mt-1 text-sm">{comment.content}</div>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    Bình luận trên: <span className="font-medium">{comment.articleTitle}</span>
+                  <div className="mt-1 text-sm text-black">
+                    {comment.content}
                   </div>
-                  <div className="mt-1 text-xs text-muted-foreground">{comment.date}</div>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Bình luận trên:{" "}
+                    <span className="font-medium">{comment.article.title}</span>
+                  </div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {comment.date}
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <button
-                    className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1 text-xs font-medium ring-offset-background hover:bg-accent hover:text-accent-foreground"
+                    className="inline-flex items-center justify-center rounded-md border border-input bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90"
                     onClick={() => handleView(comment)}
                   >
                     <Eye className="mr-1 h-3 w-3" />
@@ -179,15 +214,6 @@ export default function CommentsClientPage() {
                     >
                       <Check className="mr-1 h-3 w-3" />
                       Duyệt
-                    </button>
-                  )}
-                  {comment.status !== "REJECTED_BY_REPORT" && (
-                    <button
-                      className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1 text-xs font-medium ring-offset-background hover:bg-accent hover:text-accent-foreground"
-                      onClick={() => handleAction(comment, "hide")}
-                    >
-                      <X className="mr-1 h-3 w-3" />
-                      Ẩn
                     </button>
                   )}
                   <button
@@ -204,21 +230,67 @@ export default function CommentsClientPage() {
         </div>
         <div className="flex items-center justify-between border-t p-4">
           <div className="text-sm text-muted-foreground">
-            Hiển thị {(currentPage - 1) * commentsPerPage + 1}-{Math.min(currentPage * commentsPerPage, totalComments)}{" "}
-            của {totalComments} bình luận
+            Hiển thị {(currentPage - 1) * commentsPerPage + 1}-
+            {Math.min(currentPage * commentsPerPage, totalComments)} của{" "}
+            {totalComments} bình luận
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <button
               className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1 text-sm font-medium ring-offset-background hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
-              onClick={() => handlePagination("prev")}
+              onClick={() => setCurrentPage(currentPage - 1)}
               disabled={currentPage === 1}
             >
               Trước
             </button>
+            {[...Array(Math.ceil(totalComments / commentsPerPage))]
+              .map((_, index) => {
+                const pageNumber = index + 1;
+                const totalPages = Math.ceil(totalComments / commentsPerPage);
+
+                // Always show first and last pages, current page, and ones next to current page
+                const shouldShowPage =
+                  pageNumber === 1 ||
+                  pageNumber === totalPages ||
+                  Math.abs(currentPage - pageNumber) <= 1;
+
+                // Show ellipsis for gaps
+                if (!shouldShowPage) {
+                  if (
+                    (pageNumber === 2 && currentPage > 3) ||
+                    (pageNumber === totalPages - 1 &&
+                      currentPage < totalPages - 2)
+                  ) {
+                    return (
+                      <span key={pageNumber} className="px-1 text-sm">
+                        ...
+                      </span>
+                    );
+                  }
+                  return null;
+                }
+
+                return (
+                  <button
+                    key={pageNumber}
+                    onClick={() => setCurrentPage(pageNumber)}
+                    disabled={currentPage === pageNumber}
+                    className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-sm font-medium ${
+                      currentPage === pageNumber
+                        ? "bg-primary text-primary-foreground"
+                        : "border border-input hover:bg-accent hover:text-accent-foreground"
+                    }`}
+                  >
+                    {pageNumber}
+                  </button>
+                );
+              })
+              .filter(Boolean)}
             <button
               className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1 text-sm font-medium ring-offset-background hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
-              onClick={() => handlePagination("next")}
-              disabled={currentPage >= Math.ceil(totalComments / commentsPerPage)}
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={
+                currentPage >= Math.ceil(totalComments / commentsPerPage)
+              }
             >
               Sau
             </button>
@@ -233,14 +305,25 @@ export default function CommentsClientPage() {
             <h3 className="mb-4 text-lg font-medium">Chi tiết bình luận</h3>
             <div className="mb-4">
               <div className="mb-2 flex items-center gap-2">
-                <div className="font-medium">{selectedComment.author.name}</div>
-                <div className="text-sm text-muted-foreground">@{selectedComment.author.username}</div>
+                <div className="font-medium text-black">
+                  {selectedComment.author.name}
+                </div>
+                <div className="text-sm text-black">
+                  @{selectedComment.author.username}
+                </div>
               </div>
-              <div className="mb-2 rounded-md border p-3 text-sm">{selectedComment.content}</div>
+              <div className="mb-2 rounded-md border p-3 text-sm text-black">
+                {selectedComment.content}
+              </div>
               <div className="text-xs text-muted-foreground">
-                Bình luận trên: <span className="font-medium">{selectedComment.articleTitle}</span>
+                Bình luận trên:{" "}
+                <span className="font-medium">
+                  {selectedComment.article.title}
+                </span>
               </div>
-              <div className="mt-1 text-xs text-muted-foreground">{selectedComment.date}</div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                {selectedComment.date}
+              </div>
             </div>
             <div className="flex justify-end gap-2">
               <button
@@ -263,9 +346,10 @@ export default function CommentsClientPage() {
               <h3 className="text-lg font-medium">Xác nhận</h3>
             </div>
             <p className="mb-4 text-sm">
-              {actionType === "approve" && "Bạn có chắc chắn muốn duyệt bình luận này?"}
-              {actionType === "hide" && "Bạn có chắc chắn muốn ẩn bình luận này?"}
-              {actionType === "delete" && "Bạn có chắc chắn muốn xóa bình luận này? Hành động này không thể hoàn tác."}
+              {actionType === "approve" &&
+                "Bạn có chắc chắn muốn duyệt bình luận này?"}
+              {actionType === "delete" &&
+                "Bạn có chắc chắn muốn xóa bình luận này? Hành động này không thể hoàn tác."}
             </p>
             <div className="flex justify-end gap-2">
               <button
@@ -279,9 +363,7 @@ export default function CommentsClientPage() {
                 className={`inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium text-white ${
                   actionType === "delete"
                     ? "bg-destructive hover:bg-destructive/90"
-                    : actionType === "approve"
-                      ? "bg-green-500 hover:bg-green-600"
-                      : "bg-yellow-500 hover:bg-yellow-600"
+                    : "bg-green-500 hover:bg-green-600"
                 }`}
                 onClick={confirmAction}
                 disabled={isLoading}
@@ -291,7 +373,6 @@ export default function CommentsClientPage() {
                 ) : (
                   <>
                     {actionType === "approve" && "Duyệt"}
-                    {actionType === "hide" && "Ẩn"}
                     {actionType === "delete" && "Xóa"}
                   </>
                 )}
@@ -301,5 +382,5 @@ export default function CommentsClientPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

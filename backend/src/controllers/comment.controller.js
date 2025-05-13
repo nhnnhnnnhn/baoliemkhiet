@@ -39,7 +39,12 @@ const deleteComment = controllerHandler(async (req, res) => {
 });
 
 const getAllComments = controllerHandler(async (req, res) => {
-  const comments = await commentService.getAllComments();
+  const { offset = 0, limit = 10 } = req.query;
+
+  const comments = await commentService.getAllComments(
+    Number(offset),
+    Number(limit)
+  );
   res.status(200).json(comments);
 });
 
