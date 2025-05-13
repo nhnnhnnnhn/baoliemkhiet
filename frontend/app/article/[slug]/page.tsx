@@ -757,6 +757,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
                           rows={4}
                           value={editingCommentContent}
                           onChange={(e) => setEditingCommentContent(e.target.value)}
+                          placeholder="Nhập nội dung bình luận"
                         ></textarea>
                         <div className="flex justify-end gap-2">
                           <Button
