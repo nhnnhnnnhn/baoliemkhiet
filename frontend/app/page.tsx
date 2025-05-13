@@ -97,10 +97,13 @@ export default function Home() {
           </div>
         </div>
       ) : featuredArticle ? (
-        <div 
+        <div
           className={styles.heroSection}
-          style={{ 
-            backgroundImage: `url("${featuredArticle.thumbnail || 'https://placehold.co/1920x1080/eee/999?text=Báo+Liêm+Khiết'}")`
+          style={{
+            // Truyền biến custom property cho background image
+            // Biến này sẽ được sử dụng trong CSS module
+            // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+            ['--bg-url' as any]: `url('${featuredArticle.thumbnail || 'https://placehold.co/1920x1080/eee/999?text=Báo+Liêm+Khiết'}')`
           }}
         >
           <div className={styles.heroOverlay}>

@@ -38,6 +38,9 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
           return;
         }
 
+        // Mark that we're attempting a refresh to prevent logout loops
+        localStorage.setItem('refreshAttemptInProgress', 'true');
+
         // First update the token in Redux
         dispatch(setTokenFromStorage({
           accessToken,
@@ -47,27 +50,39 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
         // Then fetch the user profile
         try {
           await dispatch(handleGetProfile()).unwrap();
+          // Clear the refresh attempt flag on success
+          localStorage.removeItem('refreshAttemptInProgress');
         } catch (error) {
           console.error("Failed to load profile:", error);
           
-          // Clear auth state on any error
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          localStorage.removeItem("userRole");
-          
-          dispatch(setTokenFromStorage({
-            accessToken: null,
-            isLoggedIn: false
-          }));
-          
-          if (!window.location.pathname.includes('/auth/')) {
-            router.push("/auth/login");
+          // Only clear auth if we get a specific auth error (401, 403)
+          // This prevents logout due to network issues or server errors
+          if (error && typeof error === 'object' && 'status' in error && 
+              (error.status === 401 || error.status === 403)) {
+            // Clear auth state on authentication error
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+            localStorage.removeItem("userRole");
+            
+            dispatch(setTokenFromStorage({
+              accessToken: null,
+              isLoggedIn: false
+            }));
+            
+            if (!window.location.pathname.includes('/auth/')) {
+              router.push("/auth/login");
+            }
           }
+          
+          // Clear the refresh attempt flag
+          localStorage.removeItem('refreshAttemptInProgress');
         }
       } catch (error) {
-        console.error("Lỗi khởi tạo xác thực:", error)
+        console.error("Lỗi khởi tạo xác thực:", error);
+        // Clear the refresh attempt flag on error
+        localStorage.removeItem('refreshAttemptInProgress');
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
     }
 

@@ -2,15 +2,44 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+import { useAppDispatch, useAppSelector } from "@/src/store"
+import { handleGetComments, handleCreateComment, handleUpdateComment, handleDeleteComment } from "@/src/thunks/comment/commentThunk"
+import { 
+  selectComments, 
+  selectCommentsLoading, 
+  selectCommentError, 
+  selectCommentPagination,
+  selectCreateCommentLoading,
+  selectCreateCommentSuccess,
+  selectUpdateCommentLoading,
+  selectUpdateCommentSuccess,
+  selectUpdateCommentError,
+  clearCreateCommentState,
+  clearUpdateCommentState
+} from "@/src/thunks/comment/commentSlice"
+import { selectCurrentUser, selectIsLoggedIn } from "@/src/thunks/auth/authSlice"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { MessageSquare, ThumbsUp, Share2, Bookmark, Facebook, Twitter, AlertTriangle } from "lucide-react"
+import { MessageSquare, ThumbsUp, Share2, Bookmark, Facebook, Twitter, AlertTriangle, Edit, Trash2, XCircle, CheckCircle } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
 import { ChatbotButton } from "@/components/chatbot-button"
+import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
+import { Comment } from "@/src/apis/comment"
 import articleApi from "@/src/apis/article"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 // Helper function để định dạng ngày tháng an toàn
 const formatDate = (dateString: string | null | undefined) => {
@@ -72,14 +101,19 @@ interface ArticleUI {
   };
   tags: Array<{id: number; name: string}>;
   comments: Array<{
-    user: {
-      name: string;
-      avatar: string;
-    };
+    id: number;
     content: string;
-    date: string;
-    time: string;
-    likes: number;
+    articleId: number;
+    userId: number;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    user?: {
+      id: number;
+      fullname: string;
+      email: string;
+      avatar?: string;
+    };
   }>;
   relatedArticles: Array<{
     slug: string;
@@ -126,6 +160,35 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
   const [article, setArticle] = useState<ArticleUI>(createEmptyArticle())
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [commentContent, setCommentContent] = useState("")
+  
+  // States for editing comments
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
+  const [editingCommentContent, setEditingCommentContent] = useState("")
+  const editCommentRef = useRef<HTMLTextAreaElement>(null)
+  
+  // States for delete comment dialog
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [commentToDelete, setCommentToDelete] = useState<Comment | null>(null)
+  
+  const router = useRouter()
+  const dispatch = useAppDispatch()
+  const { toast } = useToast()
+  
+  // Comment selectors
+  const comments = useAppSelector(selectComments)
+  const commentsLoading = useAppSelector(selectCommentsLoading)
+  const commentError = useAppSelector(selectCommentError)
+  const { totalComments } = useAppSelector(selectCommentPagination)
+  const isCreatingComment = useAppSelector(selectCreateCommentLoading)
+  const createCommentSuccess = useAppSelector(selectCreateCommentSuccess)
+  const isUpdatingComment = useAppSelector(selectUpdateCommentLoading)
+  const updateCommentSuccess = useAppSelector(selectUpdateCommentSuccess)
+  const updateCommentError = useAppSelector(selectUpdateCommentError)
+  
+  // User authentication
+  const isAuthenticated = useAppSelector(selectIsLoggedIn)
+  const currentUser = useAppSelector(selectCurrentUser)
   
   // Fetch dữ liệu bài viết từ API
   useEffect(() => {
@@ -202,20 +265,13 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
             comments: 0  // Chưa có API
           },
           tags: response.tags || [], 
-          comments: [], // Sẽ triển khai API comments sau
+          comments: comments || [], // Sử dụng comments từ Redux
           relatedArticles: [] // Sẽ triển khai API bài viết liên quan sau
         };
         
         // Tạm thời thêm dữ liệu mẫu cho phần bình luận và bài viết liên quan
-        articleData.comments = [
-          {
-            user: { name: 'Người đọc', avatar: '/placeholder.svg?height=40&width=40' },
-            content: 'Bài viết rất hay và bổ ích!',
-            date: new Date().toLocaleDateString('vi-VN'),
-            time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-            likes: 5
-          }
-        ];
+        // Remove temporary comment data as we're using Redux now
+        articleData.comments = [];
         
         // Gọi API để lấy các bài viết liên quan trong cùng danh mục
         try {
@@ -238,7 +294,6 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
         }
         
         setArticle(articleData)
-        console.log('Dữ liệu bài viết:', articleData);
         setError(null)
       } catch (err) {
         console.error('Lỗi khi lấy dữ liệu bài viết:', err)
@@ -249,7 +304,193 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
     }
     
     fetchArticle()
-  }, [params.slug])
+
+    // Fetch comments when article ID is available
+    if (params.slug && !isNaN(Number(params.slug))) {
+      dispatch(handleGetComments({ articleId: Number(params.slug) }))
+    }
+  }, [params.slug, dispatch])
+
+  // Handle comment submission success and reset state
+  useEffect(() => {
+    if (createCommentSuccess) {
+      toast({
+        title: "Bình luận thành công",
+        description: "Bình luận của bạn đã được gửi.",
+        variant: "default"
+      })
+      
+      // Reset comment form
+      setCommentContent("")
+      
+      // Clear create comment state
+      dispatch(clearCreateCommentState())
+      
+      // Refresh comments to show newly added comment if it's approved
+      dispatch(handleGetComments({ articleId: Number(params.slug) }))
+    }
+  }, [createCommentSuccess, dispatch, params.slug, toast])
+
+  // Handle comment update success and reset state
+  useEffect(() => {
+    if (updateCommentSuccess) {
+      toast({
+        title: "Cập nhật bình luận thành công",
+        description: "Bình luận của bạn đã được cập nhật.",
+        variant: "default"
+      })
+      
+      // Reset edit state
+      setEditingCommentId(null)
+      setEditingCommentContent("")
+      
+      // Clear update comment state
+      dispatch(clearUpdateCommentState())
+      
+      // Refresh comments
+      dispatch(handleGetComments({ articleId: Number(params.slug) }))
+    }
+    
+    if (updateCommentError) {
+      toast({
+        title: "Lỗi cập nhật bình luận",
+        description: updateCommentError,
+        variant: "destructive"
+      })
+      
+      dispatch(clearUpdateCommentState())
+    }
+  }, [updateCommentSuccess, updateCommentError, dispatch, params.slug, toast])
+
+  // Focus on edit textarea when starting edit
+  useEffect(() => {
+    if (editingCommentId && editCommentRef.current) {
+      editCommentRef.current.focus()
+    }
+  }, [editingCommentId])
+
+  // Handle comment submission
+  const handleCommentSubmit = async () => {
+    if (!commentContent.trim()) return
+    
+    // Check if user is authenticated
+    if (!isAuthenticated || !currentUser?.id) {
+      toast({
+        title: "Vui lòng đăng nhập",
+        description: "Bạn cần đăng nhập để bình luận.",
+        variant: "destructive"
+      })
+      router.push('/auth/login')
+      return
+    }
+
+    try {
+      await dispatch(handleCreateComment({
+        content: commentContent,
+        article_id: Number(article.id),
+        author_id: currentUser.id,
+        status: 'PENDING' // Default status, will be auto-approved by DeepSeek if appropriate
+      })).unwrap()
+    } catch (error) {
+      console.error("Failed to post comment:", error)
+      toast({
+        title: "Lỗi",
+        description: "Không thể gửi bình luận. Vui lòng thử lại sau.",
+        variant: "destructive"
+      })
+    }
+  }
+  
+  // Handle starting edit of a comment
+  const handleEditComment = (comment: Comment) => {
+    if (!isAuthenticated || !currentUser) return
+    
+    // Only allow editing own comments
+    if (comment.userId !== currentUser.id) {
+      toast({
+        title: "Không thể chỉnh sửa",
+        description: "Bạn chỉ có thể chỉnh sửa bình luận của mình.",
+        variant: "destructive"
+      })
+      return
+    }
+    
+    setEditingCommentId(comment.id)
+    setEditingCommentContent(comment.content)
+  }
+  
+  // Handle saving edited comment
+  const handleSaveComment = async () => {
+    if (!editingCommentId || !editingCommentContent.trim() || !isAuthenticated) return
+    
+    try {
+      await dispatch(handleUpdateComment({
+        articleId: Number(article.id),
+        commentId: editingCommentId,
+        data: {
+          content: editingCommentContent
+        }
+      })).unwrap()
+    } catch (error) {
+      console.error("Failed to update comment:", error)
+    }
+  }
+  
+  // Handle canceling edit
+  const handleCancelEdit = () => {
+    setEditingCommentId(null)
+    setEditingCommentContent("")
+  }
+  
+  // Handle deleting a comment
+  const handleDeleteCommentClick = async (commentId: number) => {
+    if (!isAuthenticated || !currentUser) return
+    
+    // Find the comment
+    const comment = comments.find(c => c.id === commentId)
+    if (!comment) return
+    
+    // Check if user is the author
+    if (comment.userId !== currentUser.id) {
+      toast({
+        title: "Không thể xóa",
+        description: "Bạn chỉ có thể xóa bình luận của mình.",
+        variant: "destructive"
+      })
+      return
+    }
+    
+    try {
+      await dispatch(handleDeleteComment({
+        articleId: Number(article.id),
+        commentId
+      })).unwrap()
+      
+      toast({
+        title: "Đã xóa bình luận",
+        description: "Bình luận của bạn đã được xóa thành công.",
+        variant: "default"
+      })
+      
+      // Refresh comments
+      dispatch(handleGetComments({ articleId: Number(params.slug) }))
+      
+      // Close the dialog
+      setDeleteDialogOpen(false)
+      setCommentToDelete(null)
+    } catch (error) {
+      console.error("Failed to delete comment:", error)
+      toast({
+        title: "Lỗi",
+        description: "Không thể xóa bình luận. Vui lòng thử lại sau.",
+        variant: "destructive"
+      })
+      
+      // Close the dialog even on error
+      setDeleteDialogOpen(false)
+      setCommentToDelete(null)
+    }
+  }
 
   return (
     <>
@@ -357,48 +598,209 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
 
         {/* Comments Section */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold mb-6">Bình luận ({article.comments.length})</h2>
+          <h2 className="text-2xl font-bold mb-6">Bình luận ({totalComments})</h2>
 
           {/* Comment Form */}
-          <div className="bg-gray-50 p-6 rounded-lg mb-8">
+          <div className="bg-gray-50 p-6 rounded-lg mb-8 mt-10 comment-form">
             <h3 className="text-lg font-semibold mb-4">Để lại bình luận</h3>
-            <textarea
-              className="w-full border border-gray-300 rounded-md p-3 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows={4}
-              placeholder="Viết bình luận của bạn..."
-            ></textarea>
-            <Button>Gửi bình luận</Button>
+            {isAuthenticated ? (
+              <>
+                <textarea
+                  className="w-full border border-gray-300 rounded-md p-3 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={4}
+                  placeholder="Viết bình luận của bạn..."
+                  value={commentContent}
+                  onChange={(e) => setCommentContent(e.target.value)}
+                ></textarea>
+                <div className="flex justify-between items-center">
+                  <Button
+                    onClick={handleCommentSubmit}
+                    disabled={!commentContent.trim() || isCreatingComment}
+                  >
+                    {isCreatingComment ? "Đang gửi..." : "Gửi bình luận"}
+                  </Button>
+                  <p className="text-xs text-gray-500">
+                    Bình luận của bạn sẽ được hiển thị ngay.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-4">
+                <p className="mb-4">Bạn cần đăng nhập để bình luận</p>
+                <Button onClick={() => router.push('/auth/login')}>
+                  Đăng nhập
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Comments List */}
           <div className="space-y-6">
-            {article.comments.map((comment: any, index: number) => (
-              <div key={index} className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
-                <div className="flex justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={comment.user.avatar || "/placeholder.svg"} alt={comment.user.name} />
-                      <AvatarFallback>{comment.user.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium">{comment.user.name}</span>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {comment.date} • {comment.time}
-                  </div>
-                </div>
-                <p className="text-gray-700 mb-3">{comment.content}</p>
-                <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <button className="flex items-center gap-1 hover:text-blue-600">
-                    <ThumbsUp size={16} />
-                    <span>{comment.likes}</span>
-                  </button>
-                  <button className="flex items-center gap-1 hover:text-blue-600">
-                    <MessageSquare size={16} />
-                    <span>Trả lời</span>
-                  </button>
-                </div>
+            {commentsLoading ? (
+              <div className="text-center py-8">
+                <div className="inline-block w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                <p className="mt-2">Đang tải bình luận...</p>
               </div>
-            ))}
+            ) : commentError ? (
+              <div className="text-center text-red-500 py-4 bg-red-50 rounded-lg p-4">
+                <p className="font-medium">Có lỗi khi tải bình luận</p>
+                <p className="text-sm mt-1">{commentError}</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-3"
+                  onClick={() => dispatch(handleGetComments({ articleId: Number(params.slug) }))}
+                >
+                  Thử lại
+                </Button>
+              </div>
+            ) : comments.length === 0 ? (
+              <div className="text-center py-8 bg-gray-50 rounded-lg p-6">
+                <MessageSquare className="h-12 w-12 mx-auto text-gray-400 mb-3" />
+                <p className="text-gray-500 text-lg font-medium">Chưa có bình luận nào</p>
+                <p className="text-gray-400 mt-1 mb-4">Hãy là người đầu tiên bình luận về bài viết này!</p>
+                {isAuthenticated ? (
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      // Cuộn đến phần form bình luận
+                      document.querySelector('.comment-form')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    Viết bình luận
+                  </Button>
+                ) : (
+                  <Button onClick={() => router.push('/auth/login')}>
+                    Đăng nhập để bình luận
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-semibold">Các bình luận ({totalComments})</h3>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => dispatch(handleGetComments({ articleId: Number(params.slug) }))}
+                  >
+                    Làm mới
+                  </Button>
+                </div>
+                {comments.map((comment) => (
+                  <div key={comment.id} className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
+                    {/* Chế độ xem */}
+                    {editingCommentId !== comment.id ? (
+                      <>
+                        <div className="flex justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={comment.user?.avatar || "/placeholder.svg"} alt={comment.user?.fullname || ""} />
+                              <AvatarFallback>{(comment.user?.fullname || "U")[0]}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <span className="font-medium block">{comment.user?.fullname || "Người dùng ẩn danh"}</span>
+                              <span className="text-xs text-gray-500">
+                                {formatDate(comment.createdAt)} • {formatTime(comment.createdAt)}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {/* Nút chỉnh sửa/xóa chỉ hiển thị cho người viết bình luận */}
+                          {isAuthenticated && currentUser && comment.userId === currentUser.id && (
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => handleEditComment(comment)}
+                                className="h-8 w-8"
+                              >
+                                <Edit size={16} className="text-gray-500" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => {
+                                  setDeleteDialogOpen(true)
+                                  setCommentToDelete(comment)
+                                }}
+                                className="h-8 w-8"
+                              >
+                                <Trash2 size={16} className="text-gray-500" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-gray-700 my-3 whitespace-pre-line">{comment.content}</p>
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <button className="flex items-center gap-1 hover:text-blue-600">
+                            <ThumbsUp size={16} />
+                            <span>Thích</span>
+                          </button>
+                          {isAuthenticated && (
+                            <button className="flex items-center gap-1 hover:text-blue-600">
+                              <MessageSquare size={16} />
+                              <span>Trả lời</span>
+                            </button>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      /* Chế độ chỉnh sửa */
+                      <div className="p-2">
+                        <div className="flex justify-between mb-3">
+                          <h4 className="font-medium">Chỉnh sửa bình luận</h4>
+                        </div>
+                        <textarea
+                          ref={editCommentRef}
+                          className="w-full border border-gray-300 rounded-md p-3 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          rows={4}
+                          value={editingCommentContent}
+                          onChange={(e) => setEditingCommentContent(e.target.value)}
+                          placeholder="Nhập nội dung bình luận"
+                        ></textarea>
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleCancelEdit}
+                            className="flex items-center gap-1"
+                          >
+                            <XCircle size={16} />
+                            Hủy
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={handleSaveComment}
+                            disabled={!editingCommentContent.trim() || isUpdatingComment}
+                            className="flex items-center gap-1"
+                          >
+                            <CheckCircle size={16} />
+                            {isUpdatingComment ? "Đang lưu..." : "Lưu"}
+                          </Button>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Bình luận đã chỉnh sửa sẽ được cập nhật ngay.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {totalComments > comments.length && (
+                  <div className="text-center mt-6">
+                    <Button variant="outline" onClick={() => {
+                      // Load more comments
+                      dispatch(handleGetComments({ 
+                        articleId: Number(params.slug),
+                        page: Math.ceil(comments.length / 10) + 1
+                      }))
+                    }}>
+                      Xem thêm bình luận
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
 
@@ -435,6 +837,29 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
         </div>
       </div>
       <ChatbotButton />
+
+      {/* Delete Comment Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xóa bình luận</AlertDialogTitle>
+            <AlertDialogDescription>Bạn có chắc chắn muốn xóa bình luận này không?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                if (commentToDelete) {
+                  handleDeleteCommentClick(commentToDelete.id)
+                }
+              }}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Xóa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

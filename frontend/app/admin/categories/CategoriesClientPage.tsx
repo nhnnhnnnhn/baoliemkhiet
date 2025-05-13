@@ -235,7 +235,6 @@ export default function CategoriesClientPage() {
               <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">ID</th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Tên danh mục</th>
-                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Slug</th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Số bài viết</th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Thao tác</th>
               </tr>
@@ -248,7 +247,6 @@ export default function CategoriesClientPage() {
                 >
                   <td className="p-4 align-middle">{category.id}</td>
                   <td className="p-4 align-middle font-medium">{category.name}</td>
-                  <td className="p-4 align-middle">{category.slug}</td>
                   <td className="border px-4 py-2 text-center">{category.count || 0}</td>
                   <td className="p-4 align-middle">
                     <div className="flex items-center gap-2">
