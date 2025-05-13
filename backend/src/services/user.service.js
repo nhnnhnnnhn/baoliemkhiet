@@ -79,6 +79,11 @@ async function getAllUsers(filters = {}, pagination = {}) {
         is_online: true,
         created_at: true,
         updated_at: true,
+        articles: {
+          select: {
+            id: true
+          }
+        }
       },
       skip,
       take: limit,
@@ -90,7 +95,10 @@ async function getAllUsers(filters = {}, pagination = {}) {
   ]);
 
   return {
-    users,
+    users: users.map(({ articles, ...user }) => ({
+      ...user,
+      articleCount: articles.length
+    })),
     pagination: {
       total,
       page: parseInt(page),
@@ -153,7 +161,15 @@ async function getUserById(id) {
     throw new Error("User not found");
   }
 
-  return user;
+  // Transform the response
+  const { articles, ...userInfo } = user;
+  return {
+    ...userInfo,
+    articleCount: articles.length,
+    articles: articles.map(article => ({
+      ...article,
+    }))
+  };
 }
 
 async function deleteUser(id) {

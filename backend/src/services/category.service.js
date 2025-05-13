@@ -25,9 +25,21 @@ module.exports.getAllCategories = async () => {
     const categories = await prisma.category.findMany({
         orderBy: {
             createdAt: "desc",
+        },
+        include: {
+            articles: {
+                select: {
+                    id: true
+                }
+            }
         }
     });
-    return categories;
+    
+    return categories.map(category => ({
+        ...category,
+        articleCount: category.articles.length,
+        articles: undefined // Remove articles from response
+    }));
 };
 
 // Get a single category by ID

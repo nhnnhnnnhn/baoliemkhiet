@@ -41,8 +41,16 @@ async function deleteTag(id) {
 async function getAllTags() {
   const tags = await prisma.tag.findMany({
     orderBy: { name: "asc" },
+    include: {
+      articles: true
+    }
   });
-  return tags;
+
+  return tags.map(({ articles, ...tag }) => ({
+    id: tag.id,
+    name: tag.name,
+    articleCount: articles.length
+  }));
 }
 
 async function getTagById(id) {
