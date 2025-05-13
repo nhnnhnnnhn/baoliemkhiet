@@ -117,12 +117,11 @@ function initWebSocket(server) {
 }
 
 async function sendNotification(receiver_id, content, type, article_id) {
-  // First, ensure the receiver is online
-  if (onlineUser.has(receiver_id)) {
-    const clientId = onlineUser.get(receiver_id);
-    const clientSocket = connectedClients.get(clientId);
-
-    await prisma.notification.create({
+  try {
+    console.log(`[NOTIFICATION DEBUG] Attempting to send notification to user ${receiver_id}:`, { content, type, article_id });
+    
+    // Always create the notification in the database regardless of online status
+    const notification = await prisma.notification.create({
       data: {
         receiver_id,
         content,
@@ -130,20 +129,36 @@ async function sendNotification(receiver_id, content, type, article_id) {
         article_id,
       },
     });
+    
+    console.log(`[NOTIFICATION DEBUG] Successfully created notification in database with ID: ${notification.id}`);
 
-    if (clientSocket) {
-      // Send the notification via WebSocket
-      const notification = {
-        content,
-        type,
-        article_id,
-      };
+    // Only send real-time notification if the user is online
+    if (onlineUser.has(receiver_id)) {
+      console.log(`[NOTIFICATION DEBUG] User ${receiver_id} is online, sending via socket`);
+      const clientId = onlineUser.get(receiver_id);
+      const clientSocket = connectedClients.get(clientId);
 
-      // Emit the notification to the specific client
-      clientSocket.emit("notification", notification);
+      if (clientSocket) {
+        // Send the notification via WebSocket
+        const socketNotification = {
+          content,
+          type,
+          article_id,
+        };
+
+        // Emit the notification to the specific client
+        clientSocket.emit("notification", socketNotification);
+        console.log(`[NOTIFICATION DEBUG] Socket notification sent successfully to user ${receiver_id}`);
+      } else {
+        console.log(`[NOTIFICATION DEBUG] Client socket not found for user ${receiver_id} despite being online`);
+      }
+    } else {
+      console.log(`[NOTIFICATION DEBUG] User ${receiver_id} is not online. Notification saved to database only.`);
     }
-  } else {
-    console.log(`User ${receiver_id} is not online`);
+    
+    return notification;
+  } catch (error) {
+    console.error(`[NOTIFICATION ERROR] Error sending notification to user ${receiver_id}:`, error);
   }
 }
 
