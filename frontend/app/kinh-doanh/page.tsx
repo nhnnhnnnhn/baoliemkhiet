@@ -31,10 +31,9 @@ export default function KinhDoanhPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
-  // Format thời gian
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString)
-    return format(date, "dd/MM/yyyy HH:mm", { locale: vi })
+  // Format thời gian sử dụng hàm helper
+  const formatTime = (dateString: string | null | undefined) => {
+    return formatDateTime(dateString)
   }
 
   // Lấy bài viết nổi bật
@@ -47,8 +46,8 @@ export default function KinhDoanhPage() {
         // Lọc các bài viết đã xuất bản (isPublish=true)
         const publishedArticles = articles.filter(article => article.isPublish)
         
-        // Sắp xếp theo lượt xem để lấy bài nổi bật
-        const sortedArticles = [...publishedArticles].sort((a, b) => (b.view || 0) - (a.view || 0))
+        // Sắp xếp theo lượt xem để lấy bài nổi bật sử dụng hàm helper
+        const sortedArticles = sortByViews(publishedArticles)
         
         // Lấy bài nổi bật nhất
         const topArticle = sortedArticles.length > 0 ? [sortedArticles[0]] : []
@@ -77,12 +76,8 @@ export default function KinhDoanhPage() {
         // Lọc các bài viết đã xuất bản (isPublish=true)
         const publishedArticles = articles.filter(article => article.isPublish)
         
-        // Sắp xếp theo thời gian xuất bản mới nhất
-        const sortedArticles = [...publishedArticles].sort((a, b) => {
-          const dateA = new Date(a.published_at || a.created_at)
-          const dateB = new Date(b.published_at || b.created_at)
-          return dateB.getTime() - dateA.getTime()
-        })
+        // Sắp xếp theo thời gian xuất bản mới nhất sử dụng hàm helper
+        const sortedArticles = sortByLatest(publishedArticles)
         
         // Lấy 4 bài viết mới nhất
         const latestArticles = sortedArticles.slice(0, 4)
@@ -120,12 +115,8 @@ export default function KinhDoanhPage() {
           return false
         })
         
-        // Sắp xếp theo thời gian xuất bản mới nhất và giới hạn 3 bài
-        const sortedArticles = [...realEstateArticles].sort((a, b) => {
-          const dateA = new Date(a.published_at || a.created_at)
-          const dateB = new Date(b.published_at || b.created_at)
-          return dateB.getTime() - dateA.getTime()
-        }).slice(0, 3)
+        // Sắp xếp theo thời gian xuất bản mới nhất sử dụng hàm helper và giới hạn 3 bài
+        const sortedArticles = sortByLatest(realEstateArticles).slice(0, 3)
         
         setRealEstateArticles(sortedArticles)
       } catch (error) {
