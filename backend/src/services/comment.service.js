@@ -432,10 +432,29 @@ async function deleteComment(comment_id) {
   }
 }
 
-async function getAllComment() {
+async function getAllComments(offset = 0, limit = 10) {
   return await prisma.comment.findMany({
+    skip: (offset - 1) * limit,
+    take: limit,
     orderBy: {
       createdAt: "desc",
+    },
+
+    include: {
+      user: {
+        select: {
+          id: true,
+          fullname: true,
+          email: true,
+          avatar: true,
+        },
+      },
+      article: {
+        select: {
+          id: true,
+          title: true,
+        },
+      },
     },
   });
 }
@@ -445,5 +464,5 @@ module.exports = {
   getComments,
   updateComment,
   deleteComment,
-  getAllComment,
+  getAllComments,
 };
