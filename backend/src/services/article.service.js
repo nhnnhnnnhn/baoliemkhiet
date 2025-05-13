@@ -245,7 +245,13 @@ module.exports.getArticlesByCategory = async (categoryId) => {
       categoryId: Number(categoryId),
     },
   });
-  return articles;
+  const numberOfArticles = await prisma.article.count({
+    where: {
+      isPublish: true,
+      categoryId: Number(categoryId),
+    },
+  });
+  return {articles, numberOfArticles};
 };
 
 // Get articles by author
@@ -256,7 +262,13 @@ module.exports.getArticlesByAuthor = async (authorId) => {
       authorId: Number(authorId),
     },
   });
-  return articles;
+  const numberOfArticles = await prisma.article.count({
+    where: {
+      isPublish: true,
+      authorId: Number(authorId),
+    },
+  });
+  return {articles, numberOfArticles};
 };
 
 // Get most 5 liked articles

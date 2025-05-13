@@ -70,8 +70,8 @@ module.exports.getArticlesByCategory = controllerHandler(async (req, res) => {
   if (!categoryId) {
     return res.status(400).json({ message: "Missing category ID" });
   }
-  const articles = await service.getArticlesByCategory(categoryId);
-  res.status(200).json(articles);
+  const {articles, numberOfArticles} = await service.getArticlesByCategory(categoryId);
+  res.status(200).json({articles, numberOfArticles});
 });
 
 // Get articles by author
@@ -80,8 +80,8 @@ module.exports.getArticlesByAuthor = controllerHandler(async (req, res) => {
   if (!authorId) {
     return res.status(400).json({ message: "Missing author ID" });
   }
-  const articles = await service.getArticlesByAuthor(authorId);
-  res.status(200).json(articles);
+  const {articles, numberOfArticles} = await service.getArticlesByAuthor(authorId);
+  res.status(200).json({articles, numberOfArticles});
 });
 
 // Get most 5 liked articles

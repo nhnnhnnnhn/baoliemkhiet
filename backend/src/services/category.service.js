@@ -27,7 +27,21 @@ module.exports.getAllCategories = async () => {
             createdAt: "desc",
         }
     });
-    return categories;
+    const numberOfArticles = await prisma.category.findMany({
+        include: {
+            articles: {
+                select: {
+                    id: true,
+                }
+            }
+        }
+    });
+    const categoriesWithCount = categories.map(category => ({
+        ...category,
+        articlesCount: numberOfArticles.find(c => c.id === category.id).articles.length,
+        viewsCount: numberOfArticles.find(c => c.id === category.id).articles.reduce((acc, article) => acc + article.views, 0),
+    }));
+    return categoriesWithCount;
 };
 
 // Get a single category by ID
