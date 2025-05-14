@@ -38,23 +38,46 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Loader2, MoreHorizontal, Trash, Eye, X, Flag, MessageSquare, FileText } from "lucide-react"
+import { Loader2, MoreHorizontal, Trash, Eye, X, Flag, MessageSquare, FileText, Edit, Trash2, RefreshCw } from "lucide-react"
 
 import reportApi, { Report } from "@/src/apis/report"
-import { useAppSelector } from "@/src/store"
+import { useAppSelector, useAppDispatch } from "@/src/store"
 import { selectCurrentUser, selectIsLoggedIn } from "@/src/thunks/auth/authSlice"
+import { 
+  handleGetAllReports, 
+  handleDeleteReport,
+  handleDeleteMultipleReports
+} from "@/src/thunks/report/reportThunk"
+import { 
+  selectReports, 
+  selectIsLoading,
+  selectError,
+  selectDeleteReportSuccess,
+  clearDeleteReportState
+} from "@/src/thunks/report/reportSlice"
+import EditReportForm from "@/components/EditReportForm"
+import { EditReportMenuItem } from "./fix-edit-button"
 
 export default function AdminReportsPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const [reports, setReports] = useState<Report[]>([])
-  const [loading, setLoading] = useState(true)
+  const dispatch = useAppDispatch()
+  
+  // Redux selectors
+  const reports = useAppSelector(selectReports)
+  const isLoading = useAppSelector(selectIsLoading)
+  const error = useAppSelector(selectError)
+  const deleteSuccess = useAppSelector(selectDeleteReportSuccess)
+  
+  // Local state
   const [activeTab, setActiveTab] = useState("all")
   const [selectedReports, setSelectedReports] = useState<number[]>([])
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [reportToView, setReportToView] = useState<Report | null>(null)
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
   const [deleteMultipleDialogOpen, setDeleteMultipleDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [reportToEdit, setReportToEdit] = useState<number | null>(null)
 
   // Authentication check
   const isAuthenticated = useAppSelector(selectIsLoggedIn)
@@ -69,28 +92,32 @@ export default function AdminReportsPage() {
 
   // Load reports
   useEffect(() => {
-    const fetchReports = async () => {
-      try {
-        setLoading(true)
-        const data = await reportApi.getAllReports()
-        console.log("Fetched reports:", data) // Log dữ liệu từ API để kiểm tra
-        setReports(data)
-      } catch (error) {
-        console.error("Failed to fetch reports:", error)
-        toast({
-          title: "Lỗi",
-          description: "Không thể tải danh sách báo cáo. Vui lòng thử lại sau.",
-          variant: "destructive",
-        })
-      } finally {
-        setLoading(false)
-      }
-    }
+    dispatch(handleGetAllReports())
+  }, [dispatch])
 
-    if (isAuthenticated && currentUser?.role === "ADMIN") {
-      fetchReports()
+  // Handle delete success notification
+  useEffect(() => {
+    if (deleteSuccess) {
+      toast({
+        title: "Thành công",
+        description: "Báo cáo đã được xóa thành công",
+        variant: "success"
+      })
+      dispatch(clearDeleteReportState())
+      setDeleteDialogOpen(false)
     }
-  }, [isAuthenticated, currentUser, toast])
+  }, [deleteSuccess, dispatch])
+  
+  // Handle error notification
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Lỗi",
+        description: error,
+        variant: "destructive"
+      })
+    }
+  }, [error])
 
   // Filter reports based on active tab
   const filteredReports = reports.filter((report) => {
@@ -117,45 +144,15 @@ export default function AdminReportsPage() {
   }
 
   // Handle delete report
-  const handleDeleteReport = async (id: number) => {
-    try {
-      await reportApi.deleteReport(id)
-      setReports((prev) => prev.filter((report) => report.id !== id))
-      toast({
-        title: "Xóa thành công",
-        description: "Báo cáo đã được xóa.",
-        variant: "default",
-      })
-    } catch (error) {
-      console.error("Failed to delete report:", error)
-      toast({
-        title: "Lỗi",
-        description: "Không thể xóa báo cáo. Vui lòng thử lại sau.",
-        variant: "destructive",
-      })
-    }
+  const deleteReportHandler = async (id: number) => {
+    dispatch(handleDeleteReport(id))
   }
 
   // Handle delete multiple reports
-  const handleDeleteMultipleReports = async () => {
-    try {
-      await reportApi.deleteMultipleReports(selectedReports)
-      setReports((prev) => prev.filter((report) => !selectedReports.includes(report.id)))
-      setSelectedReports([])
-      toast({
-        title: "Xóa thành công",
-        description: `${selectedReports.length} báo cáo đã được xóa.`,
-        variant: "default",
-      })
-      setDeleteMultipleDialogOpen(false)
-    } catch (error) {
-      console.error("Failed to delete multiple reports:", error)
-      toast({
-        title: "Lỗi",
-        description: "Không thể xóa các báo cáo. Vui lòng thử lại sau.",
-        variant: "destructive",
-      })
-    }
+  const deleteMultipleReportsHandler = async () => {
+    dispatch(handleDeleteMultipleReports(selectedReports))
+    setSelectedReports([])
+    setDeleteMultipleDialogOpen(false)
   }
 
   // Format report type for display
@@ -191,6 +188,43 @@ export default function AdminReportsPage() {
     return reasonMap[reason.toLowerCase()] || reason
   }
 
+  // Open delete dialog
+  const handleOpenDeleteDialog = (reportId: number) => {
+    setReportToView(reports.find(report => report.id === reportId) || null)
+    setDeleteDialogOpen(true)
+  }
+
+  // Open edit dialog
+  const handleOpenEditDialog = (reportId: number) => {
+    console.log("handleOpenEditDialog called", { reportId })
+    setReportToEdit(reportId)
+    setIsEditDialogOpen(true)
+    console.log("Dialog state updated", { reportId, isEditDialogOpen: true })
+  }
+
+  // Delete report
+  const handleConfirmDelete = () => {
+    if (reportToView) {
+      deleteReportHandler(reportToView.id)
+      setDeleteDialogOpen(false)
+      setReportToView(null)
+    }
+  }
+
+  // Refresh reports
+  const handleRefresh = () => {
+    dispatch(handleGetAllReports())
+  }
+
+  // Format date
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'dd/MM/yyyy HH:mm')
+    } catch (error) {
+      return dateString
+    }
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -224,7 +258,7 @@ export default function AdminReportsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {loading ? (
+              {isLoading ? (
                 <div className="flex justify-center items-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
                 </div>
@@ -286,7 +320,7 @@ export default function AdminReportsPage() {
                               {report.reportedByUser?.fullname || "Thông tin người dùng"}
                             </TableCell>
                             <TableCell>
-                              {format(new Date(report.createdAt), "dd/MM/yyyy HH:mm", { locale: vi })}
+                              {formatDate(report.createdAt)}
                             </TableCell>
                             <TableCell>
                               <DropdownMenu>
@@ -305,9 +339,12 @@ export default function AdminReportsPage() {
                                     <Eye className="h-4 w-4 mr-2" />
                                     Xem chi tiết
                                   </DropdownMenuItem>
+                                  <EditReportMenuItem 
+                                    reportId={report.id} 
+                                    openEditDialog={setReportToEdit} 
+                                  />
                                   <DropdownMenuItem onClick={() => {
-                                    setDeleteDialogOpen(true)
-                                    setReportToView(report)
+                                    handleOpenDeleteDialog(report.id)
                                   }}>
                                     <Trash className="h-4 w-4 mr-2" />
                                     Xóa báo cáo
@@ -335,8 +372,7 @@ export default function AdminReportsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* Same content as "all" tab but with filtered data */}
-              {loading ? (
+              {isLoading ? (
                 <div className="flex justify-center items-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
                 </div>
@@ -347,7 +383,6 @@ export default function AdminReportsPage() {
                 </div>
               ) : (
                 <div>
-                  {/* Same table structure as in "all" tab */}
                   <div className="rounded-md border">
                     <Table>
                       <TableHeader>
@@ -388,7 +423,7 @@ export default function AdminReportsPage() {
                               {report.reportedByUser?.fullname || "Thông tin người dùng"}
                             </TableCell>
                             <TableCell>
-                              {format(new Date(report.createdAt), "dd/MM/yyyy HH:mm", { locale: vi })}
+                              {formatDate(report.createdAt)}
                             </TableCell>
                             <TableCell>
                               <DropdownMenu>
@@ -407,9 +442,12 @@ export default function AdminReportsPage() {
                                     <Eye className="h-4 w-4 mr-2" />
                                     Xem chi tiết
                                   </DropdownMenuItem>
+                                  <EditReportMenuItem 
+                                    reportId={report.id} 
+                                    openEditDialog={setReportToEdit} 
+                                  />
                                   <DropdownMenuItem onClick={() => {
-                                    setDeleteDialogOpen(true)
-                                    setReportToView(report)
+                                    handleOpenDeleteDialog(report.id)
                                   }}>
                                     <Trash className="h-4 w-4 mr-2" />
                                     Xóa báo cáo
@@ -437,8 +475,7 @@ export default function AdminReportsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* Same content as "all" tab but with filtered data */}
-              {loading ? (
+              {isLoading ? (
                 <div className="flex justify-center items-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
                 </div>
@@ -449,7 +486,6 @@ export default function AdminReportsPage() {
                 </div>
               ) : (
                 <div>
-                  {/* Same table structure as in "all" tab */}
                   <div className="rounded-md border">
                     <Table>
                       <TableHeader>
@@ -490,7 +526,7 @@ export default function AdminReportsPage() {
                               {report.reportedByUser?.fullname || "Thông tin người dùng"}
                             </TableCell>
                             <TableCell>
-                              {format(new Date(report.createdAt), "dd/MM/yyyy HH:mm", { locale: vi })}
+                              {formatDate(report.createdAt)}
                             </TableCell>
                             <TableCell>
                               <DropdownMenu>
@@ -509,9 +545,12 @@ export default function AdminReportsPage() {
                                     <Eye className="h-4 w-4 mr-2" />
                                     Xem chi tiết
                                   </DropdownMenuItem>
+                                  <EditReportMenuItem 
+                                    reportId={report.id} 
+                                    openEditDialog={setReportToEdit} 
+                                  />
                                   <DropdownMenuItem onClick={() => {
-                                    setDeleteDialogOpen(true)
-                                    setReportToView(report)
+                                    handleOpenDeleteDialog(report.id)
                                   }}>
                                     <Trash className="h-4 w-4 mr-2" />
                                     Xóa báo cáo
@@ -543,13 +582,7 @@ export default function AdminReportsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
-                if (reportToView) {
-                  handleDeleteReport(reportToView.id)
-                  setDeleteDialogOpen(false)
-                  setReportToView(null)
-                }
-              }}
+              onClick={handleConfirmDelete}
               className="bg-red-500 hover:bg-red-600"
             >
               Xóa
@@ -570,7 +603,7 @@ export default function AdminReportsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteMultipleReports}
+              onClick={deleteMultipleReportsHandler}
               className="bg-red-500 hover:bg-red-600"
             >
               Xóa {selectedReports.length} báo cáo
@@ -610,7 +643,7 @@ export default function AdminReportsPage() {
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Thời gian</h3>
                   <p className="mt-1">
-                    {format(new Date(reportToView.createdAt), "dd/MM/yyyy HH:mm", { locale: vi })}
+                    {formatDate(reportToView.createdAt)}
                   </p>
                 </div>
                 <div>
@@ -684,7 +717,7 @@ export default function AdminReportsPage() {
                           </div>
                           
                           <div className="text-xs text-gray-500 mt-2">
-                            {reportToView.comment?.createdAt && format(new Date(reportToView.comment.createdAt), "dd/MM/yyyy HH:mm", { locale: vi })}
+                            {reportToView.comment?.createdAt && formatDate(reportToView.comment.createdAt)}
                           </div>
                         </div>
                       </div>
@@ -725,6 +758,26 @@ export default function AdminReportsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Report Form Dialog */}
+      <div>
+        <p className="hidden">Debug: reportToEdit={reportToEdit}, isEditDialogOpen={isEditDialogOpen.toString()}</p>
+        {reportToEdit !== null && (
+          <EditReportForm
+            reportId={reportToEdit}
+            isOpen={isEditDialogOpen}
+            onClose={() => {
+              console.log("EditReportForm onClose called")
+              setIsEditDialogOpen(false)
+              setReportToEdit(null)
+            }}
+            onSuccess={() => {
+              console.log("EditReportForm onSuccess called")
+              handleRefresh()
+            }}
+          />
+        )}
+      </div>
     </div>
   )
 }
