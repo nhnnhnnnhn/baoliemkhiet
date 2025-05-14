@@ -90,6 +90,15 @@ pnpm build
 - Chế độ xem tối/sáng (Dark/Light mode)
 - Responsive design cho tất cả các thiết bị
 
+## Chức năng theo dõi tác giả
+
+Người dùng có thể theo dõi các tác giả/nhà báo yêu thích:
+
+- Nút theo dõi xuất hiện trên trang cá nhân của tác giả và trong phần thông tin tác giả của mỗi bài viết
+- Khi đã theo dõi, người dùng sẽ nhận được thông báo khi tác giả đăng bài viết mới
+- Người dùng có thể xem danh sách những người mình đang theo dõi trong phần "Đang theo dõi" trên trang cá nhân
+- Chức năng được xây dựng bằng Redux Toolkit để quản lý trạng thái theo dõi một cách hiệu quả
+
 ## Lưu ý về migration từ CRA sang Vite
 
 Dự án này đã được chuyển đổi từ Create React App (CRA) sang Vite. Để biết thêm chi tiết về quá trình này, vui lòng xem file `MIGRATION_CRA_TO_VITE.md`.

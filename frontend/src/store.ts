@@ -8,6 +8,7 @@ import articleReducer from './thunks/article/articleSlice';
 import commentReducer from './thunks/comment/commentSlice';
 import notificationReducer from './thunks/notification/notificationSlice';
 import reportReducer from './thunks/report/reportSlice';
+import followReducer from './thunks/follow/followSlice';
 
 const store = configureStore({
   reducer: {
@@ -19,6 +20,7 @@ const store = configureStore({
     comment: commentReducer,
     notification: notificationReducer,
     report: reportReducer,
+    follow: followReducer,
   },
 });
 

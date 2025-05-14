@@ -135,7 +135,7 @@ const articleApi = {
   },
 
   // Lấy bài viết theo tác giả
-  getArticlesByAuthor: async (authorId: number): Promise<Article[]> => {
+  getArticlesByAuthor: async (authorId: number): Promise<{articles: Article[], numberOfArticles: number}> => {
     return axiosClient.get(`/articles/get-author/${authorId}`)
   },
 
