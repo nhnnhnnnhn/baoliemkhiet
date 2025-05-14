@@ -11,8 +11,7 @@ import { ChatbotButton } from "@/components/chatbot-button"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { CategoryHeader } from "@/components/category-header"
-import articleApi from "@/src/apis/article"
-import { Article } from "@/src/apis/article"
+import articleApi, { Article, CategoryArticlesResponse } from "@/src/apis/article"
 
 export default function ThoiSuPage() {
   const currentDate = new Date().toLocaleDateString("vi-VN", {
@@ -43,10 +42,13 @@ export default function ThoiSuPage() {
         
         // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
         // Đảm bảo chỉ lấy những bài viết đã được xuất bản (isPublish=true)
-        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        const response = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        
+        // Truy cập đúng thuộc tính articles từ response
+        const articleList = response.articles || []
         
         // Lọc các bài viết đã xuất bản (isPublish=true)
-        const publishedArticles = articles.filter(article => article.isPublish)
+        const publishedArticles = articleList.filter(article => article.isPublish)
         
         // Tính toán phân trang thủ công
         const limit = 10
@@ -72,6 +74,7 @@ export default function ThoiSuPage() {
         
         // Ghi log để debug
         console.log(`Đã tìm thấy ${publishedArticles.length} bài viết thuộc danh mục Thời sự (ID: ${CATEGORY_ID})`)
+        console.log('Data from API:', response)
         
         setError(null)
       } catch (err) {

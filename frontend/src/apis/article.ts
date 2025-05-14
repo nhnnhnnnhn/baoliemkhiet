@@ -103,6 +103,11 @@ export interface ArticleStatistics {
   }[]
 }
 
+export interface CategoryArticlesResponse {
+  articles: Article[];
+  numberOfArticles: number;
+}
+
 const articleApi = {
   // Lấy danh sách bài viết
   getArticles: async (params?: GetArticlesParams): Promise<GetArticlesResponse> => {
@@ -125,7 +130,7 @@ const articleApi = {
   },
 
   // Lấy bài viết theo danh mục
-  getArticlesByCategory: async (categoryId: number): Promise<Article[]> => {
+  getArticlesByCategory: async (categoryId: number): Promise<CategoryArticlesResponse> => {
     return axiosClient.get(`/articles/get-category/${categoryId}`)
   },
 
