@@ -125,6 +125,19 @@ const reportApi = {
     }
   },
 
+  // Edit a report
+  editReport: async (id: number, reason: string): Promise<Report> => {
+    try {
+      console.log(`[API] Editing report ${id}`);
+      const response = await axiosClient.patch<Report>(`/reports/edit/${id}`, { reason });
+      console.log('[API] Report edited successfully:', response);
+      return response as unknown as Report;
+    } catch (error) {
+      console.error('[API] Error editing report:', error);
+      throw error;
+    }
+  },
+
   // Create a report for an article
   createArticleReport: async (data: { 
     reportedBy: number; 
