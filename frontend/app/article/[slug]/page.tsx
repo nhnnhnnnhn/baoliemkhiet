@@ -29,7 +29,7 @@ import { ChatbotButton } from "@/components/chatbot-button"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { Comment } from "@/src/apis/comment"
-import articleApi from "@/src/apis/article"
+import articleApi, { Article } from "@/src/apis/article"
 import commentApi from "@/src/apis/comment"
 import reportApi from "@/src/apis/report"
 import {
@@ -42,6 +42,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { FollowButton } from "@/components/FollowButton"
 
 // Helper function để định dạng ngày tháng an toàn
 const formatDate = (dateString: string | null | undefined) => {
@@ -314,7 +315,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
           relatedArticles: [] // Sẽ triển khai API bài viết liên quan sau
         };
         
-        // Tạm thời thêm dữ liệu mẫu cho phần bình luận và bài viết liên quan
+        
         // Remove temporary comment data as we're using Redux now
         articleData.comments = [];
         
@@ -323,11 +324,11 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
           const relatedArticlesData = await articleApi.getArticlesByCategory(response.category_id || 1);
           
           // Lọc chỉ lấy các bài viết khác (không lấy bài viết hiện tại)
-          const otherArticles = relatedArticlesData
-            .filter(item => item.id !== response.id && item.isPublish)
+          const otherArticles = relatedArticlesData.articles
+            .filter((item: Article) => item.id !== response.id && item.isPublish)
             .slice(0, 3); // Chỉ lấy tối đa 3 bài
           
-          articleData.relatedArticles = otherArticles.map(item => ({
+          articleData.relatedArticles = otherArticles.map((item: Article) => ({
             slug: item.id.toString(),
             title: item.title,
             publishDate: formatDate(item.published_at) || '',
@@ -727,19 +728,30 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
 
         {/* Author Info */}
         <div className="bg-gray-50 p-6 rounded-lg mb-10">
-          <Link href={`/profile/${article.author.username}`} className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src={article.author.avatar || "/placeholder.svg"} alt={article.author.name} />
-              <AvatarFallback>{article.author.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div>
-              <h3 className="text-lg font-semibold mb-1">Tác giả: {article.author.name}</h3>
+          <div className="flex items-start gap-4">
+            <Link href={`/profile/${article.author.username}`} className="shrink-0">
+              <Avatar className="h-16 w-16">
+                <AvatarImage src={article.author.avatar || "/placeholder.svg"} alt={article.author.name} />
+                <AvatarFallback>{article.author.name.charAt(0)}</AvatarFallback>
+              </Avatar>
+            </Link>
+            <div className="flex-1">
+              <Link href={`/profile/${article.author.username}`} className="hover:underline">
+                <h3 className="text-lg font-semibold mb-1">Tác giả: {article.author.name}</h3>
+              </Link>
               <p className="text-gray-600 mb-3">{article.author.bio}</p>
-              <Button variant="outline" size="sm">
-                Xem tất cả bài viết
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={`/profile/${article.author.username}`}>
+                    Xem tất cả bài viết
+                  </Link>
+                </Button>
+                {article.author.id && (
+                  <FollowButton journalistId={article.author.id} size="sm" />
+                )}
+              </div>
             </div>
-          </Link>
+          </div>
         </div>
 
         <Separator className="my-10" />
