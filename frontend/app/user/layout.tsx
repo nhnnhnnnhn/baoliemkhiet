@@ -103,9 +103,6 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
         <div className={styles.navSection}>
           <div className={styles.navSectionTitle}>Nội dung</div>
           <div className={styles.navLinks}>
-            <NavLink href="/user/bookmarks" icon={BookMarked}>
-              Bài viết đã lưu
-            </NavLink>
             <NavLink href="/user/comments" icon={MessageSquare}>
               Bình luận của tôi
             </NavLink>

@@ -1,114 +1,125 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Bell, Check, Trash2 } from "lucide-react"
+import { Bell, Check, Trash2, MessageSquare, UserPlus, Heart, FileEdit } from "lucide-react"
+import { useAppDispatch, useAppSelector } from "@/src/store"
+import { 
+  handleGetNotifications, 
+  handleMarkAsRead, 
+  handleMarkAllAsRead,
+  handleDeleteNotification 
+} from "@/src/thunks/notification/notificationThunk"
+import {
+  selectNotifications,
+  selectUnreadCount,
+  selectNotificationLoading,
+  selectDeletingNotification,
+  selectMarkingAsRead,
+  selectMarkingAllAsRead
+} from "@/src/thunks/notification/notificationSlice"
+import { formatDistanceToNow } from "date-fns"
+import { vi } from "date-fns/locale"
 
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
-
-// Mock data for notifications
-const mockNotifications = [
-  {
-    id: 1,
-    type: "COMMENT",
-    content: "Nguyễn Văn A đã bình luận về bài viết của bạn",
-    articleId: 123,
-    articleTitle: "Việt Nam đạt thỏa thuận hợp tác kinh tế mới với các nước ASEAN",
-    isRead: false,
-    createdAt: "2025-04-15T08:30:00Z",
-  },
-  {
-    id: 2,
-    type: "LIKE",
-    content: "Trần Thị B đã thích bài viết của bạn",
-    articleId: 123,
-    articleTitle: "Việt Nam đạt thỏa thuận hợp tác kinh tế mới với các nước ASEAN",
-    isRead: false,
-    createdAt: "2025-04-15T07:45:00Z",
-  },
-  {
-    id: 3,
-    type: "FOLLOW",
-    content: "Lê Văn C đã bắt đầu theo dõi bạn",
-    isRead: true,
-    createdAt: "2025-04-14T14:20:00Z",
-  },
-  {
-    id: 4,
-    type: "ARTICLE_STATUS",
-    content: "Bài viết của bạn đã được phê duyệt",
-    articleId: 124,
-    articleTitle: "Thị trường bất động sản phía Nam khởi sắc trong quý II",
-    isRead: true,
-    createdAt: "2025-04-14T10:15:00Z",
-  },
-  {
-    id: 5,
-    type: "MESSAGE",
-    content: "Bạn có tin nhắn mới từ ban biên tập",
-    isRead: true,
-    createdAt: "2025-04-13T16:30:00Z",
-  },
-]
+import { useToast } from "@/hooks/use-toast"
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState(mockNotifications)
+  const dispatch = useAppDispatch()
+  const { toast } = useToast()
   const [activeTab, setActiveTab] = useState("all")
+  
+  const notifications = useAppSelector(selectNotifications)
+  const unreadCount = useAppSelector(selectUnreadCount)
+  const loading = useAppSelector(selectNotificationLoading)
+  const deleting = useAppSelector(selectDeletingNotification)
+  const markingAsRead = useAppSelector(selectMarkingAsRead)
+  const markingAllAsRead = useAppSelector(selectMarkingAllAsRead)
 
-  // Format date to relative time (e.g., "2 hours ago")
-  const formatRelativeTime = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+  // Load notifications on mount
+  useEffect(() => {
+    dispatch(handleGetNotifications())
+  }, [dispatch])
 
-    if (diffInSeconds < 60) {
-      return "vừa xong"
-    } else if (diffInSeconds < 3600) {
-      const minutes = Math.floor(diffInSeconds / 60)
-      return `${minutes} phút trước`
-    } else if (diffInSeconds < 86400) {
-      const hours = Math.floor(diffInSeconds / 3600)
-      return `${hours} giờ trước`
-    } else {
-      const days = Math.floor(diffInSeconds / 86400)
-      return `${days} ngày trước`
+  // Mark all notifications as read
+  const handleMarkAllRead = async () => {
+    try {
+      await dispatch(handleMarkAllAsRead()).unwrap()
+      toast({
+        title: "Đã đánh dấu tất cả đã đọc",
+        description: "Tất cả thông báo đã được đánh dấu là đã đọc",
+        variant: "default",
+      })
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể đánh dấu tất cả thông báo. Vui lòng thử lại sau.",
+        variant: "destructive",
+      })
     }
   }
 
-  // Mark all notifications as read
-  const markAllAsRead = () => {
-    setNotifications(
-      notifications.map((notification) => ({
-        ...notification,
-        isRead: true,
-      })),
-    )
-  }
-
   // Mark a single notification as read
-  const markAsRead = (id: number) => {
-    setNotifications(
-      notifications.map((notification) => (notification.id === id ? { ...notification, isRead: true } : notification)),
-    )
+  const handleMarkRead = async (notificationId: number) => {
+    try {
+      await dispatch(handleMarkAsRead(notificationId)).unwrap()
+      toast({
+        title: "Đã đánh dấu đã đọc",
+        description: "Thông báo đã được đánh dấu là đã đọc",
+        variant: "default",
+      })
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể đánh dấu thông báo. Vui lòng thử lại sau.",
+        variant: "destructive",
+      })
+    }
   }
 
   // Delete a notification
-  const deleteNotification = (id: number) => {
-    setNotifications(notifications.filter((notification) => notification.id !== id))
+  const handleDeleteNotif = async (notificationId: number) => {
+    try {
+      await dispatch(handleDeleteNotification(notificationId)).unwrap()
+      toast({
+        title: "Đã xóa thông báo",
+        description: "Thông báo đã được xóa thành công",
+        variant: "default",
+      })
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể xóa thông báo. Vui lòng thử lại sau.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  // Get icon based on notification type
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case "COMMENT":
+        return <MessageSquare className="h-4 w-4" />
+      case "LIKE":
+        return <Heart className="h-4 w-4" />
+      case "FOLLOW":
+        return <UserPlus className="h-4 w-4" />
+      case "ARTICLE_STATUS":
+        return <FileEdit className="h-4 w-4" />
+      default:
+        return <Bell className="h-4 w-4" />
+    }
   }
 
   // Filter notifications based on active tab
   const filteredNotifications = notifications.filter((notification) => {
     if (activeTab === "all") return true
-    if (activeTab === "unread") return !notification.isRead
+    if (activeTab === "unread") return !notification.is_read
     return notification.type === activeTab
   })
-
-  // Count unread notifications
-  const unreadCount = notifications.filter((notification) => !notification.isRead).length
 
   return (
     <>
@@ -117,9 +128,14 @@ export default function NotificationsPage() {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">Thông báo {unreadCount > 0 && `(${unreadCount})`}</h1>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={markAllAsRead} disabled={unreadCount === 0}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleMarkAllRead} 
+              disabled={unreadCount === 0 || markingAllAsRead}
+            >
               <Check className="h-4 w-4 mr-2" />
-              Đánh dấu tất cả đã đọc
+              {markingAllAsRead ? "Đang xử lý..." : "Đánh dấu tất cả đã đọc"}
             </Button>
           </div>
         </div>
@@ -135,11 +151,16 @@ export default function NotificationsPage() {
           </TabsList>
 
           <TabsContent value={activeTab} className="space-y-4">
-            {filteredNotifications.length > 0 ? (
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+                <p className="text-gray-500 mt-2">Đang tải thông báo...</p>
+              </div>
+            ) : filteredNotifications.length > 0 ? (
               filteredNotifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 rounded-lg border ${notification.isRead ? "bg-white" : "bg-blue-50 border-blue-100"}`}
+                  className={`p-4 rounded-lg border ${notification.is_read ? "bg-white" : "bg-blue-50 border-blue-100"}`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
@@ -156,30 +177,34 @@ export default function NotificationsPage() {
                                   : "bg-gray-100 text-gray-600"
                         }`}
                       >
-                        <Bell className="h-4 w-4" />
+                        {getNotificationIcon(notification.type)}
                       </div>
                       <div className="flex-1">
                         <p className="text-gray-800">{notification.content}</p>
-                        {notification.articleId && (
+                        {notification.article_id && (
                           <Link
-                            href={`/article/${notification.articleId}`}
+                            href={`/article/${notification.article_id}`}
                             className="text-sm text-blue-600 hover:underline mt-1 block"
                           >
-                            {notification.articleTitle}
+                            {notification.article_title}
                           </Link>
                         )}
                         <span className="text-xs text-gray-500 mt-1 block">
-                          {formatRelativeTime(notification.createdAt)}
+                          {formatDistanceToNow(new Date(notification.created_at), {
+                            addSuffix: true,
+                            locale: vi
+                          })}
                         </span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {!notification.isRead && (
+                      {!notification.is_read && (
                         <Button
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0"
-                          onClick={() => markAsRead(notification.id)}
+                          onClick={() => handleMarkRead(notification.id)}
+                          disabled={markingAsRead}
                         >
                           <Check className="h-4 w-4" />
                         </Button>
@@ -188,7 +213,8 @@ export default function NotificationsPage() {
                         variant="ghost"
                         size="sm"
                         className="h-8 w-8 p-0 text-gray-500 hover:text-red-600"
-                        onClick={() => deleteNotification(notification.id)}
+                        onClick={() => handleDeleteNotif(notification.id)}
+                        disabled={deleting}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
