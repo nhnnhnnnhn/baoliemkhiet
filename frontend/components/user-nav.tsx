@@ -77,24 +77,6 @@ export function UserNav() {
               <span>Thông báo</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/user/bookmarks">
-              <BookMarked className="mr-2 h-4 w-4" />
-              <span>Bài viết đã lưu</span>
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/user/comments">
-              <MessageSquare className="mr-2 h-4 w-4" />
-              <span>Bình luận của tôi</span>
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/tags">
-              <Tag className="mr-2 h-4 w-4" />
-              <span>Chủ đề</span>
-            </Link>
-          </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
@@ -114,12 +96,6 @@ export function UserNav() {
               </Link>
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem asChild>
-            <Link href="/user">
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Cài đặt tài khoản</span>
-            </Link>
-          </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>

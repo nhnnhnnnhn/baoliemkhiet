@@ -82,12 +82,11 @@ export default function ProfilePage({ params }: { params: { username: string } }
         })
         
         // Tìm người dùng phù hợp nhất từ danh sách
-        const matchedUser = users.users.find(u => {
-          if (username.toLowerCase() === 'admin') {
-            return u.role === 'ADMIN'
-          }
-          return u.fullname.replace(/\s+/g, '').toLowerCase() === username.toLowerCase()
-        })
+        const matchedUser = users.users.find(u => 
+          (u.username && u.username.toLowerCase() === username.toLowerCase()) ||
+          (u.email && u.email.split('@')[0].toLowerCase() === username.toLowerCase()) ||
+          u.fullname.replace(/\s+/g, '').toLowerCase() === username.toLowerCase()
+        )
         
         if (!matchedUser) {
           setUserError('Không tìm thấy người dùng')
