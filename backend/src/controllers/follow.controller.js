@@ -26,14 +26,20 @@ const deleteFollow = controllerHandler(async (req, res) => {
 });
 
 const getFollowers = controllerHandler(async (req, res) => {
-  const journalistId = req.user.id;
-  const followers = await followService.getFollowers(journalistId);
+  const { userId } = req.params;
+  if (isNaN(userId)) {
+    throw new Error("Invalid user ID");
+  }
+  const followers = await followService.getFollowers(parseInt(userId));
   res.status(200).json(followers);
 });
 
 const getFollowing = controllerHandler(async (req, res) => {
-  const followerId = req.user.id;
-  const following = await followService.getFollowing(followerId);
+  const { userId } = req.params;
+  if (isNaN(userId)) {
+    throw new Error("Invalid user ID");
+  }
+  const following = await followService.getFollowing(parseInt(userId));
   res.status(200).json(following);
 });
 

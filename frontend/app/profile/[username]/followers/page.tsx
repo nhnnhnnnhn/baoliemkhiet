@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from "@/src/store"
 import { handleGetFollowers } from "@/src/thunks/follow/followThunk"
 import { selectFollowers, selectIsLoadingFollowers } from "@/src/thunks/follow/followSlice"
 import { selectCurrentUser } from "@/src/thunks/auth/authSlice"
+import userApi, { User } from "@/src/apis/user"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,19 +26,46 @@ export default function FollowersPage({ params }: { params: { username: string }
   const currentUser = useAppSelector(selectCurrentUser)
   const [searchTerm, setSearchTerm] = useState("")
   const [isClient, setIsClient] = useState(false)
+  const [profileUser, setProfileUser] = useState<User | null>(null)
   
   // Mark when component has been rendered on client
   useEffect(() => {
     setIsClient(true)
   }, [])
   
+  // Fetch user data first
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const users = await userApi.getUsers({
+          search: username,
+          role: username.toLowerCase() === 'admin' ? 'ADMIN' : undefined,
+          limit: 5
+        })
+        const matchedUser = users.users.find((u: User) => {
+          if (username.toLowerCase() === 'admin') {
+            return u.role === 'ADMIN'
+          }
+          return u.fullname.replace(/\s+/g, '').toLowerCase() === username.toLowerCase()
+        })
+        if (matchedUser) {
+          setProfileUser(matchedUser)
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error)
+      }
+    }
+    if (isClient) {
+      fetchUserData()
+    }
+  }, [username, isClient])
+  
   // Fetch followers on component mount
   useEffect(() => {
-    // Only fetch data when on client side
-    if (isClient) {
-      dispatch(handleGetFollowers())
+    if (isClient && profileUser?.id) {
+      dispatch(handleGetFollowers(profileUser.id))
     }
-  }, [dispatch, isClient])
+  }, [dispatch, isClient, profileUser?.id])
   
   // Filter followers based on search term
   const filteredFollowers = searchTerm 

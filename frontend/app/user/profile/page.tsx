@@ -1,9 +1,11 @@
 "use client"
-
 import { useState, useEffect } from "react"
-import { Calendar, Save, Upload, User } from "lucide-react"
+import { Calendar, Save, Upload, User, Users } from "lucide-react"
 import { useDispatch, useSelector } from "react-redux"
 import { useToast } from "@/hooks/use-toast"
+import { handleGetFollowers, handleGetFollowing } from "@/src/thunks/follow/followThunk"
+import { selectFollowers, selectFollowing } from "@/src/thunks/follow/followSlice"
+
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -30,9 +32,20 @@ export default function UserProfilePage() {
   const updateProfileError = useSelector(selectUpdateProfileError)
   const updateProfileSuccess = useSelector(selectUpdateProfileSuccess)
 
+  // Get current user profile
   useEffect(() => {
     dispatch(handleGetProfile() as any)
   }, [dispatch])
+  
+  // Get follow statistics
+  const followers = useSelector(selectFollowers)
+  const following = useSelector(selectFollowing)
+  useEffect(() => {
+    if (currentUser?.id) {
+      dispatch(handleGetFollowers(currentUser.id))
+      dispatch(handleGetFollowing(currentUser.id))
+    }
+  }, [dispatch, currentUser?.id])
 
   // Initialize form values from currentUser
   const [formValues, setFormValues] = useState({
@@ -196,6 +209,19 @@ export default function UserProfilePage() {
             <CardContent className="pt-20 px-6 text-center">
               <h2 className="text-2xl font-semibold">{currentUser.fullname}</h2>
               <p className="text-muted-foreground text-sm mt-1">{currentUser.email}</p>
+              
+              {/* Follow Statistics */}
+              <div className="flex justify-center gap-8 mt-4">
+                <div className="text-center">
+                  <p className="text-xl font-semibold">{followers.length}</p>
+                  <p className="text-sm text-muted-foreground">Người theo dõi</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xl font-semibold">{following.length}</p>
+                  <p className="text-sm text-muted-foreground">Đang theo dõi</p>
+                </div>
+              </div>
+              
               <Separator className="my-6" />
                 <div className="space-y-6">
                   <div>

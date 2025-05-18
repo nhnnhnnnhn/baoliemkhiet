@@ -27,9 +27,9 @@ export const handleUnfollowJournalist = createAsyncThunk(
 
 export const handleGetFollowers = createAsyncThunk(
   'follow/getFollowers',
-  async (_, { rejectWithValue }) => {
+  async (userId: number, { rejectWithValue }) => {
     try {
-      const response = await followApi.getFollowers();
+      const response = await followApi.getFollowers(userId);
       return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch followers');
@@ -39,9 +39,9 @@ export const handleGetFollowers = createAsyncThunk(
 
 export const handleGetFollowing = createAsyncThunk(
   'follow/getFollowing',
-  async (_, { rejectWithValue }) => {
+  async (userId: number, { rejectWithValue }) => {
     try {
-      const response = await followApi.getFollowing();
+      const response = await followApi.getFollowing(userId);
       return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch following');
