@@ -1,23 +1,32 @@
+"use client"
 import Link from "next/link"
-import { ArrowRight, BarChart2, Clock, Edit, Eye, FileText, MessageSquare, PenSquare, ThumbsUp } from "lucide-react"
-
+import { ArrowRight, Edit, Eye, FileText, MessageSquare, PenSquare, ThumbsUp } from "lucide-react"
+import { useSelector } from "react-redux"
+import { selectCurrentUser } from "@/src/thunks/auth/authSlice"
 import { Button } from "@/components/ui/button"
 import styles from "../admin/admin.module.css"
 
+import { useEffect } from "react"
+import { useAppDispatch } from "@/src/store"
+import { handleGetProfile } from "@/src/thunks/auth/authThunk"
+
 export default function AuthorDashboard() {
-  // Mock author data
-  const author = {
-    name: "Trần Thị B",
-    email: "tranthib@example.com",
-    role: "Tác giả",
-    memberSince: "03/04/2025",
-    totalArticles: 15,
-    publishedArticles: 12,
-    pendingArticles: 2,
-    draftArticles: 1,
-    totalViews: 45678,
-    totalLikes: 2345,
-    totalComments: 567,
+  const dispatch = useAppDispatch()
+  const currentUser = useSelector(selectCurrentUser)
+  
+  useEffect(() => {
+    dispatch(handleGetProfile() as any)
+  }, [dispatch])
+
+  // Calculate statistics from currentUser articles
+  const stats = {
+    total: currentUser?.articles?.length || 0,
+    published: currentUser?.articles?.filter(a => a.status === "PUBLISHED")?.length || 0,
+    pending: currentUser?.articles?.filter(a => a.status === "PENDING")?.length || 0,
+    draft: currentUser?.articles?.filter(a => a.status === "DRAFT")?.length || 0,
+    views: currentUser?.articles?.reduce((sum, article) => sum + (article.views || 0), 0) || 0,
+    likes: currentUser?.articles?.reduce((sum, article) => sum + (article.likes || 0), 0) || 0,
+    comments: currentUser?.articles?.reduce((sum, article) => sum + (article.comments || 0), 0) || 0
   }
 
   // Mock recent articles
@@ -71,7 +80,9 @@ export default function AuthorDashboard() {
         <div className="p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Xin chào, {author.name}!</h2>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Xin chào {currentUser?.fullname || currentUser?.name || "Tác giả"}!
+              </h2>
               <p className="mt-1 text-gray-600">Chào mừng bạn quay trở lại với trang quản lý tác giả.</p>
             </div>
             <div className="mt-4 md:mt-0">
@@ -95,11 +106,11 @@ export default function AuthorDashboard() {
               <FileText className="h-4 w-4" />
             </div>
           </div>
-          <div className={styles.statValue}>{author.totalArticles}</div>
+          <div className={styles.statValue}>{stats.total}</div>
           <div className="flex items-center text-sm text-gray-500">
-            <span className="text-green-600 font-medium mr-1">{author.publishedArticles}</span> đã xuất bản,
-            <span className="text-yellow-600 font-medium mx-1">{author.pendingArticles}</span> chờ duyệt,
-            <span className="text-gray-600 font-medium ml-1">{author.draftArticles}</span> bản nháp
+            <span className="text-green-600 font-medium mr-1">{stats.published}</span> đã xuất bản,
+            <span className="text-yellow-600 font-medium mx-1">{stats.pending}</span> chờ duyệt,
+            <span className="text-gray-600 font-medium ml-1">{stats.draft}</span> bản nháp
           </div>
         </div>
 
@@ -110,7 +121,7 @@ export default function AuthorDashboard() {
               <Eye className="h-4 w-4" />
             </div>
           </div>
-          <div className={styles.statValue}>{author.totalViews.toLocaleString()}</div>
+          <div className={styles.statValue}>{stats.likes.toLocaleString()}</div>
           <div className={`${styles.statChange} ${styles.statChangePositive}`}>
             <ArrowRight className={styles.statChangeIcon} />
             <span>5.2% so với tháng trước</span>
@@ -124,7 +135,7 @@ export default function AuthorDashboard() {
               <ThumbsUp className="h-4 w-4" />
             </div>
           </div>
-          <div className={styles.statValue}>{author.totalLikes.toLocaleString()}</div>
+          <div className={styles.statValue}>{stats.views.toLocaleString()}</div>
           <div className={`${styles.statChange} ${styles.statChangePositive}`}>
             <ArrowRight className={styles.statChangeIcon} />
             <span>7.8% so với tháng trước</span>
@@ -138,7 +149,7 @@ export default function AuthorDashboard() {
               <MessageSquare className="h-4 w-4" />
             </div>
           </div>
-          <div className={styles.statValue}>{author.totalComments.toLocaleString()}</div>
+          <div className={styles.statValue}>{stats.comments.toLocaleString()}</div>
           <div className={`${styles.statChange} ${styles.statChangePositive}`}>
             <ArrowRight className={styles.statChangeIcon} />
             <span>3.4% so với tháng trước</span>
@@ -146,10 +157,9 @@ export default function AuthorDashboard() {
         </div>
       </div>
 
-      {/* Recent Articles & Performance */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Recent Articles */}
-        <div className={`${styles.chartCard} md:col-span-2`}>
+      {/* Recent Articles */}
+      <div className="grid grid-cols-1">
+        <div className={styles.chartCard}>
           <div className={styles.chartHeader}>
             <h3 className={styles.chartTitle}>Bài viết gần đây</h3>
             <Link href="/author/articles">
@@ -214,46 +224,6 @@ export default function AuthorDashboard() {
                 ))}
               </tbody>
             </table>
-          </div>
-        </div>
-
-        {/* Performance */}
-        <div className={styles.chartCard}>
-          <div className={styles.chartHeader}>
-            <h3 className={styles.chartTitle}>Hiệu suất</h3>
-            <Button variant="outline" size="sm">
-              <Clock className="h-4 w-4 mr-2" />7 ngày
-            </Button>
-          </div>
-          <div className="p-6">
-            <div className="flex items-center justify-center h-48">
-              <BarChart2 className="h-32 w-32 text-gray-300" />
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <div className="text-sm text-gray-500">Lượt xem trung bình</div>
-                <div className="text-xl font-semibold mt-1">3,789</div>
-              </div>
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <div className="text-sm text-gray-500">Tỷ lệ tương tác</div>
-                <div className="text-xl font-semibold mt-1">6.2%</div>
-              </div>
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <div className="text-sm text-gray-500">Thời gian đọc TB</div>
-                <div className="text-xl font-semibold mt-1">4:32</div>
-              </div>
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <div className="text-sm text-gray-500">Tỷ lệ hoàn thành</div>
-                <div className="text-xl font-semibold mt-1">72%</div>
-              </div>
-            </div>
-            <div className="mt-4">
-              <Link href="/author/analytics">
-                <Button variant="outline" className="w-full">
-                  Xem phân tích chi tiết
-                </Button>
-              </Link>
-            </div>
           </div>
         </div>
       </div>

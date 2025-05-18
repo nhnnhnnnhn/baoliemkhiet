@@ -2,10 +2,11 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Calendar, Save, Upload, User } from "lucide-react"
 import { useDispatch, useSelector } from "react-redux"
 import { useToast } from "@/hooks/use-toast"
+import fileApi from '@/src/apis/file'
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,8 +15,8 @@ import { Textarea } from "@/components/ui/textarea"
 import styles from "../admin.module.css"
 
 import { AppDispatch } from "@/src/store"
-import { handleChangePassword, handleLogout } from "@/src/thunks/auth/authThunk"
-import { handleUpdateProfile } from "@/src/thunks/user/userThunk"
+import { handleChangePassword, handleLogout, handleGetProfile } from "@/src/thunks/auth/authThunk"
+import { handleUpdateProfile } from "@/src/thunks/auth/authThunk"
 import { selectCurrentUser, selectChangingPassword, selectChangePasswordError } from "@/src/thunks/auth/authSlice"
 import { selectIsUpdatingProfile, selectUpdateProfileError, selectUpdateProfileSuccess } from "@/src/thunks/user/userSlice"
 
@@ -28,6 +29,7 @@ export default function ProfilePage() {
   const isUpdatingProfile = useSelector(selectIsUpdatingProfile)
   const updateProfileError = useSelector(selectUpdateProfileError)
   const updateProfileSuccess = useSelector(selectUpdateProfileSuccess)
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handlePasswordChange = async () => {
     if (!currentUser?.email) {
@@ -105,6 +107,7 @@ export default function ProfilePage() {
     phone: currentUser?.phone || "",
     address: currentUser?.address || "",
     bio: currentUser?.bio || "",
+    avatar: currentUser?.avatar || "",
   })
 
   useEffect(() => {
@@ -115,6 +118,7 @@ export default function ProfilePage() {
         phone: currentUser.phone || "",
         address: currentUser.address || "",
         bio: currentUser.bio || "",
+        avatar: currentUser.avatar || "",
       })
     }
   }, [currentUser])
@@ -139,11 +143,14 @@ export default function ProfilePage() {
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!currentUser?.id) return
 
     const result = await dispatch(handleUpdateProfile({
-      id: currentUser.id,
-      ...formValues
+      fullname: formValues.fullname,
+      email: formValues.email,
+      phone: formValues.phone,
+      address: formValues.address,
+      bio: formValues.bio,
+      avatar: formValues.avatar
     }))
 
     if (handleUpdateProfile.fulfilled.match(result)) {
@@ -154,14 +161,100 @@ export default function ProfilePage() {
         className: "font-semibold",
         duration: 2000
       })
+      
+      // Refresh profile after update
+      await dispatch(handleGetProfile() as any);
     }
   }
 
   // Handle avatar change
   const handleAvatarChange = () => {
-    // In a real app, this would open a file picker and upload the image
-    alert("Tính năng thay đổi ảnh đại diện sẽ được triển khai sau!")
+    fileInputRef.current?.click();
   }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Lỗi",
+        description: "Kích thước file không được vượt quá 5MB",
+        variant: "destructive",
+        duration: 3000
+      });
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Lỗi",
+        description: "Chỉ chấp nhận file ảnh",
+        variant: "destructive",
+        duration: 3000
+      });
+      return;
+    }
+
+    try {
+      // Upload file
+      const response = await fileApi.uploadFile(file);
+      console.log('File upload response:', response);
+
+      if (response.success && response.file) {
+        // Get correct image path from response
+        // Response file.path already contains "images/" prefix
+        const avatarPath = response.file.path;
+        console.log('Backend response path:', response.file.path);
+        console.log('Using avatar path:', avatarPath);
+
+        // Update profile with new avatar
+        const updateResult = await dispatch(handleUpdateProfile({
+          avatar: avatarPath
+        }));
+
+        if (handleUpdateProfile.fulfilled.match(updateResult)) {
+          // Force refresh profile
+          const profileResult = await dispatch(handleGetProfile() as any);
+          
+          if (handleGetProfile.fulfilled.match(profileResult)) {
+            toast({
+              title: "Thành công",
+              description: "Cập nhật ảnh đại diện thành công",
+              variant: "success",
+              duration: 2000
+            });
+          }
+        } else {
+          throw new Error('Failed to update profile');
+        }
+      } else {
+        throw new Error('Upload failed');
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể cập nhật ảnh đại diện. Vui lòng thử lại",
+        variant: "destructive",
+        duration: 3000
+      });
+    }
+  }
+
+  // Helper function to get full image URL
+  const getImageUrl = (path: string | null | undefined) => {
+    if (!path) return "/placeholder.svg";
+    if (path.startsWith('http')) return path;
+    
+    // Backend returns path like "images/filename"
+    // Need to construct full URL: http://localhost:3000/images/filename
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+    return `${baseUrl}/${cleanPath}`;
+  };
 
   return (
     <div>
@@ -186,9 +279,15 @@ export default function ProfilePage() {
               <div className="flex flex-col items-center mb-6">
                 <div className="relative mb-4">
                   <img
-                    src={currentUser?.avatar || "/placeholder.svg"}
+                    src={getImageUrl(formValues.avatar || currentUser?.avatar)}
                     alt={currentUser?.fullname}
                     className="h-32 w-32 rounded-full object-cover border-4 border-white shadow-md"
+                    onError={(e) => {
+                      console.error('Image load error:', e);
+                      const url = formValues.avatar || currentUser?.avatar;
+                      console.log('Failed loading image URL:', url);
+                      e.currentTarget.src = "/placeholder.svg";
+                    }}
                   />
                   <button
                     onClick={handleAvatarChange}
@@ -196,6 +295,13 @@ export default function ProfilePage() {
                   >
                     <Upload className="h-4 w-4" />
                   </button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                  />
                 </div>
                 <h2 className="text-xl font-semibold">{currentUser?.fullname}</h2>
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mt-1">

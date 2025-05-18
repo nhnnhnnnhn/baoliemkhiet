@@ -23,7 +23,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { MessageSquare, ThumbsUp, Share2, Bookmark, Facebook, Twitter, AlertTriangle, Edit, Trash2, XCircle, CheckCircle } from "lucide-react"
+import { MessageCircle, AlertTriangle, Edit, Trash2, XCircle, CheckCircle } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
 import { ChatbotButton } from "@/components/chatbot-button"
 import { useToast } from "@/hooks/use-toast"
@@ -380,7 +380,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
 
     // Fetch comments when article ID is available
     if (params.slug && !isNaN(Number(params.slug))) {
-      dispatch(handleGetComments({ articleId: Number(params.slug) }))
+      dispatch(handleGetComments({ articleId: Number(params.slug) }) as any)
     }
   }, [params.slug, dispatch])
 
@@ -400,7 +400,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
       dispatch(clearCreateCommentState())
       
       // Refresh comments to show newly added comment if it's approved
-      dispatch(handleGetComments({ articleId: Number(params.slug) }))
+      dispatch(handleGetComments({ articleId: Number(params.slug) }) as any)
     }
   }, [createCommentSuccess, dispatch, params.slug, toast])
 
@@ -421,7 +421,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
       dispatch(clearUpdateCommentState())
       
       // Refresh comments
-      dispatch(handleGetComments({ articleId: Number(params.slug) }))
+      dispatch(handleGetComments({ articleId: Number(params.slug) }) as any)
     }
     
     if (updateCommentError) {
@@ -685,27 +685,11 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
           </div>
           <h1 className="text-3xl md:text-4xl font-bold leading-tight mb-4">{article.title}</h1>
 
-          {/* Social Share */}
-          <div className="flex space-x-4 mb-6">
-            <Button variant="outline" size="sm" className="flex items-center gap-2">
-              <Facebook size={16} />
-              <span className="hidden sm:inline">Chia sẻ</span>
-            </Button>
-            <Button variant="outline" size="sm" className="flex items-center gap-2">
-              <Twitter size={16} />
-              <span className="hidden sm:inline">Tweet</span>
-            </Button>
-            <Button variant="outline" size="sm" className="flex items-center gap-2">
-              <Share2 size={16} />
-              <span className="hidden sm:inline">Chia sẻ</span>
-            </Button>
-            <Button variant="outline" size="sm" className="flex items-center gap-2">
-              <Bookmark size={16} />
-              <span className="hidden sm:inline">Lưu</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
+          {/* Report Button */}
+          <div className="flex justify-end mb-6">
+            <Button
+              variant="outline"
+              size="sm"
               className="flex items-center gap-2"
               onClick={() => {
                 if (!isAuthenticated) {
@@ -722,7 +706,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
               disabled={articleReported}
             >
               <AlertTriangle className="h-4 w-4" />
-              <span className="hidden sm:inline">
+              <span>
                 {articleReported ? "Đã báo cáo" : "Báo cáo"}
               </span>
             </Button>
@@ -866,7 +850,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
               </div>
             ) : comments.length === 0 ? (
               <div className="text-center py-8 bg-gray-50 rounded-lg p-6">
-                <MessageSquare className="h-12 w-12 mx-auto text-gray-400 mb-3" />
+                <MessageCircle className="h-12 w-12 mx-auto text-gray-400 mb-3" />
                 <p className="text-gray-500 text-lg font-medium">Chưa có bình luận nào</p>
                 <p className="text-gray-400 mt-1 mb-4">Hãy là người đầu tiên bình luận về bài viết này!</p>
                 {isAuthenticated ? (
@@ -951,7 +935,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
                         <p className="text-gray-700 my-3 whitespace-pre-line">{comment.content}</p>
                         <div className="flex items-center gap-4 text-sm text-gray-500">
                           <button className="flex items-center gap-1 hover:text-blue-600">
-                            <ThumbsUp size={16} />
+                            <CheckCircle size={16} />
                             <span>Thích</span>
                           </button>
                           {isAuthenticated && (

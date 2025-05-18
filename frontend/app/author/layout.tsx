@@ -14,7 +14,6 @@ import {
   Edit,
   ChevronDown,
   Bell,
-  BarChart2,
   Users,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
@@ -51,13 +50,6 @@ function AuthorSidebarNavigation() {
           >
             <Home className={styles.navIcon} />
             Trang chủ
-          </Link>
-          <Link
-            href="/author/statistics"
-            className={`${styles.navLink} ${isActive("/author/statistics") ? styles.navLinkActive : ""}`}
-          >
-            <BarChart2 className={styles.navIcon} />
-            Thống kê
           </Link>
         </div>
       </div>
@@ -136,7 +128,6 @@ function AuthorHeaderBreadcrumb() {
   // Get the current section name based on the pathname
   const getCurrentSection = () => {
     if (pathname === "/author") return "Trang chủ"
-    if (pathname.startsWith("/author/statistics")) return "Thống kê"
     if (pathname.startsWith("/author/articles/add")) return "Viết bài mới"
     if (pathname.startsWith("/author/articles")) return "Bài viết của tôi"
     if (pathname.startsWith("/author/comments")) return "Bình luận"

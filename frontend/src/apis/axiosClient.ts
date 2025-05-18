@@ -64,6 +64,23 @@ axiosClient.interceptors.request.use(
   }
 );
 
+// Add authentication interceptor for upload client
+axiosUploadClient.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    // Only try to get token if we're in a browser environment
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 // Add a response interceptor
 axiosClient.interceptors.response.use(
   (response) => {
