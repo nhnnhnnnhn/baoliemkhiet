@@ -9,33 +9,23 @@ import Providers from "@/components/providers"
 import { Toaster } from "@/components/ui/toaster"
 
 // Sử dụng font Inter cho nội dung - font sans-serif hiện đại
-const inter = Inter({
-  subsets: ["latin", "vietnamese"],
-  variable: "--font-sans",
-  display: "swap",
-})
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
 // Sử dụng font Montserrat cho tiêu đề - font hiện đại và bắt mắt
-const montserrat = Montserrat({
-  subsets: ["latin", "vietnamese"],
-  variable: "--font-montserrat",
-  display: "swap",
-  weight: ["400", "500", "600", "700", "800"],
-})
+const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" })
 
 export const metadata: Metadata = {
-  title: "Báo Liêm Khiết - Tin tức nhanh chóng và chính xác",
-  description: "Trang tin tức cập nhật nhanh chóng và chính xác nhất Việt Nam",
-    generator: 'v0.dev'
+  title: "Báo Liêm Khiết",
+  description: "Báo điện tử Liêm Khiết - Tin tức mới nhất, nhanh nhất và đầy đủ nhất",
 }
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
-    <html lang="vi" className={`${inter.variable} ${montserrat.variable}`}>
+    <html lang="vi" className={`${inter.variable} ${montserrat.variable}`} suppressHydrationWarning>
       <body className={inter.className}>
         <Providers>
           <Suspense fallback={<Loading />}>{children}</Suspense>
