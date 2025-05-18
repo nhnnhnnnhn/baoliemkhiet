@@ -232,7 +232,7 @@ export default function SearchPage() {
             )}
 
             {/* Trending Searches */}
-            <div>
+            {/* <div>
               <h2 className="text-lg font-bold mb-4">Xu hướng tìm kiếm</h2>
               <div className="flex flex-wrap gap-2">
                 {trendingSearches.map((search, index) => (
@@ -245,10 +245,10 @@ export default function SearchPage() {
                   </button>
                 ))}
               </div>
-            </div>
+            </div> */}
 
             {/* Categories */}
-            <div className="mt-12">
+            {/* <div className="mt-12">
               <h2 className="text-lg font-bold mb-4">Khám phá theo danh mục</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {["Thời sự", "Thế giới", "Kinh doanh", "Công nghệ", "Thể thao", "Giải trí", "Sức khỏe", "Đời sống"].map(
@@ -259,7 +259,7 @@ export default function SearchPage() {
                   ),
                 )}
               </div>
-            </div>
+            </div> */}
           </div>
         )}
       </main>
