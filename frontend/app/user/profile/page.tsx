@@ -1,10 +1,11 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Calendar, Save, Upload, User, Users } from "lucide-react"
 import { useDispatch, useSelector } from "react-redux"
 import { useToast } from "@/hooks/use-toast"
 import { handleGetFollowers, handleGetFollowing } from "@/src/thunks/follow/followThunk"
 import { selectFollowers, selectFollowing } from "@/src/thunks/follow/followSlice"
+import fileApi from "@/src/apis/file"
 
 
 import { Button } from "@/components/ui/button"
@@ -174,8 +175,37 @@ export default function UserProfilePage() {
   }
 
   // Handle avatar change
-  const handleAvatarChange = () => {
-    alert("Tính năng thay đổi ảnh đại diện sẽ được triển khai sau!")
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0]) return
+    const file = e.target.files[0]
+
+    try {
+      const { file: uploadedFile } = await fileApi.uploadFile(file)
+      if (!currentUser?.id) return
+
+      const result = await dispatch(handleUpdateProfile({
+        id: currentUser.id,
+        avatar: uploadedFile.url
+      }))
+
+      if (handleUpdateProfile.fulfilled.match(result)) {
+        toast({
+          title: "Thành công!",
+          description: "Cập nhật ảnh đại diện thành công",
+          variant: "success",
+          duration: 2000
+        })
+        // Force reload profile to update avatar
+        dispatch(handleGetProfile() as any)
+      }
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể cập nhật ảnh đại diện. Vui lòng thử lại.",
+        variant: "destructive",
+        duration: 3000
+      })
+    }
   }
 
   if (!currentUser) {
@@ -197,12 +227,21 @@ export default function UserProfilePage() {
             <CardHeader className="relative pb-0">
               <div className="h-32 w-full bg-gradient-to-r from-primary/80 to-primary rounded-lg"></div>
               <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2">
-                <div className="relative">
+                <div className="relative group">
                   <img
                     src={currentUser.avatar || "/default-avatar.png"}
                     alt="Avatar"
                     className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
                   />
+                  <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                    <Upload className="h-6 w-6 text-white" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarChange}
+                    />
+                  </label>
                 </div>
               </div>
             </CardHeader>
