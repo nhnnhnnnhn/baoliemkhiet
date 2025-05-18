@@ -57,10 +57,10 @@ const followApi = {
   },
 
   // Get list of followers
-  getFollowers: async (): Promise<Follow[]> => {
+  getFollowers: async (userId: number): Promise<Follow[]> => {
     try {
-      console.log('[API] Fetching followers');
-      const response = await axiosClient.get<Follow[]>('/follows/followers');
+      console.log('[API] Fetching followers for user:', userId);
+      const response = await axiosClient.get<Follow[]>(`/follows/followers/${userId}`);
       console.log('[API] Followers fetched:', response);
       return Array.isArray(response) ? response : [];
     } catch (error) {
@@ -70,10 +70,10 @@ const followApi = {
   },
 
   // Get list of journalists being followed
-  getFollowing: async (): Promise<Follow[]> => {
+  getFollowing: async (userId: number): Promise<Follow[]> => {
     try {
-      console.log('[API] Fetching following');
-      const response = await axiosClient.get<Follow[]>('/follows/following');
+      console.log('[API] Fetching following for user:', userId);
+      const response = await axiosClient.get<Follow[]>(`/follows/following/${userId}`);
       console.log('[API] Following fetched:', response);
       return Array.isArray(response) ? response : [];
     } catch (error) {

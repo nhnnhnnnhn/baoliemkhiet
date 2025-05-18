@@ -7,6 +7,8 @@ import { ArrowLeft, Search } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "@/src/store"
 import { handleGetFollowing } from "@/src/thunks/follow/followThunk"
 import { selectFollowing, selectIsLoadingFollowing } from "@/src/thunks/follow/followSlice"
+import { selectCurrentUser } from "@/src/thunks/auth/authSlice"
+import userApi, { User } from "@/src/apis/user"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,21 +23,49 @@ export default function FollowingPage({ params }: { params: { username: string }
   const dispatch = useAppDispatch()
   const following = useAppSelector(selectFollowing)
   const isLoading = useAppSelector(selectIsLoadingFollowing)
+  const currentUser = useAppSelector(selectCurrentUser)
   const [searchTerm, setSearchTerm] = useState("")
   const [isClient, setIsClient] = useState(false)
+  const [profileUser, setProfileUser] = useState<User | null>(null)
   
   // Mark when component has been rendered on client
   useEffect(() => {
     setIsClient(true)
   }, [])
   
+  // Fetch user data first
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const users = await userApi.getUsers({
+          search: username,
+          role: username.toLowerCase() === 'admin' ? 'ADMIN' : undefined,
+          limit: 5
+        })
+        const matchedUser = users.users.find((u: User) => {
+          if (username.toLowerCase() === 'admin') {
+            return u.role === 'ADMIN'
+          }
+          return u.fullname.replace(/\s+/g, '').toLowerCase() === username.toLowerCase()
+        })
+        if (matchedUser) {
+          setProfileUser(matchedUser)
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error)
+      }
+    }
+    if (isClient) {
+      fetchUserData()
+    }
+  }, [username, isClient])
+  
   // Fetch following on component mount
   useEffect(() => {
-    // Only fetch data when on client side
-    if (isClient) {
-      dispatch(handleGetFollowing())
+    if (isClient && profileUser?.id) {
+      dispatch(handleGetFollowing(profileUser.id))
     }
-  }, [dispatch, isClient])
+  }, [dispatch, isClient, profileUser?.id])
   
   // Filter following based on search term
   const filteredFollowing = searchTerm 
@@ -59,7 +89,7 @@ export default function FollowingPage({ params }: { params: { username: string }
           <div>
             <h1 className="text-2xl font-bold">Đang theo dõi</h1>
             <p className="text-gray-500">
-              @{username} đang theo dõi {isClient ? following.length : 0} người
+              {isClient ? following.length : 0} người đang theo dõi
             </p>
           </div>
         </div>
@@ -103,12 +133,12 @@ export default function FollowingPage({ params }: { params: { username: string }
             {searchTerm ? (
               <>
                 <p className="text-lg font-medium">Không tìm thấy kết quả</p>
-                <p className="text-gray-500 mt-1">Không có tác giả nào phù hợp với tìm kiếm của bạn</p>
+                <p className="text-gray-500 mt-1">Không có người đang theo dõi nào phù hợp với tìm kiếm của bạn</p>
               </>
             ) : (
               <>
                 <p className="text-lg font-medium">Chưa theo dõi ai</p>
-                <p className="text-gray-500 mt-1">Khi bạn theo dõi tác giả, họ sẽ xuất hiện ở đây</p>
+                <p className="text-gray-500 mt-1">Khi bạn theo dõi ai đó, họ sẽ xuất hiện ở đây</p>
               </>
             )}
           </div>
@@ -131,12 +161,16 @@ export default function FollowingPage({ params }: { params: { username: string }
                   </Link>
                   <div>
                     <Link href={`/profile/${follow.journalist?.fullname?.toLowerCase().replace(/\s+/g, '')}`} className="font-medium hover:text-blue-600">
-                      {follow.journalist?.fullname || "Tác giả"}
+                      {follow.journalist?.fullname || "Người dùng"}
                     </Link>
                     <p className="text-sm text-gray-500">{follow.journalist?.email || ""}</p>
                   </div>
                 </div>
-                {isClient && <FollowButton journalistId={follow.journalistId} size="sm" />}
+                
+                {/* Only show follow button if not the current user */}
+                {isClient && currentUser?.id !== follow.journalistId && follow.journalist?.id && (
+                  <FollowButton journalistId={follow.journalist.id} size="sm" />
+                )}
               </div>
             ))}
           </div>

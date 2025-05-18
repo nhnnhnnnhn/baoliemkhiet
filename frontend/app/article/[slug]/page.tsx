@@ -93,6 +93,7 @@ interface ArticleUI {
     avatar: string;
     bio: string;
     username: string;
+    fullname?: string;
     id?: number;
   };
   content: Array<{type: string; value: string; url?: string; caption?: string}>;
@@ -164,7 +165,23 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [commentContent, setCommentContent] = useState("")
-  
+
+  const router = useRouter()
+  const dispatch = useAppDispatch()
+  const { toast } = useToast()
+
+  // Comment selectors
+  const comments = useAppSelector(selectComments)
+  const commentsLoading = useAppSelector(selectCommentsLoading)
+  const commentError = useAppSelector(selectCommentError)
+  const { totalComments } = useAppSelector(selectCommentPagination)
+  const isCreatingComment = useAppSelector(selectCreateCommentLoading)
+  const createCommentSuccess = useAppSelector(selectCreateCommentSuccess)
+  const isUpdatingComment = useAppSelector(selectUpdateCommentLoading)
+  const updateCommentSuccess = useAppSelector(selectUpdateCommentSuccess)
+  const updateCommentError = useAppSelector(selectUpdateCommentError)
+
+
   // States for editing comments
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
   const [editingCommentContent, setEditingCommentContent] = useState("")
@@ -187,20 +204,6 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
   const [isReportingArticle, setIsReportingArticle] = useState(false)
   const [articleReported, setArticleReported] = useState(false)
   
-  const router = useRouter()
-  const dispatch = useAppDispatch()
-  const { toast } = useToast()
-  
-  // Comment selectors
-  const comments = useAppSelector(selectComments)
-  const commentsLoading = useAppSelector(selectCommentsLoading)
-  const commentError = useAppSelector(selectCommentError)
-  const { totalComments } = useAppSelector(selectCommentPagination)
-  const isCreatingComment = useAppSelector(selectCreateCommentLoading)
-  const createCommentSuccess = useAppSelector(selectCreateCommentSuccess)
-  const isUpdatingComment = useAppSelector(selectUpdateCommentLoading)
-  const updateCommentSuccess = useAppSelector(selectUpdateCommentSuccess)
-  const updateCommentError = useAppSelector(selectUpdateCommentError)
   
   // User authentication
   const isAuthenticated = useAppSelector(selectIsLoggedIn)
@@ -246,8 +249,22 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
         if (!articleId) {
           throw new Error('ID bài viết không hợp lệ')
         }
-        
+
         const response = await articleApi.getArticleById(articleId)
+        // Debug detailed API response
+        console.log('=== API Response Debug ===');
+        console.log('Full response:', response);
+        console.log('Author raw:', response.author);
+        console.log('Author details:', {
+          hasAuthor: !!response.author,
+          authorType: typeof response.author,
+          authorProps: response.author ? Object.keys(response.author).join(', ') : 'none',
+          name: response.author?.name,
+          fullname: response.author?.fullname,
+          id: response.author?.id,
+          author_id: response.author_id
+        });
+        console.log('=======================');
         
         // Kiểm tra trạng thái xuất bản của bài viết (isPublish)
         if (!response.isPublish) {
@@ -297,12 +314,22 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
           publishTime: formatTime(response.published_at) || new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
           category: response.category?.name || 'Tin tức',
           content: processedContent.length > 0 ? processedContent : [{ type: 'text', value: response.content || 'Nội dung đang được cập nhật' }],
-          author: {
-            id: response.author_id,
-            name: response.author?.name || 'Tác giả',
-            avatar: response.author?.avatar || '/placeholder.svg?height=80&width=80',
-            bio: response.author?.fullname ? `${response.author.fullname} - Phóng viên Báo Liêm Khiết` : 'Phóng viên Báo Liêm Khiết',
-            username: response.author?.name?.toLowerCase().replace(/\s+/g, '') || 'tacgia'
+          author: response.author ? {
+            id: response.author.id,
+            name: response.author.fullname || response.author.name || '',
+            username: response.author.name || '',
+            fullname: response.author.fullname || '',
+            avatar: response.author.avatar || '/placeholder.svg?height=80&width=80',
+            bio: response.author.fullname
+              ? `${response.author.fullname} - Phóng viên Báo Liêm Khiết`
+              : 'Phóng viên Báo Liêm Khiết',
+          } : {
+            id: 0,
+            name: '',
+            username: '',
+            fullname: '',
+            avatar: '/placeholder.svg?height=80&width=80',
+            bio: 'Phóng viên Báo Liêm Khiết',
           },
           stats: {
             views: response.view || 0,
@@ -622,6 +649,10 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
     }
   }
 
+  const authorProfile = article.author.name
+    ? article.author.name.trim().replace(/\s+/g, '').toLowerCase()
+    : 'tacgia';
+
   return (
     <>
       <SiteHeader variant="solid" />
@@ -729,27 +760,46 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
         {/* Author Info */}
         <div className="bg-gray-50 p-6 rounded-lg mb-10">
           <div className="flex items-start gap-4">
-            <Link href={`/profile/${article.author.username}`} className="shrink-0">
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={article.author.avatar || "/placeholder.svg"} alt={article.author.name} />
-                <AvatarFallback>{article.author.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-            </Link>
-            <div className="flex-1">
-              <Link href={`/profile/${article.author.username}`} className="hover:underline">
-                <h3 className="text-lg font-semibold mb-1">Tác giả: {article.author.name}</h3>
+            {/* Render avatar */}
+            {(article.author && article.author.name) ? (
+              <Link href={`http://localhost:3001/profile/${article.author.fullname || article.author.name}`} className="shrink-0">
+                <Avatar className="h-16 w-16">
+                  <AvatarImage src={article.author.avatar || "/placeholder.svg"} alt={article.author.fullname || article.author.name} />
+                  <AvatarFallback>{(article.author.fullname || article.author.name).charAt(0)}</AvatarFallback>
+                </Avatar>
               </Link>
-              <p className="text-gray-600 mb-3">{article.author.bio}</p>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" asChild>
-                  <Link href={`/profile/${article.author.username}`}>
-                    Xem tất cả bài viết
+            ) : (
+              <Avatar className="h-16 w-16">
+                <AvatarImage src="/placeholder.svg" alt="Tác giả" />
+                <AvatarFallback>T</AvatarFallback>
+              </Avatar>
+            )}
+            <div className="flex-1">
+              {(article.author && article.author.name) ? (
+                <>
+                  <Link href={`http://localhost:3001/profile/${article.author.fullname || article.author.name}`} className="hover:underline">
+                    <h3 className="text-lg font-semibold mb-1">
+                      Tác giả: {article.author.fullname || article.author.name}
+                    </h3>
                   </Link>
-                </Button>
-                {article.author.id && (
-                  <FollowButton journalistId={article.author.id} size="sm" />
-                )}
-              </div>
+                  {article.author.bio && <p className="text-gray-600 mb-3">{article.author.bio}</p>}
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`http://localhost:3001/profile/${article.author.fullname || article.author.name}`}>
+                        Xem tất cả bài viết
+                      </Link>
+                    </Button>
+                    {article.author.id && (
+                      <FollowButton journalistId={article.author.id} size="sm" />
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-lg font-semibold mb-1">Tác giả chưa xác định</h3>
+                  <p className="text-gray-600 mb-3">Thông tin tác giả đang được cập nhật</p>
+                </>
+              )}
             </div>
           </div>
         </div>

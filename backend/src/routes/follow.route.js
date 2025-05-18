@@ -14,10 +14,10 @@ router.delete(
 );
 
 // Get list of followers
-router.get("/followers", authMiddleware(), followController.getFollowers);
+router.get("/followers/:userId", authMiddleware(), followController.getFollowers);
 
 // Get list of following
-router.get("/following", authMiddleware(), followController.getFollowing);
+router.get("/following/:userId", authMiddleware(), followController.getFollowing);
 
 // Check if following a journalist
 router.get(

@@ -39,9 +39,9 @@ const formatJoinDate = (dateString: string) => {
   }
 };
 
-export default function ProfilePage({ params }: { params: Promise<{ username: string }> }) {
-  // Truy cập params chuẩn
-  const username = use(params).username;
+export default function ProfilePage({ params }: { params: { username: string } }) {
+  // Truy cập params trực tiếp
+  const username = params.username;
   
   const dispatch = useAppDispatch()
   const currentUser = useAppSelector(selectCurrentUser)
@@ -67,24 +67,27 @@ export default function ProfilePage({ params }: { params: Promise<{ username: st
     setIsClient(true)
   }, []);
   
-  // Tìm kiếm người dùng theo username
+  // Tìm kiếm người dùng theo username và role
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         setUserLoading(true)
         setUserError(null)
         
-        // Giả sử rằng chúng ta có API để tìm người dùng theo username
-        // Trong thực tế, bạn sẽ cần phải gọi API nào thích hợp nhất
+        // Tìm kiếm người dùng theo username và role
         const users = await userApi.getUsers({
           search: username,
+          role: username.toLowerCase() === 'admin' ? 'ADMIN' : undefined,
           limit: 5
         })
         
         // Tìm người dùng phù hợp nhất từ danh sách
-        const matchedUser = users.users.find(u => 
-          u.fullname.toLowerCase().replace(/\s+/g, '') === username.toLowerCase()
-        )
+        const matchedUser = users.users.find(u => {
+          if (username.toLowerCase() === 'admin') {
+            return u.role === 'ADMIN'
+          }
+          return u.fullname.replace(/\s+/g, '').toLowerCase() === username.toLowerCase()
+        })
         
         if (!matchedUser) {
           setUserError('Không tìm thấy người dùng')
@@ -132,11 +135,11 @@ export default function ProfilePage({ params }: { params: Promise<{ username: st
   
   // Fetch followers and following on component mount
   useEffect(() => {
-    dispatch(handleGetFollowers())
-    dispatch(handleGetFollowing())
-    
-    // Check follow status for this user if we have their ID
     if (user?.id) {
+      dispatch(handleGetFollowers(user.id))
+      dispatch(handleGetFollowing(user.id))
+      
+      // Check follow status for this user if we have their ID
       dispatch(handleCheckFollowing(user.id))
     }
   }, [dispatch, user?.id])
