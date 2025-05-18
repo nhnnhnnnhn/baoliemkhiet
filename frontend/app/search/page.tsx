@@ -2,61 +2,14 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { ArrowLeft, Search, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-// Mock data for search results
-const mockArticles = [
-  {
-    id: 1,
-    title: "Global Leaders Gather for Climate Summit as Temperatures Soar",
-    excerpt:
-      "World leaders convene in Geneva to address urgent climate concerns amid record-breaking heat waves across continents.",
-    category: "Thế giới",
-    date: "2 giờ trước",
-    image: "/placeholder.svg?height=200&width=300&text=Climate",
-  },
-  {
-    id: 2,
-    title: "Markets Rally as Fed Signals Potential Rate Cut",
-    excerpt:
-      "Investors respond positively to Federal Reserve's latest economic outlook suggesting easing inflation pressures.",
-    category: "Kinh doanh",
-    date: "4 giờ trước",
-    image: "/placeholder.svg?height=200&width=300&text=Markets",
-  },
-  {
-    id: 3,
-    title: "New Study Reveals Benefits of Mediterranean Diet",
-    excerpt:
-      "Research confirms significant health improvements for participants following traditional Mediterranean eating patterns.",
-    category: "Sức khỏe",
-    date: "6 giờ trước",
-    image: "/placeholder.svg?height=200&width=300&text=Diet",
-  },
-  {
-    id: 4,
-    title: "Tech Giants Face New Antitrust Regulations",
-    excerpt:
-      "Lawmakers propose comprehensive legislation aimed at curbing monopolistic practices in the technology sector.",
-    category: "Công nghệ",
-    date: "8 giờ trước",
-    image: "/placeholder.svg?height=200&width=300&text=Tech",
-  },
-  {
-    id: 5,
-    title: "National Football Team Prepares for World Cup Qualifiers",
-    excerpt: "Coach announces squad selection for upcoming crucial matches in the World Cup qualification campaign.",
-    category: "Thể thao",
-    date: "10 giờ trước",
-    image: "/placeholder.svg?height=200&width=300&text=Football",
-  },
-]
+import articleApi, { Article } from "@/src/apis/article"
 
 const trendingSearches = [
   "Biến đổi khí hậu",
@@ -70,9 +23,10 @@ const trendingSearches = [
 
 export default function SearchPage() {
   const [query, setQuery] = useState("")
-  const [searchResults, setSearchResults] = useState<typeof mockArticles>([])
+  const [searchResults, setSearchResults] = useState<Article[]>([])
   const [recentSearches, setRecentSearches] = useState<string[]>([])
   const [isSearching, setIsSearching] = useState(false)
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null)
 
   // Load recent searches from localStorage on component mount
   useEffect(() => {
@@ -86,8 +40,7 @@ export default function SearchPage() {
   const saveRecentSearch = (search: string) => {
     if (!search.trim()) return
 
-    const updatedSearches = [search, ...recentSearches.filter((item) => item !== search)].slice(0, 5) // Keep only the 5 most recent searches
-
+    const updatedSearches = [search, ...recentSearches.filter((item) => item !== search)].slice(0, 5)
     setRecentSearches(updatedSearches)
     localStorage.setItem("recentSearches", JSON.stringify(updatedSearches))
   }
@@ -105,47 +58,41 @@ export default function SearchPage() {
     localStorage.removeItem("recentSearches")
   }
 
-  // Handle search submission
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!query.trim()) return
-
+  // Debounce search khi nhập
+  useEffect(() => {
+    if (!query.trim()) {
+      setSearchResults([])
+      return
+    }
     setIsSearching(true)
-
-    // Simulate API call with setTimeout
-    setTimeout(() => {
-      // Filter mock articles based on query
-      const results = mockArticles.filter(
-        (article) =>
-          article.title.toLowerCase().includes(query.toLowerCase()) ||
-          article.excerpt.toLowerCase().includes(query.toLowerCase()),
-      )
-
-      setSearchResults(results)
-      saveRecentSearch(query)
-      setIsSearching(false)
-    }, 500)
-  }
+    if (debounceTimeout.current) clearTimeout(debounceTimeout.current)
+    debounceTimeout.current = setTimeout(async () => {
+      try {
+        const results = await articleApi.searchArticles(query)
+        setSearchResults(results)
+        saveRecentSearch(query)
+      } catch (err) {
+        setSearchResults([])
+      } finally {
+        setIsSearching(false)
+      }
+    }, 400)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query])
 
   // Handle clicking on a trending or recent search
-  const handleSearchClick = (search: string) => {
+  const handleSearchClick = async (search: string) => {
     setQuery(search)
-
     setIsSearching(true)
-
-    // Simulate API call with setTimeout
-    setTimeout(() => {
-      // Filter mock articles based on search
-      const results = mockArticles.filter(
-        (article) =>
-          article.title.toLowerCase().includes(search.toLowerCase()) ||
-          article.excerpt.toLowerCase().includes(search.toLowerCase()),
-      )
-
+    try {
+      const results = await articleApi.searchArticles(search)
       setSearchResults(results)
       saveRecentSearch(search)
+    } catch (err) {
+      setSearchResults([])
+    } finally {
       setIsSearching(false)
-    }, 500)
+    }
   }
 
   return (
@@ -159,7 +106,7 @@ export default function SearchPage() {
             </Button>
           </Link>
 
-          <form onSubmit={handleSearch} className="flex-1">
+          <form onSubmit={e => e.preventDefault()} className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <Input
@@ -204,16 +151,22 @@ export default function SearchPage() {
                   <div key={article.id} className="flex gap-4 pb-6 border-b border-gray-200">
                     <div className="flex-1">
                       <div className="flex items-center text-sm text-gray-500 mb-2">
-                        <span className="font-medium text-blue-600">{article.category}</span>
+                        <span className="font-medium text-blue-600">{article.category?.name || "Không rõ"}</span>
                         <span className="mx-2">•</span>
-                        <span>{article.date}</span>
+                        <span>
+                          {article.published_at
+                            ? new Date(article.published_at).toLocaleDateString("vi-VN")
+                            : article.created_at
+                              ? new Date(article.created_at).toLocaleDateString("vi-VN")
+                              : ""}
+                        </span>
                       </div>
                       <h3 className="text-xl font-bold mb-2">{article.title}</h3>
-                      <p className="text-gray-600">{article.excerpt}</p>
+                      <p className="text-gray-600">{article.excerpt || (article.content?.slice(0, 120) + "...")}</p>
                     </div>
                     <div className="w-32 h-24 bg-gray-100 rounded overflow-hidden shrink-0">
                       <img
-                        src={article.image || "/placeholder.svg"}
+                        src={article.thumbnail || "/placeholder.svg"}
                         alt={article.title}
                         className="w-full h-full object-cover"
                       />
