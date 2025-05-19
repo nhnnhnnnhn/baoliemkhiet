@@ -327,7 +327,7 @@ export default function UsersPage() {
                          user.status}
                       </span>
                     </td>
-                    <td className={styles.tableCell}>{user.articles ? user.articles.length : 0}</td>
+                    <td className={styles.tableCell}>{user._count?.articles ?? 0}</td>
                     <td className={styles.tableCell}>{format(new Date(user.created_at), 'dd/MM/yyyy')}</td>
                     <td className={styles.tableCell}>
                       <div className="flex space-x-2">

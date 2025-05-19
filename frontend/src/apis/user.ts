@@ -42,6 +42,9 @@ export interface User {
       avatar: string | null
     }
   }>
+  _count?: {
+    articles: number
+  }
 }
 
 export interface GetUsersResponse {
