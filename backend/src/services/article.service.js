@@ -199,6 +199,12 @@ module.exports.getArticleById = async (id) => {
           tag: true,
         },
       },
+      _count: {
+        select: {
+          articleLikes: true,
+          comments: true,
+        },
+      },
     },
   });
   return article;
@@ -1046,3 +1052,4 @@ cron.schedule("0 0 * * *", async () => {
     console.error("Error in scheduled statistics update:", error.message);
   }
 });
+

@@ -1,375 +1,351 @@
 "use client"
 
-import type React from "react"
 import { useState, useEffect } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Calendar, Check, Clock, Edit, Eye, ImageIcon, Link2, ListChecks, Save, X } from "lucide-react"
+import Link from "next/link"
+import { ArrowLeft, Loader2, Save, Clock } from "lucide-react"
+import dynamic from "next/dynamic"
 import { useAppDispatch, useAppSelector } from "@/src/store"
-import { 
-  handleGetArticleById, 
-  handleUpdateArticle
-} from "@/src/thunks/article/articleThunk"
-import {
-  selectSelectedArticle,
-  selectIsUpdatingArticle,
-  selectUpdateArticleSuccess,
-  selectUpdateArticleError,
-  clearUpdateArticleState
-} from "@/src/thunks/article/articleSlice"
-import { Article, EditArticlePayload } from "@/src/apis/article"
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
+const RichTextEditor = dynamic(() => import("@/components/rich-text-editor"), {
+  ssr: false,
+  loading: () => <div className="h-[600px] w-full bg-gray-100 animate-pulse rounded-md" />
+})
+import { handleCreateArticle, handleApproveArticle } from "@/src/thunks/article/articleThunk"
+import {
+  selectIsCreatingArticle,
+  selectCreateArticleSuccess,
+  selectCreateArticleError,
+  clearCreateArticleState
+} from "@/src/thunks/article/articleSlice"
+import { handleGetCategories } from "@/src/thunks/category/categoryThunk"
+import { selectCategories } from "@/src/thunks/category/categorySlice"
+import { handleGetTags } from "@/src/thunks/tag/tagThunk"
+import { selectTags } from "@/src/thunks/tag/tagSlice"
+import { toast } from "@/components/ui/use-toast"
+
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import { toast } from "sonner"
-import styles from "../../../../admin/admin.module.css"
+import { MultiSelect } from "@/components/ui/multi-select"
+import { Spinner } from "@/components/ui/spinner"
+import styles from "@/app/admin/admin.module.css"
 
-export default function EditArticlePage({ params }: { params: { id: string } }) {
+export default function AddArticlePage() {
   const router = useRouter()
   const dispatch = useAppDispatch()
-  const articleId = parseInt(params.id)
-
+  
   // Redux selectors
-  const article = useAppSelector(selectSelectedArticle)
-  const isUpdatingArticle = useAppSelector(selectIsUpdatingArticle)
-  const updateArticleSuccess = useAppSelector(selectUpdateArticleSuccess)
-  const updateArticleError = useAppSelector(selectUpdateArticleError)
-
-  // Local state
-  const [formData, setFormData] = useState<EditArticlePayload>({
-    title: "",
-    content: "",
-    excerpt: "",
-    status: "DRAFT",
-    categoryId: 0,
-    tags: [],
-    thumbnail: "",
-  })
-
-  // Fetch article data on component mount
+  const categories = useAppSelector(selectCategories)
+  const tags = useAppSelector(selectTags)
+  const isCreatingArticle = useAppSelector(selectIsCreatingArticle)
+  const createArticleSuccess = useAppSelector(selectCreateArticleSuccess)
+  const createArticleError = useAppSelector(selectCreateArticleError)
+  
+  // State for form fields
+  const [title, setTitle] = useState('')
+  const [excerpt, setExcerpt] = useState('')
+  const [content, setContent] = useState('')
+  const [status, setStatus] = useState<'APPROVED' | 'DRAFT' | 'PENDING'>('DRAFT')
+  const [categoryId, setCategoryId] = useState<string>('')
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [thumbnailUrl, setThumbnailUrl] = useState('')
+  const [publishDate, setPublishDate] = useState<string>('')
+  const [useCurrentDate, setUseCurrentDate] = useState(false)
+  
+  // Fetch categories and tags on component mount
   useEffect(() => {
-    dispatch(handleGetArticleById(articleId))
-  }, [dispatch, articleId])
-
-  // Update local state when article data is loaded
-  useEffect(() => {
-    if (article) {
-      setFormData({
-        title: article.title || "",
-        content: article.content || "",
-        excerpt: article.excerpt || "",
-        status: article.status || "DRAFT",
-        categoryId: article.category_id || 0,
-        tags: article.tags?.map(tag => tag.id) || [],
-        thumbnail: article.thumbnail || "",
-      })
-    }
-  }, [article])
-
-  // Handle update success/error
-  useEffect(() => {
-    if (updateArticleSuccess) {
-      toast.success("Cập nhật bài viết thành công!")
-      dispatch(clearUpdateArticleState())
-      router.push(`/author/articles/${articleId}`)
-    }
-    if (updateArticleError) {
-      toast.error(updateArticleError)
-      dispatch(clearUpdateArticleState())
-    }
-  }, [updateArticleSuccess, updateArticleError, dispatch, router, articleId])
-
+    dispatch(handleGetCategories({}))
+    dispatch(handleGetTags({}))
+  }, [dispatch])
+  
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    dispatch(handleUpdateArticle({
-      id: articleId,
-      data: formData
-    }))
-  }
-
-  // Handle input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-  }
-
-  // Handle category change
-  const handleCategoryChange = (value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      categoryId: parseInt(value)
-    }))
-  }
-
-  // Handle status change
-  const handleStatusChange = (value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      status: value as "DRAFT" | "APPROVED" | "PENDING" | "REJECTED" | "PUBLISHED"
-    }))
-  }
-
-  // Handle tags
-  const [tagInput, setTagInput] = useState("")
-  const handleAddTag = () => {
-    if (tagInput.trim()) {
-      const tagId = parseInt(tagInput.trim())
-      if (!isNaN(tagId) && !formData.tags?.includes(tagId)) {
-        setFormData(prev => ({
-          ...prev,
-          tags: [...(prev.tags || []), tagId]
-        }))
-        setTagInput("")
+    
+    if (!title || !content || !categoryId) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng điền đầy đủ thông tin bắt buộc",
+        variant: "destructive"
+      })
+      return
+    }
+    
+    // Xử lý ngày xuất bản
+    let publishDateValue: string | undefined = undefined;
+    if (status === 'APPROVED') {
+      // Nếu chọn "Bây giờ", lấy thời gian hiện tại và đảm bảo định dạng chuẩn ISO
+      if (useCurrentDate) {
+        const now = new Date();
+        // Đảm bảo rằng ngày được tạo đúng định dạng ISO8601 đầy đủ
+        publishDateValue = now.toISOString();
+        console.log('Sử dụng thời gian hiện tại:', publishDateValue);
+      } 
+      // Nếu chọn một ngày cụ thể, sử dụng ngày đó
+      else if (publishDate) {
+        try {
+          const dateObj = new Date(publishDate)
+          if (!isNaN(dateObj.getTime())) {
+            publishDateValue = dateObj.toISOString()
+          }
+        } catch (error) {
+          console.error("Lỗi xử lý ngày xuất bản:", error)
+          publishDateValue = new Date().toISOString() // Mặc định là ngày hiện tại
+        }
+      }
+      // Mặc định là thời gian hiện tại
+      else {
+        publishDateValue = new Date().toISOString()
       }
     }
-  }
-
-  const handleRemoveTag = (tagId: number) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags?.filter(id => id !== tagId) || []
+    
+    const tagIds = selectedTags.map(id => parseInt(id))
+    dispatch(handleCreateArticle({
+      title,
+      content,
+      thumbnail: thumbnailUrl || undefined,
+      authorId: 1, // Hiện tại gán cứng ID người dùng, sau này lấy từ auth state
+      categoryId: parseInt(categoryId),
+      status: status,
+      publishedAt: publishDateValue,
+      tags: tagIds
     }))
   }
-
-  // Get status badge variant
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case "PUBLISHED":
-        return "default"
-      case "PENDING":
-        return "secondary"
-      case "DRAFT":
-        return "outline"
-      case "REJECTED":
-        return "destructive"
-      default:
-        return "default"
+  
+  // Handle success/error
+  useEffect(() => {
+    if (createArticleSuccess) {
+      // Nếu tạo bài viết thành công và có id
+      const article = createArticleSuccess as any;
+      if (article && typeof article === 'object' && article.id) {
+        // Không cần gọi handleApproveArticle nữa vì khi tạo bài viết
+        // với status=APPROVED, backend đã tự động đặt isPublish=true
+        
+        toast({
+          title: "Thành công",
+          description: "Đã tạo bài viết mới thành công" + (status === 'APPROVED' ? ' và đã xuất bản' : ''),
+          variant: "success"
+        })
+      } else {
+        toast({
+          title: "Thành công",
+          description: "Đã tạo bài viết mới thành công",
+          variant: "success"
+        })
+      }
+      
+      dispatch(clearCreateArticleState())
+      router.push('/admin/articles')
     }
-  }
-
-  // Get status text
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "PUBLISHED":
-        return "Đã xuất bản"
-      case "PENDING":
-        return "Chờ duyệt"
-      case "DRAFT":
-        return "Bản nháp"
-      case "REJECTED":
-        return "Đã từ chối"
-      default:
-        return status
+    
+    if (createArticleError) {
+      toast({
+        title: "Lỗi",
+        description: createArticleError,
+        variant: "destructive"
+      })
+      dispatch(clearCreateArticleState())
     }
-  }
-
-  if (!article) {
-    return <div>Loading...</div>
-  }
-
+  }, [createArticleSuccess, createArticleError, dispatch, router])
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center space-x-4">
-          <Link href={`/author/articles/${articleId}`}>
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-4 w-4" />
+    <div>
+      {/* Page Header */}
+      <div className={styles.pageHeader}>
+        <div className="flex items-center">
+          <Link href="/admin/articles">
+            <Button variant="ghost" size="sm" className="mr-4">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Quay lại
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold">Chỉnh sửa bài viết</h1>
-            <p className="text-muted-foreground">Cập nhật thông tin bài viết của bạn</p>
+            <h1 className={styles.pageTitle}>Thêm bài viết mới</h1>
+            <div className={styles.pageBreadcrumb}>
+              <div className={styles.breadcrumbItem}>Trang chủ</div>
+              <div className={styles.breadcrumbDivider}>/</div>
+              <div className={styles.breadcrumbItem}>Bài viết</div>
+              <div className={styles.breadcrumbDivider}>/</div>
+              <div className={styles.breadcrumbItem}>Thêm mới</div>
+            </div>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <Badge variant={getStatusBadgeVariant(article.status)}>
-            {getStatusText(article.status)}
-          </Badge>
-          <Button onClick={handleSubmit} disabled={isUpdatingArticle}>
-            {isUpdatingArticle ? (
-              <>
-                <Clock className="mr-2 h-4 w-4 animate-spin" />
-                Đang cập nhật...
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Lưu thay đổi
-              </>
-            )}
-          </Button>
-        </div>
+        <Button onClick={handleSubmit} disabled={isCreatingArticle}>
+          {isCreatingArticle ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Đang lưu...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4 mr-2" />
+              Lưu bài viết
+            </>
+          )}
+        </Button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="md:col-span-2 space-y-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Nội dung bài viết</CardTitle>
-                <CardDescription>
-                  Nhập tiêu đề và nội dung bài viết của bạn
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+      {/* Add Article Form */}
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2">
+          <div className={styles.chartCard}>
+            <div className={styles.chartHeader}>
+              <h3 className={styles.chartTitle}>Nội dung bài viết</h3>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
                 <div>
-                  <Label htmlFor="title">Tiêu đề</Label>
-                  <Input
-                    id="title"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    className="mt-1"
-                    placeholder="Nhập tiêu đề bài viết"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="content">Nội dung</Label>
-                  <Textarea
-                    id="content"
-                    name="content"
-                    value={formData.content}
-                    onChange={handleChange}
-                    className="mt-1 min-h-[200px]"
-                    placeholder="Nhập nội dung bài viết"
+                  <Label htmlFor="title">Tiêu đề <span className="text-red-500">*</span></Label>
+                  <Input 
+                    id="title" 
+                    placeholder="Nhập tiêu đề bài viết" 
+                    className="mt-1" 
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
                   />
                 </div>
                 <div>
                   <Label htmlFor="excerpt">Tóm tắt</Label>
-                  <Textarea
-                    id="excerpt"
-                    name="excerpt"
-                    value={formData.excerpt}
-                    onChange={handleChange}
-                    className="mt-1"
-                    placeholder="Nhập tóm tắt bài viết"
+                  <Textarea 
+                    id="excerpt" 
+                    placeholder="Nhập tóm tắt bài viết" 
+                    className="mt-1" 
+                    rows={3} 
+                    value={excerpt}
+                    onChange={(e) => setExcerpt(e.target.value)}
                   />
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Phân loại</CardTitle>
-                <CardDescription>
-                  Chọn chuyên mục và thêm tags cho bài viết
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="category">Chuyên mục</Label>
-                  <Select 
-                    value={formData.categoryId?.toString()} 
-                    onValueChange={handleCategoryChange}
-                  >
+                  <Label htmlFor="content">Nội dung <span className="text-red-500">*</span></Label>
+                  <div className="mt-1">
+                    <RichTextEditor
+                      value={content}
+                      onChange={(newContent) => setContent(newContent)}
+                    />
+                    <input
+                      type="hidden"
+                      name="content"
+                      value={content}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="md:col-span-1">
+          <div className={styles.chartCard}>
+            <div className={styles.chartHeader}>
+              <h3 className={styles.chartTitle}>Thông tin bài viết</h3>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="status">Trạng thái</Label>
+                  <Select value={status} onValueChange={(value: 'APPROVED' | 'DRAFT' | 'PENDING') => setStatus(value)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Chọn trạng thái" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="DRAFT">Bản nháp</SelectItem>
+                      <SelectItem value="PENDING">Chờ duyệt</SelectItem>
+                      <SelectItem value="APPROVED">Đã duyệt</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label>Ngày xuất bản</Label>
+                  <div className="flex flex-wrap items-center gap-3 mt-1 w-full">
+                    <Input
+                      type="datetime-local"
+                      value={publishDate}
+                      onChange={(e) => setPublishDate(e.target.value)}
+                      disabled={useCurrentDate}
+                      className="w-[220px] min-w-0 flex-shrink"
+                    />
+                    <Button
+                      type="button"
+                      variant={useCurrentDate ? "default" : "outline"}
+                      className="flex items-center gap-2 rounded-full shadow-sm border border-gray-200 min-w-[180px] mt-2 sm:mt-0"
+                      onClick={() => setUseCurrentDate(!useCurrentDate)}
+                    >
+                      <Clock className="h-4 w-4" />
+                      {useCurrentDate ? 'Đã chọn: Bây giờ' : 'Sử dụng thời gian hiện tại'}
+                    </Button>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1 min-h-[20px]">
+                    {useCurrentDate
+                      ? 'Bài viết sẽ được xuất bản ngay khi lưu.'
+                      : publishDate
+                        ? `Bài viết sẽ được xuất bản vào: ${new Date(publishDate).toLocaleString('vi-VN')}`
+                        : 'Chọn thời gian xuất bản hoặc sử dụng thời gian hiện tại.'}
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="category">Chuyên mục <span className="text-red-500">*</span></Label>
+                  <Select value={categoryId} onValueChange={(value) => setCategoryId(value)}>
                     <SelectTrigger id="category" className="mt-1">
                       <SelectValue placeholder="Chọn chuyên mục" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">Thời sự</SelectItem>
-                      <SelectItem value="2">Thế giới</SelectItem>
-                      <SelectItem value="3">Kinh doanh</SelectItem>
-                      <SelectItem value="4">Thể thao</SelectItem>
-                      <SelectItem value="5">Công nghệ</SelectItem>
-                      <SelectItem value="6">Du lịch</SelectItem>
+                      {categories.length === 0 ? (
+                        <SelectItem value="loading" disabled>
+                          <Spinner size="sm" /> Đang tải...
+                        </SelectItem>
+                      ) : (
+                        categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id.toString()}>
+                            {category.name}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label>Tags</Label>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {formData.tags?.map(tagId => (
-                      <Badge key={tagId} variant="secondary">
-                        {tagId}
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveTag(tagId)}
-                          className="ml-2 hover:text-destructive"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <Input
-                      value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
-                      placeholder="Nhập ID tag"
-                      className="flex-1"
-                    />
-                    <Button type="button" onClick={handleAddTag}>
-                      Thêm
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="space-y-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Trạng thái</CardTitle>
-                <CardDescription>
-                  Chọn trạng thái cho bài viết
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Select 
-                  value={formData.status} 
-                  onValueChange={handleStatusChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Chọn trạng thái" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="DRAFT">Bản nháp</SelectItem>
-                    <SelectItem value="PENDING">Gửi phê duyệt</SelectItem>
-                    <SelectItem value="PUBLISHED">Đã xuất bản</SelectItem>
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Ảnh đại diện</CardTitle>
-                <CardDescription>
-                  Thêm ảnh đại diện cho bài viết
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col items-center">
-                  <img
-                    src={formData.thumbnail || "/placeholder.svg"}
-                    alt="Ảnh đại diện"
-                    className="w-full h-48 object-cover rounded-md mb-4"
+                  <Label htmlFor="tags">Thẻ</Label>
+                  <MultiSelect
+                    options={tags.map(tag => ({
+                      label: tag.name,
+                      value: tag.id.toString()
+                    }))}
+                    selected={selectedTags}
+                    onChange={setSelectedTags}
+                    placeholder="Chọn thẻ"
+                    className="mt-1"
                   />
-                  <div className="flex gap-2">
-                    <Button variant="outline" type="button">
-                      <ImageIcon className="mr-2 h-4 w-4" />
-                      Chọn ảnh
-                    </Button>
-                    <Button variant="outline" type="button" className="text-destructive">
-                      <X className="mr-2 h-4 w-4" />
-                      Xóa ảnh
-                    </Button>
-                  </div>
                 </div>
-              </CardContent>
-            </Card>
+                <div>
+                  <Label htmlFor="thumbnailUrl">Ảnh đại diện (URL)</Label>
+                  <Input 
+                    id="thumbnailUrl" 
+                    placeholder="Nhập URL ảnh đại diện" 
+                    className="mt-1" 
+                    value={thumbnailUrl}
+                    onChange={(e) => setThumbnailUrl(e.target.value)}
+                  />
+                </div>
+                <div className="pt-4 border-t border-gray-200">
+                  <Button type="submit" className="w-full" disabled={isCreatingArticle}>
+                    {isCreatingArticle ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Đang lưu...
+                      </>
+                    ) : (
+                      'Lưu bài viết'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </form>

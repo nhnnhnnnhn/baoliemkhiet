@@ -267,38 +267,38 @@ export default function AuthorArticlesPage() {
         </div>
         <div className={styles.tableContent}>
           <div className="overflow-x-auto">
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th className={styles.tableHeaderCell}>ID</th>
-                  <th className={styles.tableHeaderCell}>Tiêu đề</th>
-                  <th className={styles.tableHeaderCell}>Trạng thái</th>
-                  <th className={styles.tableHeaderCell}>Chuyên mục</th>
-                  <th className={styles.tableHeaderCell}>Ngày xuất bản</th>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th className={styles.tableHeaderCell}>ID</th>
+                <th className={styles.tableHeaderCell}>Tiêu đề</th>
+                <th className={styles.tableHeaderCell}>Trạng thái</th>
+                <th className={styles.tableHeaderCell}>Chuyên mục</th>
+                <th className={styles.tableHeaderCell}>Ngày xuất bản</th>
                   <th className={styles.tableHeaderCell}>Lượt thích</th>
                   <th className={styles.tableHeaderCell}>Bình luận</th>
-                  <th className={styles.tableHeaderCell}>Hành động</th>
-                </tr>
-              </thead>
-              <tbody>
+                <th className={styles.tableHeaderCell}>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
                 {filteredArticles && filteredArticles.length > 0 ? (
                   filteredArticles.map((article) => (
-                  <tr key={article.id} className={styles.tableRow}>
-                    <td className={styles.tableCell}>{article.id}</td>
-                    <td className={styles.tableCell}>
+                <tr key={article.id} className={styles.tableRow}>
+                  <td className={styles.tableCell}>{article.id}</td>
+                  <td className={styles.tableCell}>
                       <div className="font-medium max-w-[300px] truncate">{article.title}</div>
-                    </td>
-                    <td className={styles.tableCell}>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  </td>
+                  <td className={styles.tableCell}>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           ARTICLE_STATUS[article.status as ArticleStatus]?.color || "bg-gray-100 text-gray-800"
                         }`}
                       >
                         {ARTICLE_STATUS[article.status as ArticleStatus]?.label || article.status}
-                      </span>
-                    </td>
-                    <td className={styles.tableCell}>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    </span>
+                  </td>
+                  <td className={styles.tableCell}>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {article.category?.name || "Chưa phân loại"}
                       </span>
                     </td>
@@ -321,26 +321,26 @@ export default function AuthorArticlesPage() {
                       <div className="flex items-center gap-1 text-gray-600">
                         <MessageSquare className="h-4 w-4" />
                         <span>{article._count?.articleComments || 0}</span>
-                      </div>
-                    </td>
-                    <td className={styles.tableCell}>
+                    </div>
+                  </td>
+                  <td className={styles.tableCell}>
                       <div className="flex items-center gap-2">
-                        <Link href={`/author/articles/${article.id}`}>
+                      <Link href={`/author/articles/${article.id}`}>
                           <Button variant="ghost" size="icon">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                        <Link href={`/author/articles/${article.id}/edit`}>
-                          <Button variant="ghost" size="icon">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                        <Button variant="ghost" size="icon" className="text-destructive">
-                          <Trash2 className="h-4 w-4" />
+                          <Eye className="h-4 w-4" />
                         </Button>
-                      </div>
-                    </td>
-                  </tr>
+                      </Link>
+                      <Link href={`/author/articles/${article.id}/edit`}>
+                          <Button variant="ghost" size="icon">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                        <Button variant="ghost" size="icon" className="text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
                   ))
                 ) : (
                   <tr>
@@ -349,8 +349,8 @@ export default function AuthorArticlesPage() {
                     </td>
                   </tr>
                 )}
-              </tbody>
-            </table>
+            </tbody>
+          </table>
           </div>
         </div>
       </div>

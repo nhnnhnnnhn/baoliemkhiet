@@ -43,11 +43,13 @@ module.exports.getAllPostedArticles = controllerHandler(async (req, res) => {
 
 // Get a single article by ID
 module.exports.getArticleById = controllerHandler(async (req, res) => {
+  console.log('-----------------Running getArticleById with id:', req.params.id);
   const { id } = req.params;
   if (!id) {
     return res.status(400).json({ message: "Missing article ID" });
   }
   const article = await service.getArticleById(id);
+  console.log('-----------------Article:', article);
   if (!article) {
     return res.status(404).json({ message: "Article not found" });
   }
@@ -257,3 +259,4 @@ module.exports.deleteMultipleArticles = controllerHandler(async (req, res) => {
   }
   res.status(200).json({ message: "Delete successfully!", articles });
 });
+

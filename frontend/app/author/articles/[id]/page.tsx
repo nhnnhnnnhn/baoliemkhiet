@@ -1,5 +1,13 @@
+"use client"
+
+import { useEffect } from "react"
+import { use } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { ArrowLeft, Calendar, Clock, Edit, Eye, MessageSquare, Share2, ThumbsUp, User } from "lucide-react"
+import { useAppDispatch, useAppSelector } from "@/src/store"
+import { handleGetArticleById } from "@/src/thunks/article/articleThunk"
+import { selectSelectedArticle } from "@/src/thunks/article/articleSlice"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -8,72 +16,66 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator"
 import styles from "../../../admin/admin.module.css"
 
+// Định nghĩa các trạng thái và mapping
+const ARTICLE_STATUS = {
+  APPROVED: {
+    value: "APPROVED",
+    label: "Đã xuất bản",
+    color: "bg-green-100 text-green-800"
+  },
+  PENDING: {
+    value: "PENDING",
+    label: "Chờ duyệt",
+    color: "bg-yellow-100 text-yellow-800"
+  },
+  DRAFT: {
+    value: "DRAFT",
+    label: "Bản nháp",
+    color: "bg-gray-100 text-gray-800"
+  },
+  REJECTED: {
+    value: "REJECTED",
+    label: "Đã từ chối",
+    color: "bg-red-100 text-red-800"
+  }
+} as const
+
+type ArticleStatus = keyof typeof ARTICLE_STATUS
+
+interface RelatedArticle {
+  id: string
+  title: string
+  category?: {
+    name: string
+  }
+  publishedAt?: string
+}
+
+interface Tag {
+  id: number
+  name: string
+  slug: string
+}
+
 export default function ArticleDetailPage({ params }: { params: { id: string } }) {
-  // Mock article data
-  const article = {
-    id: params.id,
-    title: "Đội tuyển Việt Nam giành chiến thắng ấn tượng tại vòng loại World Cup",
-    status: "Đã xuất bản",
-    category: "Thể thao",
-    tags: ["Bóng đá", "Đội tuyển Việt Nam", "World Cup", "Vòng loại"],
-    publishedAt: "04/04/2025 15:30",
-    updatedAt: "04/04/2025 16:45",
-    author: {
-      name: "Trần Thị B",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    editor: {
-      name: "Nguyễn Văn C",
-    },
-    views: 10876,
-    likes: 543,
-    comments: 78,
-    readTime: "5 phút",
-    content: `
-      <p>Đội tuyển Việt Nam đã có một trận đấu xuất sắc khi đánh bại đối thủ mạnh với tỷ số 2-0 trong trận đấu thuộc vòng loại World Cup diễn ra vào tối qua.</p>
-      
-      <p>Hai bàn thắng được ghi do công của tiền đạo Nguyễn Tiến Linh ở phút thứ 30 và tiền vệ Nguyễn Quang Hải ở phút 75. Đây là chiến thắng quan trọng giúp đội tuyển Việt Nam cải thiện vị trí trên bảng xếp hạng và nuôi hy vọng tiến xa hơn trong hành trình chinh phục tấm vé dự World Cup.</p>
-      
-      <h2>Diễn biến trận đấu</h2>
-      
-      <p>Ngay từ đầu trận, đội tuyển Việt Nam đã thể hiện lối chơi tấn công mạnh mẽ. Các cầu thủ liên tục tạo ra những tình huống nguy hiểm về phía khung thành đối phương.</p>
-      
-      <p>Phút thứ 30, từ đường chuyền của Quang Hải, Tiến Linh đã thoát xuống và dứt điểm chính xác, mở tỷ số cho đội tuyển Việt Nam.</p>
-      
-      <p>Sang hiệp hai, dù đối phương tăng cường tấn công nhưng hàng thủ Việt Nam đã chơi rất chắc chắn. Phút 75, Quang Hải có pha đi bóng và dứt điểm từ ngoài vòng cấm, nâng tỷ số lên 2-0 cho đội tuyển Việt Nam.</p>
-      
-      <h2>Nhận định từ chuyên gia</h2>
-      
-      <p>Theo nhận định của các chuyên gia, đội tuyển Việt Nam đã có một trận đấu hoàn hảo cả về chiến thuật lẫn tinh thần. HLV Park Hang-seo đã có những điều chỉnh hợp lý về đội hình và chiến thuật, giúp đội tuyển Việt Nam kiểm soát tốt trận đấu.</p>
-      
-      <p>"Đây là một trong những trận đấu hay nhất của đội tuyển Việt Nam trong vòng loại World Cup. Các cầu thủ đã thể hiện được bản lĩnh và kỹ thuật tốt. Chiến thắng này mở ra cơ hội lớn cho đội tuyển Việt Nam ở các trận đấu tiếp theo", chuyên gia bóng đá Trần Văn D nhận định.</p>
-      
-      <h2>Cơ hội tiến xa</h2>
-      
-      <p>Với chiến thắng này, đội tuyển Việt Nam đã cải thiện đáng kể vị trí trên bảng xếp hạng. Nếu tiếp tục duy trì phong độ tốt ở các trận đấu sắp tới, cơ hội tiến xa trong vòng loại World Cup là hoàn toàn có thể.</p>
-      
-      <p>Trận đấu tiếp theo của đội tuyển Việt Nam sẽ diễn ra vào ngày 10/04/2025. Đây sẽ là thử thách quan trọng để đội tuyển Việt Nam khẳng định vị thế của mình trong khu vực.</p>
-    `,
-    relatedArticles: [
-      {
-        id: "ART-002",
-        title: "Phân tích chiến thuật của HLV Park Hang-seo trong trận đấu với đội tuyển Malaysia",
-        category: "Thể thao",
-        publishedAt: "03/04/2025",
-      },
-      {
-        id: "ART-003",
-        title: "Tiền vệ Nguyễn Quang Hải: 'Chúng tôi đặt mục tiêu tiến xa nhất có thể trong vòng loại World Cup'",
-        category: "Thể thao",
-        publishedAt: "02/04/2025",
-      },
-      {
-        id: "ART-004",
-        title: "Lịch thi đấu của đội tuyển Việt Nam trong vòng loại World Cup 2026",
-        category: "Thể thao",
-        publishedAt: "01/04/2025",
-      },
-    ],
+  const router = useRouter()
+  const dispatch = useAppDispatch()
+  const article = useAppSelector(selectSelectedArticle)
+  const isLoading = useAppSelector(state => state.article.isLoading)
+  const resolvedParams = use(params)
+
+  useEffect(() => {
+    if (resolvedParams.id) {
+      dispatch(handleGetArticleById(Number(resolvedParams.id)))
+    }
+  }, [dispatch, resolvedParams.id])
+
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
+
+  if (!article) {
+    return <div>Không tìm thấy bài viết</div>
   }
 
   return (
@@ -107,23 +109,31 @@ export default function ArticleDetailPage({ params }: { params: { id: string } }
               <CardDescription className="mt-2 flex flex-wrap items-center gap-2">
                 <Badge
                   variant={
-                    article.status === "Đã xuất bản"
-                      ? "success"
-                      : article.status === "Chờ duyệt"
-                        ? "warning"
+                    article.status === "APPROVED"
+                      ? "default"
+                      : article.status === "PENDING"
+                        ? "secondary"
                         : "outline"
                   }
                 >
-                  {article.status}
+                  {ARTICLE_STATUS[article.status as ArticleStatus]?.label || article.status}
                 </Badge>
-                <Badge variant="secondary">{article.category}</Badge>
+                <Badge variant="secondary">{article.category?.name || "Chưa phân loại"}</Badge>
                 <span className="flex items-center text-sm text-muted-foreground">
                   <Calendar className="h-3.5 w-3.5 mr-1" />
-                  {article.publishedAt}
+                  {article.publishedAt 
+                    ? new Date(article.publishedAt).toLocaleDateString('vi-VN', {
+                        year: 'numeric',
+                        month: 'numeric',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })
+                    : "Chưa xuất bản"}
                 </span>
                 <span className="flex items-center text-sm text-muted-foreground">
                   <Clock className="h-3.5 w-3.5 mr-1" />
-                  {article.readTime}
+                  5 phút
                 </span>
               </CardDescription>
             </div>
@@ -169,54 +179,76 @@ export default function ArticleDetailPage({ params }: { params: { id: string } }
                 <h4 className="text-sm font-medium text-muted-foreground mb-2">Tác giả</h4>
                 <div className="flex items-center">
                   <Avatar className="h-8 w-8 mr-2">
-                    <AvatarImage src={article.author.avatar} alt={article.author.name} />
-                    <AvatarFallback>{article.author.name.charAt(0)}</AvatarFallback>
+                    <AvatarImage src={article.author?.avatar} alt={article.author?.fullname} />
+                    <AvatarFallback>{article.author?.fullname?.charAt(0) || "A"}</AvatarFallback>
                   </Avatar>
-                  <span>{article.author.name}</span>
+                  <span>{article.author?.fullname || "Chưa có tác giả"}</span>
                 </div>
               </div>
 
-              {article.editor && (
+              {article.editor_name && (
                 <div>
                   <h4 className="text-sm font-medium text-muted-foreground mb-2">Biên tập viên</h4>
                   <div className="flex items-center">
                     <User className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span>{article.editor.name}</span>
+                    <span>{article.editor_name}</span>
                   </div>
                 </div>
               )}
 
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground mb-2">Chuyên mục</h4>
-                <Badge variant="secondary">{article.category}</Badge>
+                <Badge variant="secondary">{article.category?.name || "Chưa phân loại"}</Badge>
               </div>
 
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">Thẻ</h4>
-                <div className="flex flex-wrap gap-2">
-                  {article.tags.map((tag) => (
-                    <Badge key={tag} variant="outline">
-                      {tag}
-                    </Badge>
-                  ))}
+              {article.tags && article.tags.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Thẻ</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {article.tags.map((tag: Tag) => (
+                      <Badge key={tag.id} variant="outline">
+                        {tag.name}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground mb-2">Ngày xuất bản</h4>
                 <div className="flex items-center">
                   <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <span>{article.publishedAt}</span>
+                  <span>
+                    {article.publishedAt 
+                      ? new Date(article.publishedAt).toLocaleDateString('vi-VN', {
+                          year: 'numeric',
+                          month: 'numeric',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })
+                      : "Chưa xuất bản"}
+                  </span>
                 </div>
               </div>
 
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">Cập nhật lần cuối</h4>
-                <div className="flex items-center">
-                  <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <span>{article.updatedAt}</span>
+              {article.updated_at && (
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Cập nhật lần cuối</h4>
+                  <div className="flex items-center">
+                    <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <span>
+                      {new Date(article.updated_at).toLocaleDateString('vi-VN', {
+                        year: 'numeric',
+                        month: 'numeric',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
@@ -228,18 +260,10 @@ export default function ArticleDetailPage({ params }: { params: { id: string } }
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <Eye className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <span>Lượt xem</span>
-                </div>
-                <span className="font-medium">{article.views.toLocaleString()}</span>
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
                   <ThumbsUp className="h-4 w-4 mr-2 text-muted-foreground" />
                   <span>Lượt thích</span>
                 </div>
-                <span className="font-medium">{article.likes.toLocaleString()}</span>
+                <span className="font-medium">{article._count?.articleLikes?.toLocaleString() || 0}</span>
               </div>
               <Separator />
               <div className="flex items-center justify-between">
@@ -247,7 +271,7 @@ export default function ArticleDetailPage({ params }: { params: { id: string } }
                   <MessageSquare className="h-4 w-4 mr-2 text-muted-foreground" />
                   <span>Bình luận</span>
                 </div>
-                <span className="font-medium">{article.comments.toLocaleString()}</span>
+                <span className="font-medium">{article._count?.articleComments?.toLocaleString() || 0}</span>
               </div>
             </CardContent>
           </Card>
@@ -258,22 +282,30 @@ export default function ArticleDetailPage({ params }: { params: { id: string } }
               <CardTitle className="text-lg">Bài viết liên quan</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {article.relatedArticles.map((relatedArticle) => (
-                  <div key={relatedArticle.id} className="border-b pb-4 last:border-0 last:pb-0">
-                    <Link href={`/author/articles/${relatedArticle.id}`} className="hover:underline">
-                      <h4 className="font-medium mb-1">{relatedArticle.title}</h4>
-                    </Link>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Badge variant="secondary" className="mr-2">
-                        {relatedArticle.category}
-                      </Badge>
-                      <Calendar className="h-3.5 w-3.5 mr-1" />
-                      {relatedArticle.publishedAt}
+              {article.related_articles && article.related_articles.length > 0 ? (
+                <div className="space-y-4">
+                  {article.related_articles.map((relatedArticle: RelatedArticle) => (
+                    <div key={relatedArticle.id} className="border-b pb-4 last:border-0 last:pb-0">
+                      <Link href={`/author/articles/${relatedArticle.id}`} className="hover:underline">
+                        <h4 className="font-medium mb-1">{relatedArticle.title}</h4>
+                      </Link>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Badge variant="secondary" className="mr-2">
+                          {relatedArticle.category?.name || "Chưa phân loại"}
+                        </Badge>
+                        <Calendar className="h-3.5 w-3.5 mr-1" />
+                        {relatedArticle.publishedAt 
+                          ? new Date(relatedArticle.publishedAt).toLocaleDateString('vi-VN')
+                          : "Chưa xuất bản"}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-muted-foreground py-4">
+                  Chưa có bài viết liên quan
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
