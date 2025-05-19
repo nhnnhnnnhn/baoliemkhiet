@@ -123,6 +123,11 @@ export default function ProfilePage() {
     }
   }, [currentUser])
 
+  // Debug logs
+  useEffect(() => {
+    console.log('Current formValues:', formValues);
+    console.log('Current user:', currentUser);
+  }, [formValues, currentUser]);
 
   // State for password form
   const [passwordForm, setPasswordForm] = useState({
@@ -210,45 +215,76 @@ export default function ProfilePage() {
     }
 
     try {
+      console.log('Starting file upload...', file);
       // Upload file
       const response = await fileApi.uploadFile(file);
       console.log('File upload response:', response);
 
       if (response.success && response.file) {
-        // Lấy trực tiếp URL trả về từ backend
+        // Lấy URL từ response
         const avatarUrl = response.file.url;
-        // Update profile với avatar là URL
+        console.log('Avatar URL from response:', avatarUrl);
+        
+        // Update profile với avatar là URL gốc từ backend
+        console.log('Updating profile with avatar:', avatarUrl);
         const updateResult = await dispatch(handleUpdateProfile({
           avatar: avatarUrl
         }));
+        console.log('Update profile result:', updateResult);
 
         if (handleUpdateProfile.fulfilled.match(updateResult)) {
-          // Cập nhật luôn state formValues.avatar để hiển thị ngay
-          setFormValues((prev) => ({
-            ...prev,
-            avatar: avatarUrl
-          }));
+          // Cập nhật state local
+          setFormValues((prev) => {
+            console.log('Updating formValues with new avatar:', avatarUrl);
+            return {
+              ...prev,
+              avatar: avatarUrl
+            };
+          });
+          
           // Force refresh profile
+          console.log('Refreshing profile...');
           const profileResult = await dispatch(handleGetProfile() as any);
+          console.log('Profile refresh result:', profileResult);
+          
           if (handleGetProfile.fulfilled.match(profileResult)) {
+            // Cập nhật lại formValues với dữ liệu mới từ profile
+            const updatedUser = profileResult.payload.data;
+            if (updatedUser) {
+              console.log('Setting formValues from updated profile:', updatedUser);
+              setFormValues({
+                fullname: updatedUser.fullname || "",
+                email: updatedUser.email || "",
+                phone: updatedUser.phone || "",
+                address: updatedUser.address || "",
+                bio: updatedUser.bio || "",
+                avatar: updatedUser.avatar || "",
+              });
+            }
+
             toast({
               title: "Thành công",
               description: "Cập nhật ảnh đại diện thành công",
               variant: "success",
               duration: 2000
             });
+          } else {
+            console.error('Profile refresh failed:', profileResult);
+            throw new Error('Failed to refresh profile');
           }
         } else {
+          console.error('Profile update failed:', updateResult);
           throw new Error('Failed to update profile');
         }
       } else {
-        throw new Error('Upload failed');
+        console.error('Upload response invalid:', response);
+        throw new Error('Upload failed - invalid response');
       }
-    } catch (error) {
-      console.error('Error uploading file:', error);
+    } catch (error: any) {
+      console.error('Error in handleFileChange:', error);
       toast({
         title: "Lỗi",
-        description: "Không thể cập nhật ảnh đại diện. Vui lòng thử lại",
+        description: error.message || "Không thể cập nhật ảnh đại diện. Vui lòng thử lại",
         variant: "destructive",
         duration: 3000
       });
@@ -257,14 +293,23 @@ export default function ProfilePage() {
 
   // Helper function to get full image URL
   const getImageUrl = (path: string | null | undefined) => {
-    if (!path) return "/placeholder.svg";
-    if (path.startsWith('http')) return path;
+    console.log('getImageUrl input path:', path);
+    if (!path) {
+      console.log('No path provided, returning placeholder');
+      return "/placeholder.svg";
+    }
+    if (path.startsWith('data:image')) {
+      console.log('Path is base64 image data');
+      return path;
+    }
+    if (path.startsWith('http')) {
+      console.log('Path is already a full URL:', path);
+      return path;
+    }
     
-    // Backend returns path like "images/filename"
-    // Need to construct full URL: http://localhost:3000/images/filename
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-    return `${baseUrl}/${cleanPath}`;
+    // For other paths, return placeholder
+    console.log('Unknown path format, returning placeholder');
+    return "/placeholder.svg";
   };
 
   return (
@@ -290,16 +335,21 @@ export default function ProfilePage() {
               <div className="flex flex-col items-center mb-6">
                 <div className="relative mb-4">
                   <img
-                    src={formValues.avatar || currentUser?.avatar || "/placeholder.svg"}
+                    src={getImageUrl(formValues.avatar || currentUser?.avatar)}
                     alt={currentUser?.fullname}
                     className="h-32 w-32 rounded-full object-cover border-4 border-white shadow-md"
                     onError={(e) => {
+                      console.error('Image failed to load:', e.currentTarget.src);
                       e.currentTarget.src = "/placeholder.svg";
                     }}
                   />
                   <button
-                    onClick={handleAvatarChange}
-                    className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full shadow-lg"
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleAvatarChange();
+                    }}
+                    className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full shadow-lg hover:bg-primary/90 transition-colors"
                   >
                     <Upload className="h-4 w-4" />
                   </button>
