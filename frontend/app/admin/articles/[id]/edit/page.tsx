@@ -6,6 +6,7 @@ import Link from "next/link"
 import { ArrowLeft, Loader2, Save } from "lucide-react"
 import dynamic from "next/dynamic"
 import { useAppDispatch, useAppSelector } from "@/src/store"
+import axiosClient from '@/src/apis/axiosClient'
 
 const RichTextEditor = dynamic(() => import("@/components/rich-text-editor"), {
   ssr: false,
@@ -94,8 +95,8 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
         setSelectedTags(article.tags.map(tag => tag.id.toString()))
       }
       
-      if (article.published_at) {
-        setPublishDate(new Date(article.published_at).toISOString().slice(0, 16))
+      if (article.publishedAt) {
+        setPublishDate(new Date(article.publishedAt).toISOString().slice(0, 16))
       }
       
       console.log('Loaded article data:', article)
@@ -107,16 +108,34 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     if (updateArticleSuccess) {
       // Nếu cập nhật thành công
       const updatedArticle = updateArticleSuccess as any;
-      
+      // Nếu có selectedTags, cập nhật tags cho bài viết
+      if (selectedTags.length > 0) {
+        axiosClient.put(`/articles/${articleId}/tags`, { tagIds: selectedTags.map(Number) })
+          .then(() => {
+            toast({
+              title: "Thành công",
+              description: "Đã cập nhật bài viết và thẻ thành công",
+              variant: "success"
+            });
+            dispatch(clearUpdateArticleState())
+            router.push('/admin/articles')
+          })
+          .catch(() => {
+            toast({
+              title: "Cảnh báo",
+              description: "Bài viết đã cập nhật nhưng cập nhật thẻ thất bại!",
+              variant: "destructive"
+            });
+            dispatch(clearUpdateArticleState())
+            router.push('/admin/articles')
+          });
+        return;
+      }
       toast({
         title: "Thành công",
-        description: "Đã cập nhật bài viết " + 
-          (status === 'APPROVED' || (updatedArticle && updatedArticle.isPublish) ? "và đã xuất bản" : "") + 
-          " thành công",
+        description: "Đã cập nhật bài viết thành công",
         variant: "success"
       })
-      
-      // Lập tức làm mới kho bài viết để có dữ liệu mới nhất
       dispatch(clearUpdateArticleState())
       router.push('/admin/articles')
     }
@@ -134,63 +153,57 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!title || !content || !categoryId) {
+    const authorId = article?.author_id || article?.author?.id;
+    const categoryId = article?.category_id || article?.category?.id;
+    console.log('submit', {
+      title,
+      content,
+      status,
+      authorId,
+      categoryId,
+      isUpdatingArticle
+    })
+    if (!title || !content || !status || !authorId || !categoryId) {
       toast({
         title: "Lỗi",
-        description: "Vui lòng điền đầy đủ thông tin bắt buộc",
+        description: "Thiếu thông tin bắt buộc (tác giả, chuyên mục, tiêu đề, nội dung, trạng thái)",
         variant: "destructive"
-      })
-      return
+      });
+      return;
     }
-    
-    const tagIds = selectedTags.map(id => parseInt(id))
+
     let publishDateValue = undefined
-    
-    // Đảm bảo luôn có authorId bằng cách lấy từ bài viết gốc hoặc dùng ID mặc định nếu không tìm thấy
-    const authorId = article?.author_id || article?.author?.id || 1; // Mặc định là 1 nếu không tìm thấy
-    
-    // Xử lý ngày xuất bản đảm bảo định dạng chính xác
     if (status === 'APPROVED') {
-      // Nếu chọn "Bây giờ", lấy thời gian hiện tại và đảm bảo định dạng chuẩn ISO
       if (useCurrentDate) {
         const now = new Date();
-        // Đảm bảo rằng ngày được tạo đúng định dạng ISO8601 đầy đủ
         publishDateValue = now.toISOString();
-        console.log('Cập nhật bài viết với thời gian hiện tại:', publishDateValue);
-      } 
-      // Nếu chọn một ngày cụ thể, sử dụng ngày đó
-      else if (publishDate) {
+      } else if (publishDate) {
         try {
           const dateObj = new Date(publishDate)
           if (!isNaN(dateObj.getTime())) {
             publishDateValue = dateObj.toISOString()
           } else {
-            publishDateValue = new Date().toISOString() // Mặc định nếu ngày không hợp lệ
+            publishDateValue = new Date().toISOString()
           }
         } catch (error) {
-          console.error('Lỗi xử lý ngày:', error)
-          publishDateValue = new Date().toISOString() // Mặc định nếu có lỗi
+          publishDateValue = new Date().toISOString()
         }
-      }
-      // Nếu không có ngày mới, giữ lại ngày cũ (nếu có)
-      else if (article?.published_at) {
+      } else if (article?.publishedAt) {
         try {
-          const dateObj = new Date(article.published_at)
+          const dateObj = new Date(article.publishedAt)
           if (!isNaN(dateObj.getTime())) {
-            publishDateValue = article.published_at
+            publishDateValue = article.publishedAt
           } else {
-            publishDateValue = new Date().toISOString() // Mặc định nếu ngày cũ không hợp lệ
+            publishDateValue = new Date().toISOString()
           }
         } catch (error) {
-          console.error('Lỗi xử lý ngày cũ:', error)
-          publishDateValue = new Date().toISOString() // Mặc định nếu có lỗi
+          publishDateValue = new Date().toISOString()
         }
       } else {
-        publishDateValue = new Date().toISOString() // Mặc định là thời gian hiện tại
+        publishDateValue = new Date().toISOString()
       }
     }
-    
+
     const updateData = {
       id: articleId,
       data: {
@@ -198,15 +211,10 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
         content,
         excerpt,
         thumbnail: thumbnailUrl || undefined,
-        authorId: authorId, 
-        categoryId: parseInt(categoryId),
         status,
         publishedAt: publishDateValue,
-        tags: tagIds.length > 0 ? tagIds : undefined
       }
     }
-    
-    console.log('Submitting update with data:', updateData)
     dispatch(handleUpdateArticle(updateData))
   }
   
