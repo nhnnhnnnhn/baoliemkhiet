@@ -128,7 +128,7 @@ async function createComment(user_id, article_id, content) {
         where: { id: articleId },
         select: {
           title: true,
-          author_id: true,
+          authorId: true,
         },
       });
 
