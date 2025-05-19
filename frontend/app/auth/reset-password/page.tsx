@@ -1,12 +1,17 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
-import { Lock, Eye, EyeOff, CheckCircle } from "lucide-react"
+import { Lock, Eye, EyeOff, CheckCircle, Mail, KeySquare } from "lucide-react"
+import authApi from "@/src/apis/auth"
 
 export default function ResetPasswordPage() {
+  const searchParams = useSearchParams()
+  const [email, setEmail] = useState("")
+  const [otp, setOtp] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -14,23 +19,50 @@ export default function ResetPasswordPage() {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  
+  useEffect(() => {
+    const emailParam = searchParams.get("email")
+    if (emailParam) {
+      setEmail(emailParam)
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
 
+    if (!email) {
+      setError("Email không được để trống")
+      return
+    }
+    
+    if (!otp) {
+      setError("Mã OTP không được để trống")
+      return
+    }
+
     if (password !== confirmPassword) {
       setError("Mật khẩu không khớp")
+      return
+    }
+    
+    if (password.length < 6) {
+      setError("Mật khẩu phải có ít nhất 6 ký tự")
       return
     }
 
     setIsLoading(true)
 
-    // Giả lập đặt lại mật khẩu
-    setTimeout(() => {
-      setIsLoading(false)
+    try {
+      // Gọi API đặt lại mật khẩu thực tế
+      await authApi.resetPassword(email, otp, password)
       setIsSubmitted(true)
-    }, 1500)
+    } catch (error: any) {
+      console.error('Lỗi khi đặt lại mật khẩu:', error)
+      setError(error.message || 'Đã xảy ra lỗi khi đặt lại mật khẩu. Mã OTP có thể không đúng hoặc đã hết hạn.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -44,7 +76,7 @@ export default function ResetPasswordPage() {
           {!isSubmitted ? (
             <>
               <h2 className="text-2xl font-bold">Đặt lại mật khẩu</h2>
-              <p className="mt-2 text-center text-sm text-gray-600">Nhập mật khẩu mới cho tài khoản của bạn</p>
+              <p className="mt-2 text-center text-sm text-gray-600">Nhập mã OTP đã được gửi đến email của bạn và mật khẩu mới</p>
             </>
           ) : (
             <>
@@ -65,6 +97,49 @@ export default function ResetPasswordPage() {
               </div>
             )}
 
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <div className="mt-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="example@email.com"
+                  readOnly={!!searchParams.get("email")}
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label htmlFor="otp" className="block text-sm font-medium text-gray-700">
+                Mã OTP
+              </label>
+              <div className="mt-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <KeySquare className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="otp"
+                  name="otp"
+                  type="text"
+                  required
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Nhập mã OTP từ email"
+                />
+              </div>
+            </div>
+            
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Mật khẩu mới

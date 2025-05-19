@@ -11,6 +11,9 @@ router.post("/register", authController.register);
 // POST /api/auth/change-password
 router.post("/change-password", authController.changePassword);
 
+// POST /api/auth/forgot-password
+router.post("/forgot-password", authController.forgotPassword);
+
 // PUT /api/auth/profile
 router.put("/profile", authMiddleware(), authController.updateProfile);
 

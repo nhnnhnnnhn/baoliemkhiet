@@ -121,9 +121,23 @@ async function changePassword(email, oldPassword, newPassword) {
   return true;
 }
 
+async function forgotPassword(email) {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    throw new Error("User not found");
+  }
+  
+  // Sử dụng dịch vụ OTP hiện có để gửi mã đặt lại
+  const otp = await sendOtp(email, "FORGOT_PASSWORD");
+  return true;
+}
+
+
+
 module.exports = {
   loginUser,
   registerUser,
   logoutUser,
   changePassword,
+  forgotPassword,
 };
