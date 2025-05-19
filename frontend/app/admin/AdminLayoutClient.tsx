@@ -117,13 +117,6 @@ function SidebarNavigation() {
             <User className={styles.navIcon} />
             Hồ sơ
           </Link>
-          <Link
-            href="/admin/settings"
-            className={`${styles.navLink} ${isActive("/admin/settings") ? styles.navLinkActive : ""}`}
-          >
-            <Settings className={styles.navIcon} />
-            Cài đặt
-          </Link>
         </div>
       </div>
     </div>
