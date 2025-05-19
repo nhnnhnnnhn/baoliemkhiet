@@ -9,10 +9,12 @@ import {
   handleDeleteArticle,
   handleDeleteMultipleArticles,
   handleApproveArticle,
-  handleRejectArticle
+  handleRejectArticle,
+  handleSearchArticles
 } from "@/src/thunks/article/articleThunk"
 import {
   selectArticles,
+  selectFilteredArticles,
   selectTotalArticles,
   selectCurrentPage,
   selectTotalPages,
@@ -54,6 +56,7 @@ export default function ArticlesPage() {
   
   // Redux selectors
   const articles = useAppSelector(selectArticles)
+  const filteredArticles = useAppSelector(selectFilteredArticles)
   const totalArticles = useAppSelector(selectTotalArticles)
   const currentPage = useAppSelector(selectCurrentPage)
   const totalPages = useAppSelector(selectTotalPages)
@@ -65,6 +68,7 @@ export default function ArticlesPage() {
   
   // Local state
   const [searchQuery, setSearchQuery] = useState('')
+  const [isSearching, setIsSearching] = useState(false)
   const [selectedArticleId, setSelectedArticleId] = useState<number | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [itemsPerPage] = useState(10)
@@ -101,15 +105,44 @@ export default function ArticlesPage() {
     dispatch(handleGetArticles({}))
   }, [dispatch])
   
-  // Handle search
-  const handleSearch = () => {
-    dispatch(handleGetArticles({ search: searchQuery }))
+  // Handle search input change with debounce
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
+  
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setSearchQuery(value)
+    
+    // Clear previous timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout)
+    }
+    
+    // Set new timeout to debounce the search (300ms)
+    const timeout = setTimeout(() => {
+      if (value.trim() === '') {
+        // If search query is empty, get all articles
+        setIsSearching(false)
+        dispatch(handleGetArticles({}))
+      } else {
+        // Otherwise use the search API
+        setIsSearching(true)
+        dispatch(handleSearchArticles(value))
+      }
+    }, 300)
+    
+    setSearchTimeout(timeout)
   }
   
   // Handle keypress for search
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      handleSearch()
+      if (searchQuery.trim() === '') {
+        setIsSearching(false)
+        dispatch(handleGetArticles({}))
+      } else {
+        setIsSearching(true)
+        dispatch(handleSearchArticles(searchQuery))
+      }
     }
   }
   
@@ -298,14 +331,10 @@ export default function ArticlesPage() {
                 placeholder="Tìm kiếm bài viết..." 
                 className="pl-8 h-9 w-[200px] md:w-[300px]" 
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearchInputChange}
                 onKeyPress={handleKeyPress}
               />
             </div>
-            <Button variant="outline" size="sm" onClick={handleSearch}>
-              <Search className="h-4 w-4 mr-2" />
-              Tìm kiếm
-            </Button>
             <Button variant="outline" size="sm" onClick={handleRefresh}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Làm mới
@@ -345,12 +374,16 @@ export default function ArticlesPage() {
                     <td className={styles.tableCell}><Skeleton className="h-4 w-20" /></td>
                   </tr>
                 ))
-              ) : articles.length === 0 ? (
+              ) : articles.length === 0 && !isSearching ? (
                 <tr>
                   <td colSpan={9} className="text-center py-4">Không có dữ liệu</td>
                 </tr>
+              ) : isSearching && filteredArticles.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="text-center py-4">Không tìm thấy kết quả phù hợp</td>
+                </tr>
               ) : (
-                articles.map((article) => (
+                (isSearching ? filteredArticles : articles).map((article) => (
                   <tr 
                     key={article.id} 
                     className={`${styles.tableRow} ${highlightedArticleId && article.id.toString() === highlightedArticleId ? 'highlight-row' : ''}`}
@@ -375,8 +408,8 @@ export default function ArticlesPage() {
                     <td className={styles.tableCell}>
                       {article.publishedAt ? (
                         format(new Date(article.publishedAt), 'dd/MM/yyyy HH:mm')
-                      ) : article.status === 'APPROVED' && (article.createdAt || article.created_at) ? (
-                        format(new Date(article.createdAt || article.created_at), 'dd/MM/yyyy HH:mm')
+                      ) : article.status === 'APPROVED' && (article.created_at) ? (
+                        format(new Date(article.created_at), 'dd/MM/yyyy HH:mm')
                       ) : (
                         <span className="text-gray-500">Chưa xuất bản</span>
                       )}

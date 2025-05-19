@@ -207,7 +207,8 @@ const authSlice = createSlice({
             email: action.payload.email || state.user.email,
             phone: action.payload.phone || state.user.phone || undefined,
             address: action.payload.address || state.user.address,
-            bio: action.payload.bio || state.user.bio
+            bio: action.payload.bio || state.user.bio,
+            avatar: action.payload.avatar !== undefined ? action.payload.avatar : state.user.avatar
           };
         }
       })
