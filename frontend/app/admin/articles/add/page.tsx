@@ -4,7 +4,13 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Loader2, Save, Clock } from "lucide-react"
+import dynamic from "next/dynamic"
 import { useAppDispatch, useAppSelector } from "@/src/store"
+
+const RichTextEditor = dynamic(() => import("@/components/rich-text-editor"), {
+  ssr: false,
+  loading: () => <div className="h-[600px] w-full bg-gray-100 animate-pulse rounded-md" />
+})
 import { handleCreateArticle, handleApproveArticle } from "@/src/thunks/article/articleThunk"
 import {
   selectIsCreatingArticle,
@@ -48,8 +54,6 @@ export default function AddArticlePage() {
   const [thumbnailUrl, setThumbnailUrl] = useState('')
   const [publishDate, setPublishDate] = useState<string>('')
   const [useCurrentDate, setUseCurrentDate] = useState(false)
-  const [showImageInsert, setShowImageInsert] = useState(false)
-  const [imageUrl, setImageUrl] = useState('')
   
   // Fetch categories and tags on component mount
   useEffect(() => {
@@ -216,69 +220,18 @@ export default function AddArticlePage() {
                 </div>
                 <div>
                   <Label htmlFor="content">Nội dung <span className="text-red-500">*</span></Label>
-                  <div className="mb-2 flex justify-between items-center">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setShowImageInsert(!showImageInsert)}>
-                      {showImageInsert ? 'Ẩn công cụ chèn ảnh' : 'Chèn ảnh vào bài viết'}
-                    </Button>
+                  <div className="mt-1">
+                    <RichTextEditor
+                      value={content}
+                      onChange={(newContent) => setContent(newContent)}
+                    />
+                    <input
+                      type="hidden"
+                      name="content"
+                      value={content}
+                      required
+                    />
                   </div>
-                  
-                  {showImageInsert && (
-                    <div className="mb-3 p-4 border rounded-md bg-gray-50">
-                      <Label htmlFor="imageUrl">URL ảnh muốn chèn</Label>
-                      <div className="flex gap-2 mt-1">
-                        <Input
-                          id="imageUrl"
-                          placeholder="Nhập URL ảnh"
-                          value={imageUrl}
-                          onChange={(e) => setImageUrl(e.target.value)}
-                        />
-                        <Button 
-                          type="button" 
-                          onClick={() => {
-                            if (!imageUrl) return;
-                            // Chèn thẻ hình ảnh vào vị trí con trỏ hoặc cuối nội dung
-                            const imageTag = `\n![Hình ảnh](${imageUrl})\n`;
-                            const textarea = document.getElementById('content') as HTMLTextAreaElement;
-                            
-                            if (textarea) {
-                              const start = textarea.selectionStart;
-                              const end = textarea.selectionEnd;
-                              const newContent = content.substring(0, start) + imageTag + content.substring(end);
-                              setContent(newContent);
-                              // Reset image URL sau khi chèn
-                              setImageUrl('');
-                              // Focus lại vào textarea
-                              setTimeout(() => {
-                                textarea.focus();
-                                textarea.selectionStart = start + imageTag.length;
-                                textarea.selectionEnd = start + imageTag.length;
-                              }, 0);
-                            } else {
-                              // Nếu không thể truy cập textarea, thêm vào cuối
-                              setContent(content + imageTag);
-                              setImageUrl('');
-                            }
-                          }}
-                        >
-                          Chèn ảnh
-                        </Button>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2">Hình ảnh sẽ được chèn vào vị trí con trỏ trong nội dung.</p>
-                    </div>
-                  )}
-                  <Textarea 
-                    id="content" 
-                    placeholder="Nhập nội dung bài viết" 
-                    className="mt-1 font-mono" 
-                    rows={20} 
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    required
-                  />
                 </div>
               </div>
             </div>
