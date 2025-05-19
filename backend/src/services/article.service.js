@@ -221,6 +221,14 @@ module.exports.getArticleById = async (id) => {
       },
     },
   });
+  await prisma.article.update({
+    where: { id: Number(id) },
+    data: {
+      view: {
+        increment: 1,
+      },
+    },
+  });
   return article;
 };
 
@@ -1141,7 +1149,8 @@ module.exports.getAuthorDashboard = async (authorId) => {
     });
 
     // tỉ lệ phần trăm
-    let likePercentage = ((monthlyLikes - previousMonthlyLikes) / previousMonthlyLikes) * 100;
+    let likePercentage =
+      ((monthlyLikes - previousMonthlyLikes) / previousMonthlyLikes) * 100;
     if (isNaN(likePercentage)) {
       likePercentage = 0;
     }
@@ -1175,7 +1184,9 @@ module.exports.getAuthorDashboard = async (authorId) => {
     });
 
     // tỉ lệ phần trăm
-    let commentPercentage = ((monthlyComments - previousMonthlyComments) / previousMonthlyComments) * 100;
+    let commentPercentage =
+      ((monthlyComments - previousMonthlyComments) / previousMonthlyComments) *
+      100;
     if (isNaN(commentPercentage)) {
       commentPercentage = 0;
     }
@@ -1189,9 +1200,9 @@ module.exports.getAuthorDashboard = async (authorId) => {
         categoryId: true,
       },
     });
-    
+
     const uniqueCategoryCount = categoryCount.length;
-    
+
     return {
       latestArticles,
       monthlyLikes,
