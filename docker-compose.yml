@@ -2,11 +2,11 @@ services:
   # Service Backend
   backend:
     build:
-      context: ../backend
+      context: ./backend
       dockerfile: Dockerfile
     restart: always
     env_file:
-      - ../stack.env
+      - ./stack.env
     environment:
       - NODE_ENV=production
     ports:
@@ -18,13 +18,13 @@ services:
   # Service Frontend
   frontend:
     build:
-      context: ../frontend
+      context: ./frontend
       dockerfile: Dockerfile
     restart: always
     depends_on:
       - backend
     env_file:
-      - ../stack.env
+      - ./stack.env
     environment:
       - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL_DOCKER}
     ports:
