@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { ChevronRightIcon, TrendingUp, DollarSign, BarChart3 } from "lucide-react"
-import { format } from "date-fns"
+import { format, parseISO } from "date-fns"
 import { vi } from "date-fns/locale"
 import { formatDateTime, sortByLatest, sortByViews } from "@/src/utils/date-helpers"
 
@@ -16,10 +16,10 @@ import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { CategoryHeader } from "@/components/category-header"
 import articleApi from "@/src/apis/article"
-import { Article } from "@/src/apis/article"
+import { Article, CategoryArticlesResponse } from "@/src/apis/article"
 
 // ID danh mục Kinh doanh - đã xác định từ cơ sở dữ liệu
-const CATEGORY_ID = 7 // Xác nhận: category_id của Kinh doanh là 4
+const CATEGORY_ID = 7 // Xác nhận: category_id của Kinh doanh là 7
 
 export default function KinhDoanhPage() {
   const [activeTab, setActiveTab] = useState("all")
@@ -32,8 +32,18 @@ export default function KinhDoanhPage() {
   const [totalPages, setTotalPages] = useState(1)
 
   // Format thời gian sử dụng hàm helper
-  const formatTime = (dateString: string | null | undefined) => {
-    return formatDateTime(dateString)
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return ""
+    
+    try {
+      const date = typeof dateString === "string" 
+        ? parseISO(dateString) 
+        : new Date(dateString)
+      
+      return format(date, "HH:mm - dd MMMM, yyyy", { locale: vi })
+    } catch (error) {
+      return ""
+    }
   }
 
   // Lấy bài viết nổi bật
@@ -41,10 +51,13 @@ export default function KinhDoanhPage() {
     const fetchFeaturedArticles = async () => {
       try {
         // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
-        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        const response = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        
+        // Đảm bảo response.articles là một mảng
+        const articleList = response.articles || []
         
         // Lọc các bài viết đã xuất bản (isPublish=true)
-        const publishedArticles = articles.filter(article => article.isPublish)
+        const publishedArticles = articleList.filter(article => article.isPublish)
         
         // Sắp xếp theo lượt xem để lấy bài nổi bật sử dụng hàm helper
         const sortedArticles = sortByViews(publishedArticles)
@@ -71,10 +84,13 @@ export default function KinhDoanhPage() {
       try {
         setLoading(true)
         // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
-        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        const response = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        
+        // Đảm bảo response.articles là một mảng
+        const articleList = response.articles || []
         
         // Lọc các bài viết đã xuất bản (isPublish=true)
-        const publishedArticles = articles.filter(article => article.isPublish)
+        const publishedArticles = articleList.filter(article => article.isPublish)
         
         // Sắp xếp theo thời gian xuất bản mới nhất sử dụng hàm helper
         const sortedArticles = sortByLatest(publishedArticles)
@@ -98,27 +114,24 @@ export default function KinhDoanhPage() {
   useEffect(() => {
     const fetchRealEstateArticles = async () => {
       try {
-        // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
-        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        // Sử dụng API chuyên biệt để lấy bài viết theo danh mục Kinh doanh
+        const response = await articleApi.getArticlesByCategory(CATEGORY_ID)
         
-        // Lọc các bài viết đã xuất bản (isPublish=true)
-        const publishedArticles = articles.filter(article => article.isPublish)
+        // Đảm bảo response.articles là một mảng
+        const allArticles = response.articles || []
         
-        // Lọc các bài viết có tag bất động sản
-        const realEstateArticles = publishedArticles.filter(article => {
-          if (article.tags && article.tags.length > 0) {
-            // Giả sử tag_id 2 là bất động sản hoặc có tag liên quan đến đất đai
-            return article.tags.some(tag => tag.id === 2 || 
-              tag.name.toLowerCase().includes('bất động sản') || 
-              tag.name.toLowerCase().includes('nhà đất'))
-          }
-          return false
+        // Lọc các bài viết về bất động sản dựa vào tags
+        const realEstateArticles = allArticles.filter(article => {
+          return article.isPublish && article.tags && article.tags.some(tag => 
+            tag.name.toLowerCase().includes('bất động sản') ||
+            tag.slug.includes('bat-dong-san')
+          )
         })
         
-        // Sắp xếp theo thời gian xuất bản mới nhất sử dụng hàm helper và giới hạn 3 bài
-        const sortedArticles = sortByLatest(realEstateArticles).slice(0, 3)
+        // Lấy tối đa 5 bài viết
+        const limitedArticles = realEstateArticles.slice(0, 5)
         
-        setRealEstateArticles(sortedArticles)
+        setRealEstateArticles(limitedArticles)
       } catch (error) {
         console.error("Error fetching real estate articles:", error)
         setRealEstateArticles([])
@@ -135,10 +148,13 @@ export default function KinhDoanhPage() {
         setLoading(true)
         
         // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
-        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        const response = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        
+        // Đảm bảo response.articles là một mảng
+        const articleList = response.articles || []
         
         // Lọc các bài viết đã xuất bản (isPublish=true)
-        let filteredArticles = articles.filter(article => article.isPublish)
+        let filteredArticles = articleList.filter(article => article.isPublish)
         
         // Lọc theo tab nếu không phải "all"
         if (activeTab !== "all") {
@@ -155,7 +171,7 @@ export default function KinhDoanhPage() {
         const sortedArticles = sortByLatest(filteredArticles)
         
         // Tính toán phân trang thủ công
-        const limit = 10
+        const limit = 5
         const start = (page - 1) * limit
         const end = start + limit
         const paginatedArticles = sortedArticles.slice(start, end)
@@ -295,7 +311,7 @@ export default function KinhDoanhPage() {
                         />
                       </div>
                       <h2 className="text-3xl font-bold mb-3 hover:text-amber-600">
-                        <Link href={`/articles/${featuredArticles[0].id}`}>{featuredArticles[0].title}</Link>
+                        <Link href={`/article/${featuredArticles[0].id}`}>{featuredArticles[0].title}</Link>
                       </h2>
                       <p className="text-gray-600 mb-4 text-lg">
                         {featuredArticles[0].content.substring(0, 200).replace(/<[^>]*>/g, '')}...
@@ -303,7 +319,7 @@ export default function KinhDoanhPage() {
                       <div className="flex items-center text-sm text-gray-500">
                         <span className="font-medium text-amber-600">{featuredArticles[0].category?.name || "Kinh doanh"}</span>
                         <span className="mx-2">•</span>
-                        <span>{featuredArticles[0].published_at ? formatTime(featuredArticles[0].published_at) : formatTime(featuredArticles[0].created_at)}</span>
+                        <span>{formatDate(featuredArticles[0].publishedAt || featuredArticles[0].created_at)}</span>
                       </div>
                     </div>
                   ) : (
@@ -320,15 +336,37 @@ export default function KinhDoanhPage() {
             {/* Business News Grid */}
             <div className="mb-12">
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold">Tin kinh doanh mới nhất</h3>
-                <Button variant="ghost" className="text-sm flex items-center">
-                  Xem tất cả <ChevronRightIcon className="ml-1 h-4 w-4" />
-                </Button>
+                <h3 className="text-xl font-bold">Tin kinh doanh</h3>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">Trang {page}/{totalPages}</span>
+                  <div className="flex">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handlePageChange(Math.max(1, page - 1))}
+                      disabled={page === 1}
+                      className="px-2"
+                    >
+                      <span className="sr-only">Trang trước</span>
+                      &larr;
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
+                      disabled={page === totalPages}
+                      className="px-2"
+                    >
+                      <span className="sr-only">Trang sau</span>
+                      &rarr;
+                    </Button>
+                  </div>
+                </div>
               </div>
 
               {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {[1, 2, 3, 4].map((item) => (
+                  {[1, 2, 3, 4, 5].map((item) => (
                     <div key={item} className="border-b pb-6 mb-6">
                       <div className="flex flex-col md:flex-row gap-4">
                         <Skeleton className="md:w-1/3 aspect-[4/3] rounded" />
@@ -344,8 +382,8 @@ export default function KinhDoanhPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {latestArticles.length > 0 ? (
-                    latestArticles.map((article, index) => (
+                  {articles.length > 0 ? (
+                    articles.map((article, index) => (
                       <div key={article.id} className="border-b pb-6 mb-6 last:border-0 last:mb-0 last:pb-0">
                         <div className="flex flex-col md:flex-row gap-4">
                           <div className="md:w-1/3 aspect-[4/3]">
@@ -357,17 +395,17 @@ export default function KinhDoanhPage() {
                           </div>
                           <div className="md:w-2/3">
                             <h4 className="text-lg font-bold mb-2 hover:text-amber-600">
-                              <Link href={`/articles/${article.id}`}>
+                              <Link href={`/article/${article.id}`}>
                                 {article.title}
                               </Link>
                             </h4>
                             <p className="text-gray-600 text-sm mb-2">
-                              {article.content.substring(0, 120).replace(/<[^>]*>/g, '')}...
+                              <span dangerouslySetInnerHTML={{ __html: article.content.substring(0, 120).replace(/<[^>]*>/g, '') + '...' }}></span>
                             </p>
                             <div className="flex items-center text-xs text-gray-500">
                               <span className="font-medium text-amber-600">{article.category?.name || "Kinh doanh"}</span>
                               <span className="mx-2">•</span>
-                              <span>{article.published_at ? formatTime(article.published_at) : formatTime(article.created_at)}</span>
+                              <span>{formatDate(article.publishedAt || article.created_at)}</span>
                             </div>
                           </div>
                         </div>
@@ -381,62 +419,15 @@ export default function KinhDoanhPage() {
                   )}
                 </div>
               )}
-            </div>
-
-            {/* Real Estate Section */}
-            <div className="mb-12">
-              <div className="flex items-center mb-6">
-                <div className="w-1 h-6 bg-amber-600 mr-3"></div>
-                <h3 className="text-xl font-bold">Bất động sản</h3>
-              </div>
-
-              {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {[1, 2, 3].map((item) => (
-                    <div key={item} className="border rounded-lg overflow-hidden">
-                      <Skeleton className="aspect-[4/3] w-full" />
-                      <div className="p-4 space-y-2">
-                        <Skeleton className="h-5 w-full" />
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-1/2" />
-                        <Skeleton className="h-3 w-20" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {realEstateArticles.length > 0 ? (
-                    realEstateArticles.map((article) => (
-                      <div key={article.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                        <div className="aspect-[4/3]">
-                          <img
-                            src={article.thumbnail || "/placeholder.svg?height=200&width=300&text=Real Estate"}
-                            alt={article.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="p-4">
-                          <h4 className="font-bold mb-2 hover:text-amber-600">
-                            <Link href={`/articles/${article.id}`}>
-                              {article.title}
-                            </Link>
-                          </h4>
-                          <p className="text-sm text-gray-600 mb-3">
-                            {article.content.substring(0, 100).replace(/<[^>]*>/g, '')}...
-                          </p>
-                          <div className="flex items-center text-xs text-gray-500">
-                            <span>{article.published_at ? formatTime(article.published_at) : formatTime(article.created_at)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="col-span-3 text-center py-8 bg-gray-50 rounded-lg">
-                      <DollarSign className="h-10 w-10 mx-auto text-gray-300 mb-2" />
-                      <p className="text-gray-500">Chưa có tin tức bất động sản.</p>
-                    </div>
-                  )}
+              
+              {/* Phân trang ở cuối */}
+              {!loading && articles.length > 0 && totalPages > 1 && (
+                <div className="mt-8 flex justify-center">
+                  <Pagination
+                    page={page}
+                    count={totalPages}
+                    onPageChange={handlePageChange}
+                  />
                 </div>
               )}
             </div>
