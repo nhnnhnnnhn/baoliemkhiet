@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
-import { Calendar, Save, Upload, User } from "lucide-react"
+import { Calendar, Save, Upload, User, Eye, EyeOff } from "lucide-react"
 import { useDispatch, useSelector } from "react-redux"
 import { useToast } from "@/hooks/use-toast"
 import fileApi from '@/src/apis/file'
@@ -31,76 +31,7 @@ export default function ProfilePage() {
   const updateProfileSuccess = useSelector(selectUpdateProfileSuccess)
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handlePasswordChange = async () => {
-    if (!currentUser?.email) {
-      toast({
-        title: "Lỗi",
-        description: "Không tìm thấy thông tin người dùng",
-        variant: "destructive",
-        duration: 3000
-      })
-      return
-    }
-
-    // Validate passwords
-    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
-      toast({
-        title: "Lỗi",
-        description: "Vui lòng điền đầy đủ thông tin",
-        variant: "destructive",
-        duration: 3000
-      })
-      return
-    }
-
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast({
-        title: "Lỗi",
-        description: "Mật khẩu mới không khớp",
-        variant: "destructive",
-        duration: 3000
-      })
-      return
-    }
-
-    const result = await dispatch(handleChangePassword({
-      email: currentUser.email,
-      oldPassword: passwordForm.currentPassword,
-      newPassword: passwordForm.newPassword
-    }))
-
-    if (handleChangePassword.fulfilled.match(result)) {
-      // Show success toast with new variant
-      toast({
-        title: "Thành công!",
-        description: "Đổi mật khẩu thành công",
-        variant: "success",
-        duration: 2000,
-      })
-
-      setPasswordForm({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: ""
-      })
-
-      // Show warning toast with blue styling
-      setTimeout(() => {
-        toast({
-          title: "Thông báo",
-          description: "Đăng xuất trong 3 giây...",
-          className: "bg-blue-50 border-blue-200 text-blue-900",
-          duration: 3000,
-        })
-      }, 2500)
-
-      // Logout after warning
-      setTimeout(() => {
-        dispatch(handleLogout())
-      }, 4000)
-    }
-  }
-  // Initialize form values from currentUser
+  // State for form values
   const [formValues, setFormValues] = useState({
     fullname: currentUser?.fullname || "",
     email: currentUser?.email || "",
@@ -108,6 +39,25 @@ export default function ProfilePage() {
     address: currentUser?.address || "",
     bio: currentUser?.bio || "",
     avatar: currentUser?.avatar || "",
+  })
+
+  // Add validation state
+  const [errors, setErrors] = useState({
+    fullname: "",
+    email: "",
+    phone: "",
+    address: "",
+    bio: "",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  })
+
+  // State for password visibility
+  const [showPassword, setShowPassword] = useState({
+    currentPassword: false,
+    newPassword: false,
+    confirmPassword: false
   })
 
   useEffect(() => {
@@ -128,6 +78,104 @@ export default function ProfilePage() {
     console.log('Current formValues:', formValues);
     console.log('Current user:', currentUser);
   }, [formValues, currentUser]);
+  // Validation functions
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
+
+  const validatePhone = (phone: string): boolean => {
+    // Validate Vietnamese phone numbers
+    const phoneRegex = /^(0|\+84)(\d{9,10})$/
+    return phone === "" || phoneRegex.test(phone)
+  }
+
+  const validateFullname = (name: string): boolean => {
+    return name.trim().length >= 2
+  }
+
+  const validateBio = (bio: string): boolean => {
+    return bio.length <= 500
+  }
+
+  // Validate profile form
+  const validateProfileForm = (): boolean => {
+    const newErrors = {
+      fullname: "",
+      email: "",
+      phone: "",
+      address: "",
+      bio: "",
+      currentPassword: errors.currentPassword,
+      newPassword: errors.newPassword,
+      confirmPassword: errors.confirmPassword
+    }
+    
+    let isValid = true
+    
+    if (!validateFullname(formValues.fullname)) {
+      newErrors.fullname = "Họ và tên phải có ít nhất 2 ký tự"
+      isValid = false
+    }
+    
+    if (!validateEmail(formValues.email)) {
+      newErrors.email = "Email không hợp lệ"
+      isValid = false
+    }
+    
+    if (!validatePhone(formValues.phone)) {
+      newErrors.phone = "Số điện thoại không hợp lệ"
+      isValid = false
+    }
+    
+    if (!validateBio(formValues.bio)) {
+      newErrors.bio = "Giới thiệu không được vượt quá 500 ký tự"
+      isValid = false
+    }
+    
+    setErrors(newErrors)
+    return isValid
+  }
+  
+  // Validate password form
+  const validatePasswordForm = (): boolean => {
+    const newErrors = {
+      fullname: errors.fullname,
+      email: errors.email,
+      phone: errors.phone,
+      address: errors.address,
+      bio: errors.bio,
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: ""
+    }
+    
+    let isValid = true
+    
+    if (!passwordForm.currentPassword) {
+      newErrors.currentPassword = "Vui lòng nhập mật khẩu hiện tại"
+      isValid = false
+    }
+    
+    if (!passwordForm.newPassword) {
+      newErrors.newPassword = "Vui lòng nhập mật khẩu mới"
+      isValid = false
+    } else if (passwordForm.newPassword.length < 6) {
+      newErrors.newPassword = "Mật khẩu phải có ít nhất 6 ký tự"
+      isValid = false
+    }
+    
+    if (!passwordForm.confirmPassword) {
+      newErrors.confirmPassword = "Vui lòng xác nhận mật khẩu"
+      isValid = false
+    } else if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      newErrors.confirmPassword = "Mật khẩu không khớp"
+      isValid = false
+    }
+    
+    setErrors(newErrors)
+    return isValid
+  }
 
   // State for password form
   const [passwordForm, setPasswordForm] = useState({
@@ -143,11 +191,55 @@ export default function ProfilePage() {
       ...prev,
       [name]: value,
     }))
+    
+    // Clear error when user types
+    if (errors[name as keyof typeof errors]) {
+      setErrors({
+        ...errors,
+        [name]: ""
+      })
+    }
+  }
+  
+  // Handle password input changes
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setPasswordForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+    
+    // Clear error when user types
+    if (errors[name as keyof typeof errors]) {
+      setErrors({
+        ...errors,
+        [name]: ""
+      })
+    }
+  }
+
+  // Toggle password visibility
+  const togglePasswordVisibility = (field: 'currentPassword' | 'newPassword' | 'confirmPassword') => {
+    setShowPassword({
+      ...showPassword,
+      [field]: !showPassword[field]
+    })
   }
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validate form
+    if (!validateProfileForm()) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng kiểm tra lại thông tin",
+        variant: "destructive",
+        duration: 3000
+      })
+      return
+    }
 
     const result = await dispatch(handleUpdateProfile({
       fullname: formValues.fullname,
@@ -312,6 +404,61 @@ export default function ProfilePage() {
     return "/placeholder.svg";
   };
 
+  // Handle password change submission
+  const submitPasswordChange = async () => {
+    if (!currentUser?.email) {
+      toast({
+        title: "Lỗi",
+        description: "Không tìm thấy thông tin người dùng",
+        variant: "destructive",
+        duration: 3000
+      })
+      return
+    }
+
+    // Validate passwords
+    if (!validatePasswordForm()) {
+      return
+    }
+
+    const result = await dispatch(handleChangePassword({
+      email: currentUser.email,
+      oldPassword: passwordForm.currentPassword,
+      newPassword: passwordForm.newPassword
+    }))
+
+    if (handleChangePassword.fulfilled.match(result)) {
+      // Show success toast with new variant
+      toast({
+        title: "Thành công!",
+        description: "Đổi mật khẩu thành công",
+        variant: "success",
+        duration: 2000,
+      })
+
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      })
+
+      // Show warning toast with blue styling
+      setTimeout(() => {
+        toast({
+          title: "Thông báo",
+          description: "Đăng xuất trong 3 giây...",
+          className: "bg-blue-50 border-blue-200 text-blue-900",
+          duration: 3000,
+        })
+      }, 2500)
+
+      // Logout after warning
+      setTimeout(() => {
+        dispatch(handleLogout())
+      }, 4000)
+    }
+  }
+
   return (
     <div>
       {/* Page Header */}
@@ -421,23 +568,38 @@ export default function ProfilePage() {
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div>
-                    <Label htmlFor="fullname">Họ và tên</Label>
-                    <Input id="fullname" name="fullname" value={formValues.fullname} onChange={handleChange} className="mt-1" />
+                    <Label htmlFor="fullname">Họ và tên <span className="text-red-500">*</span></Label>
+                    <Input 
+                      id="fullname" 
+                      name="fullname" 
+                      value={formValues.fullname} 
+                      onChange={handleChange} 
+                      className={`mt-1 ${errors.fullname ? 'border-red-500' : ''}`} 
+                    />
+                    {errors.fullname && <p className="text-red-500 text-sm mt-1">{errors.fullname}</p>}
                   </div>
                   <div>
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
                     <Input
                       id="email"
                       name="email"
                       type="email"
                       value={formValues.email}
                       onChange={handleChange}
-                      className="mt-1"
+                      className={`mt-1 ${errors.email ? 'border-red-500' : ''}`}
                     />
+                    {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                   </div>
                   <div>
                     <Label htmlFor="phone">Số điện thoại</Label>
-                    <Input id="phone" name="phone" value={formValues.phone} onChange={handleChange} className="mt-1" />
+                    <Input 
+                      id="phone" 
+                      name="phone" 
+                      value={formValues.phone} 
+                      onChange={handleChange} 
+                      className={`mt-1 ${errors.phone ? 'border-red-500' : ''}`} 
+                    />
+                    {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
                   </div>
                   <div>
                     <Label htmlFor="address">Địa chỉ</Label>
@@ -457,9 +619,10 @@ export default function ProfilePage() {
                     name="bio"
                     value={formValues.bio}
                     onChange={handleChange}
-                    className="mt-1"
+                    className={`mt-1 ${errors.bio ? 'border-red-500' : ''}`}
                     rows={4}
                   />
+                  {errors.bio && <p className="text-red-500 text-sm mt-1">{errors.bio}</p>}
                 </div>
                 <div className="flex justify-end">
                   <Button type="submit" disabled={isUpdatingProfile}>
@@ -488,38 +651,83 @@ export default function ProfilePage() {
             <div className="p-6">
               <div className="space-y-6">
                 <div>
-                  <Label htmlFor="current-password">Mật khẩu hiện tại</Label>
-                  <Input
-                    id="current-password"
-                    type="password"
-                    className="mt-1"
-                    placeholder="Nhập mật khẩu hiện tại"
-                    value={passwordForm.currentPassword}
-                    onChange={(e) => setPasswordForm(prev => ({...prev, currentPassword: e.target.value}))}
-                  />
+                  <Label htmlFor="currentPassword">Mật khẩu hiện tại <span className="text-red-500">*</span></Label>
+                  <div className="relative">
+                    <Input
+                      id="currentPassword"
+                      name="currentPassword"
+                      type={showPassword.currentPassword ? "text" : "password"}
+                      className={`mt-1 ${errors.currentPassword ? 'border-red-500' : ''}`}
+                      placeholder="Nhập mật khẩu hiện tại"
+                      value={passwordForm.currentPassword}
+                      onChange={handlePasswordChange}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      onClick={() => togglePasswordVisibility('currentPassword')}
+                    >
+                      {showPassword.currentPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                  {errors.currentPassword && <p className="text-red-500 text-sm mt-1">{errors.currentPassword}</p>}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <Label htmlFor="new-password">Mật khẩu mới</Label>
-                    <Input
-                      id="new-password"
-                      type="password"
-                      className="mt-1"
-                      placeholder="Nhập mật khẩu mới"
-                      value={passwordForm.newPassword}
-                      onChange={(e) => setPasswordForm(prev => ({...prev, newPassword: e.target.value}))}
-                    />
+                    <Label htmlFor="newPassword">Mật khẩu mới <span className="text-red-500">*</span></Label>
+                    <div className="relative">
+                      <Input
+                        id="newPassword"
+                        name="newPassword"
+                        type={showPassword.newPassword ? "text" : "password"}
+                        className={`mt-1 ${errors.newPassword ? 'border-red-500' : ''}`}
+                        placeholder="Nhập mật khẩu mới"
+                        value={passwordForm.newPassword}
+                        onChange={handlePasswordChange}
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        onClick={() => togglePasswordVisibility('newPassword')}
+                      >
+                        {showPassword.newPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                    {errors.newPassword && <p className="text-red-500 text-sm mt-1">{errors.newPassword}</p>}
                   </div>
                   <div>
-                    <Label htmlFor="confirm-password">Xác nhận mật khẩu</Label>
-                    <Input
-                      id="confirm-password"
-                      type="password"
-                      className="mt-1"
-                      placeholder="Nhập lại mật khẩu mới"
-                      value={passwordForm.confirmPassword}
-                      onChange={(e) => setPasswordForm(prev => ({...prev, confirmPassword: e.target.value}))}
-                    />
+                    <Label htmlFor="confirmPassword">Xác nhận mật khẩu <span className="text-red-500">*</span></Label>
+                    <div className="relative">
+                      <Input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type={showPassword.confirmPassword ? "text" : "password"}
+                        className={`mt-1 ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                        placeholder="Nhập lại mật khẩu mới"
+                        value={passwordForm.confirmPassword}
+                        onChange={handlePasswordChange}
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        onClick={() => togglePasswordVisibility('confirmPassword')}
+                      >
+                        {showPassword.confirmPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                    {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
                   </div>
                 </div>
                 <div className="flex justify-end">
@@ -532,12 +740,19 @@ export default function ProfilePage() {
                         newPassword: "",
                         confirmPassword: ""
                       })
+                      // Clear password errors
+                      setErrors({
+                        ...errors,
+                        currentPassword: "",
+                        newPassword: "",
+                        confirmPassword: ""
+                      })
                     }}
                   >
                     Hủy
                   </Button>
                   <Button
-                    onClick={handlePasswordChange}
+                    onClick={submitPasswordChange}
                     disabled={isChangingPassword}
                     type="button"
                   >
