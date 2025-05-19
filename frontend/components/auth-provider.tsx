@@ -49,16 +49,22 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
         // Then fetch the user profile
         try {
-          await dispatch(handleGetProfile()).unwrap();
+          const result = await dispatch(handleGetProfile()).unwrap();
+          console.log("Profile loaded successfully:", result);
           // Clear the refresh attempt flag on success
           localStorage.removeItem('refreshAttemptInProgress');
-        } catch (error) {
-          console.error("Failed to load profile:", error);
+        } catch (error: any) {
+          console.error("Failed to load profile:", {
+            message: error.message,
+            status: error.status,
+            data: error.data
+          });
           
           // Only clear auth if we get a specific auth error (401, 403)
           // This prevents logout due to network issues or server errors
           if (error && typeof error === 'object' && 'status' in error && 
               (error.status === 401 || error.status === 403)) {
+            console.log("Authentication error detected, clearing auth state");
             // Clear auth state on authentication error
             localStorage.removeItem("accessToken");
             localStorage.removeItem("refreshToken");
@@ -72,21 +78,21 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
             if (!window.location.pathname.includes('/auth/')) {
               router.push("/auth/login");
             }
+          } else {
+            console.log("Non-auth error, maintaining current state");
           }
           
           // Clear the refresh attempt flag
           localStorage.removeItem('refreshAttemptInProgress');
         }
       } catch (error) {
-        console.error("Lỗi khởi tạo xác thực:", error);
-        // Clear the refresh attempt flag on error
-        localStorage.removeItem('refreshAttemptInProgress');
+        console.error("Unexpected error in initAuth:", error);
       } finally {
         setIsLoading(false);
       }
-    }
+    };
 
-    initAuth()
+    initAuth();
 
     // Lắng nghe sự kiện storage để đồng bộ trạng thái đăng nhập giữa các tab
     const handleStorageChange = (event: StorageEvent) => {
@@ -108,13 +114,9 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     }
   }, [isClient, dispatch, router])
 
-  if (isLoading && isClient) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-      </div>
-    )
+  if (!isClient || isLoading) {
+    return null;
   }
 
-  return <>{children}</>
+  return <>{children}</>;
 }

@@ -1,96 +1,203 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import Link from "next/link"
-import { ChevronLeftIcon, ChevronRightIcon, Download, Edit, Eye, Filter, PenSquare, Search, Trash2 } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { ChevronLeftIcon, ChevronRightIcon, Edit, Eye, Filter, Heart, MessageSquare, PenSquare, Search, Trash2 } from "lucide-react"
+import { useAppDispatch, useAppSelector } from "@/src/store"
+import { handleGetArticlesByAuthor } from "@/src/thunks/article/articleThunk"
+import { selectArticles, selectIsLoading } from "@/src/thunks/article/articleSlice"
+import { handleGetProfile } from "@/src/thunks/auth/authThunk"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import styles from "../../admin/admin.module.css"
 
+// Định nghĩa các trạng thái và mapping
+const ARTICLE_STATUS = {
+  APPROVED: {
+    value: "APPROVED",
+    label: "Đã xuất bản",
+    color: "bg-green-100 text-green-800"
+  },
+  PENDING: {
+    value: "PENDING",
+    label: "Chờ duyệt",
+    color: "bg-yellow-100 text-yellow-800"
+  },
+  DRAFT: {
+    value: "DRAFT",
+    label: "Bản nháp",
+    color: "bg-gray-100 text-gray-800"
+  },
+  REJECTED: {
+    value: "REJECTED",
+    label: "Đã từ chối",
+    color: "bg-red-100 text-red-800"
+  }
+} as const
+
+type ArticleStatus = keyof typeof ARTICLE_STATUS
+
+// Định nghĩa các tùy chọn lọc theo thời gian
+const TIME_FILTERS = {
+  ALL: {
+    value: "all",
+    label: "Tất cả",
+    getDateRange: () => ({ start: null, end: null })
+  },
+  TODAY: {
+    value: "today",
+    label: "Hôm nay",
+    getDateRange: () => {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      return { start: today, end: new Date() }
+    }
+  },
+  YESTERDAY: {
+    value: "yesterday",
+    label: "Hôm qua",
+    getDateRange: () => {
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      yesterday.setHours(0, 0, 0, 0)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      return { start: yesterday, end: today }
+    }
+  },
+  THIS_WEEK: {
+    value: "this_week",
+    label: "Tuần này",
+    getDateRange: () => {
+      const today = new Date()
+      const startOfWeek = new Date(today)
+      startOfWeek.setDate(today.getDate() - today.getDay())
+      startOfWeek.setHours(0, 0, 0, 0)
+      return { start: startOfWeek, end: new Date() }
+    }
+  },
+  THIS_MONTH: {
+    value: "this_month",
+    label: "Tháng này",
+    getDateRange: () => {
+      const today = new Date()
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+      return { start: startOfMonth, end: new Date() }
+    }
+  }
+} as const
+
 export default function AuthorArticlesPage() {
-  // Mock articles data
-  const articles = [
-    {
-      id: "ART-001",
-      title: "Đội tuyển Việt Nam giành chiến thắng ấn tượng tại vòng loại World Cup",
-      status: "Đã xuất bản",
-      category: "Thể thao",
-      publishedAt: "04/04/2025",
-      views: 10876,
-      likes: 543,
-      comments: 78,
-    },
-    {
-      id: "ART-002",
-      title: "Thị trường bất động sản phía Nam khởi sắc trong quý II",
-      status: "Đã xuất bản",
-      category: "Kinh doanh",
-      publishedAt: "03/04/2025",
-      views: 8932,
-      likes: 421,
-      comments: 56,
-    },
-    {
-      id: "ART-003",
-      title: "Dự báo tăng trưởng GDP Việt Nam năm 2025",
-      status: "Chờ duyệt",
-      category: "Kinh tế",
-      publishedAt: "-",
-      views: 0,
-      likes: 0,
-      comments: 0,
-    },
-    {
-      id: "ART-004",
-      title: "Những xu hướng thời trang nổi bật mùa hè 2025",
-      status: "Bản nháp",
-      category: "Thời trang",
-      publishedAt: "-",
-      views: 0,
-      likes: 0,
-      comments: 0,
-    },
-    {
-      id: "ART-005",
-      title: "Top 10 điểm du lịch hấp dẫn nhất Việt Nam trong mùa hè này",
-      status: "Đã xuất bản",
-      category: "Du lịch",
-      publishedAt: "01/04/2025",
-      views: 6789,
-      likes: 321,
-      comments: 45,
-    },
-    {
-      id: "ART-006",
-      title: "Cách phòng tránh các bệnh mùa hè thường gặp",
-      status: "Đã xuất bản",
-      category: "Sức khỏe",
-      publishedAt: "28/03/2025",
-      views: 5432,
-      likes: 234,
-      comments: 32,
-    },
-    {
-      id: "ART-007",
-      title: "Những món ăn giải nhiệt mùa hè được ưa chuộng",
-      status: "Đã xuất bản",
-      category: "Ẩm thực",
-      publishedAt: "25/03/2025",
-      views: 4567,
-      likes: 198,
-      comments: 27,
-    },
-    {
-      id: "ART-008",
-      title: "Công nghệ AI đang thay đổi ngành y tế như thế nào",
-      status: "Từ chối",
-      category: "Công nghệ",
-      publishedAt: "-",
-      views: 0,
-      likes: 0,
-      comments: 0,
-      rejectionReason: "Nội dung cần bổ sung thêm dẫn chứng và nguồn tham khảo",
-    },
-  ]
+  const router = useRouter()
+  const dispatch = useAppDispatch()
+  const articles = useAppSelector(selectArticles)
+  const isLoading = useAppSelector(selectIsLoading)
+  const currentUser = useAppSelector(state => state.auth.user)
+  const authorId = currentUser?.id
+
+  // State for search and filter
+  const [searchQuery, setSearchQuery] = useState("")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [timeFilter, setTimeFilter] = useState("all")
+  const [sortBy, setSortBy] = useState<"likes" | "comments" | null>(null)
+
+  // Filtered and sorted articles
+  const filteredArticles = articles?.filter(article => {
+    // Tìm kiếm theo nhiều trường
+    const searchFields = [
+      article.title,
+      article.content,
+      article.category?.name,
+      article.excerpt
+    ].filter(Boolean)
+
+    const matchesSearch = searchFields.some(field => 
+      field?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+
+    // Lọc theo trạng thái
+    const matchesStatus = statusFilter === "all" || 
+      article.status === statusFilter.toUpperCase()
+
+    // Lọc theo thời gian
+    const { start, end } = TIME_FILTERS[timeFilter.toUpperCase() as keyof typeof TIME_FILTERS].getDateRange()
+    const matchesTime = !start || !end || (
+      article.publishedAt && 
+      new Date(article.publishedAt) >= start && 
+      new Date(article.publishedAt) <= end
+    )
+
+    return matchesSearch && matchesStatus && matchesTime
+  }).sort((a, b) => {
+    if (!sortBy) return 0
+
+    if (sortBy === "likes") {
+      const likesA = a._count?.articleLikes || 0
+      const likesB = b._count?.articleLikes || 0
+      if (likesA !== likesB) return likesB - likesA
+
+      // Nếu số lượt thích bằng nhau, sắp xếp theo số bình luận
+      const commentsA = a._count?.articleComments || 0
+      const commentsB = b._count?.articleComments || 0
+      return commentsB - commentsA
+    }
+
+    if (sortBy === "comments") {
+      const commentsA = a._count?.articleComments || 0
+      const commentsB = b._count?.articleComments || 0
+      if (commentsA !== commentsB) return commentsB - commentsA
+
+      // Nếu số bình luận bằng nhau, sắp xếp theo số lượt thích
+      const likesA = a._count?.articleLikes || 0
+      const likesB = b._count?.articleLikes || 0
+      return likesB - likesA
+    }
+
+    return 0
+  })
+
+  // Debug logs
+  console.log("Current user:", currentUser)
+  console.log("Author ID:", authorId)
+  console.log("Articles from Redux:", articles)
+  console.log("Is loading:", isLoading)
+
+  // Load user profile when component mounts
+  useEffect(() => {
+    dispatch(handleGetProfile())
+  }, [dispatch])
+
+  useEffect(() => {
+    // Check if user is authenticated
+    if (!currentUser) {
+      router.push('/login')
+      return
+    }
+
+    if (authorId) {
+      console.log("Fetching articles for author:", authorId)
+      dispatch(handleGetArticlesByAuthor(authorId))
+        .then((response) => {
+          console.log("API Response:", response)
+          console.log("Articles after API call:", articles)
+        })
+        .catch((error) => {
+          console.error("API Error:", error)
+        })
+    }
+  }, [dispatch, authorId, currentUser, router])
+
+  // If not authenticated, don't render the page
+  if (!currentUser) {
+    return null
+  }
+
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
 
   return (
     <div>
@@ -111,28 +218,45 @@ export default function AuthorArticlesPage() {
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-              <Input type="search" placeholder="Tìm kiếm bài viết..." className="pl-8 h-9 w-[200px] md:w-[300px]" />
+              <Input 
+                type="search" 
+                placeholder="Tìm kiếm..." 
+                className="pl-8 h-9 w-[200px]"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-            <Select defaultValue="all">
+            <Select 
+              value={statusFilter} 
+              onValueChange={setStatusFilter}
+            >
               <SelectTrigger className="w-[150px] h-9">
                 <SelectValue placeholder="Trạng thái" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tất cả</SelectItem>
-                <SelectItem value="published">Đã xuất bản</SelectItem>
-                <SelectItem value="pending">Chờ duyệt</SelectItem>
-                <SelectItem value="draft">Bản nháp</SelectItem>
-                <SelectItem value="rejected">Từ chối</SelectItem>
+                {Object.values(ARTICLE_STATUS).map(status => (
+                  <SelectItem key={status.value} value={status.value.toLowerCase()}>
+                    {status.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              Lọc
-            </Button>
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Xuất
-            </Button>
+            <Select 
+              value={timeFilter} 
+              onValueChange={setTimeFilter}
+            >
+              <SelectTrigger className="w-[150px] h-9">
+                <SelectValue placeholder="Thời gian" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.values(TIME_FILTERS).map(filter => (
+                  <SelectItem key={filter.value} value={filter.value}>
+                    {filter.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Link href="/author/articles/add">
               <Button size="sm">
                 <PenSquare className="h-4 w-4 mr-2" />
@@ -142,101 +266,95 @@ export default function AuthorArticlesPage() {
           </div>
         </div>
         <div className={styles.tableContent}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th className={styles.tableHeaderCell}>ID</th>
-                <th className={styles.tableHeaderCell}>Tiêu đề</th>
-                <th className={styles.tableHeaderCell}>Trạng thái</th>
-                <th className={styles.tableHeaderCell}>Chuyên mục</th>
-                <th className={styles.tableHeaderCell}>Ngày xuất bản</th>
-                <th className={styles.tableHeaderCell}>Lượt xem</th>
-                <th className={styles.tableHeaderCell}>Tương tác</th>
-                <th className={styles.tableHeaderCell}>Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              {articles.map((article) => (
-                <tr key={article.id} className={styles.tableRow}>
-                  <td className={styles.tableCell}>{article.id}</td>
-                  <td className={styles.tableCell}>
-                    <div className="font-medium">{article.title}</div>
-                    {article.rejectionReason && (
-                      <div className="text-xs text-red-600 mt-1">Lý do từ chối: {article.rejectionReason}</div>
-                    )}
-                  </td>
-                  <td className={styles.tableCell}>
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        article.status === "Đã xuất bản"
-                          ? "bg-green-100 text-green-800"
-                          : article.status === "Chờ duyệt"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : article.status === "Bản nháp"
-                              ? "bg-gray-100 text-gray-800"
-                              : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {article.status}
-                    </span>
-                  </td>
-                  <td className={styles.tableCell}>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {article.category}
-                    </span>
-                  </td>
-                  <td className={styles.tableCell}>{article.publishedAt}</td>
-                  <td className={styles.tableCell}>{article.views.toLocaleString()}</td>
-                  <td className={styles.tableCell}>
-                    <div className="flex flex-col">
-                      <span className="text-xs">
-                        <span className="font-medium">{article.likes}</span> thích
-                      </span>
-                      <span className="text-xs">
-                        <span className="font-medium">{article.comments}</span> bình luận
-                      </span>
-                    </div>
-                  </td>
-                  <td className={styles.tableCell}>
-                    <div className="flex space-x-2">
-                      <Link href={`/author/articles/${article.id}`}>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <Link href={`/author/articles/${article.id}/edit`}>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th className={styles.tableHeaderCell}>ID</th>
+                  <th className={styles.tableHeaderCell}>Tiêu đề</th>
+                  <th className={styles.tableHeaderCell}>Trạng thái</th>
+                  <th className={styles.tableHeaderCell}>Chuyên mục</th>
+                  <th className={styles.tableHeaderCell}>Ngày xuất bản</th>
+                  <th className={styles.tableHeaderCell}>Lượt thích</th>
+                  <th className={styles.tableHeaderCell}>Bình luận</th>
+                  <th className={styles.tableHeaderCell}>Hành động</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className={styles.tableFooter}>
-          <div className={styles.paginationInfo}>Hiển thị 1 đến 8 trong tổng số 15 bài viết</div>
-          <div className={styles.paginationControls}>
-            <button className={`${styles.paginationButton} ${styles.paginationButtonDisabled}`} disabled>
-              <ChevronLeftIcon className="h-4 w-4" />
-            </button>
-            <button className={`${styles.paginationButton} ${styles.paginationButtonActive}`}>1</button>
-            <button className={styles.paginationButton}>2</button>
-            <button className={styles.paginationButton}>
-              <ChevronRightIcon className="h-4 w-4" />
-            </button>
+              </thead>
+              <tbody>
+                {filteredArticles && filteredArticles.length > 0 ? (
+                  filteredArticles.map((article) => (
+                  <tr key={article.id} className={styles.tableRow}>
+                    <td className={styles.tableCell}>{article.id}</td>
+                    <td className={styles.tableCell}>
+                      <div className="font-medium max-w-[300px] truncate">{article.title}</div>
+                    </td>
+                    <td className={styles.tableCell}>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          ARTICLE_STATUS[article.status as ArticleStatus]?.color || "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {ARTICLE_STATUS[article.status as ArticleStatus]?.label || article.status}
+                      </span>
+                    </td>
+                    <td className={styles.tableCell}>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {article.category?.name || "Chưa phân loại"}
+                      </span>
+                    </td>
+                    <td className={styles.tableCell}>
+                      {article.publishedAt 
+                        ? new Date(article.publishedAt).toLocaleDateString('vi-VN', {
+                            year: 'numeric',
+                            month: 'numeric',
+                            day: 'numeric'
+                          })
+                        : "Chưa xuất bản"}
+                    </td>
+                    <td className={styles.tableCell}>
+                      <div className="flex items-center gap-1 text-gray-600">
+                        <Heart className="h-4 w-4" />
+                        <span>{article._count?.articleLikes || 0}</span>
+                      </div>
+                    </td>
+                    <td className={styles.tableCell}>
+                      <div className="flex items-center gap-1 text-gray-600">
+                        <MessageSquare className="h-4 w-4" />
+                        <span>{article._count?.articleComments || 0}</span>
+                      </div>
+                    </td>
+                    <td className={styles.tableCell}>
+                      <div className="flex items-center gap-2">
+                        <Link href={`/author/articles/${article.id}`}>
+                          <Button variant="ghost" size="icon">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <Link href={`/author/articles/${article.id}/edit`}>
+                          <Button variant="ghost" size="icon">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <Button variant="ghost" size="icon" className="text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={8} className={styles.tableCell}>
+                      <div className="text-center py-4">Không có bài viết nào</div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     </div>
   )
 }
+

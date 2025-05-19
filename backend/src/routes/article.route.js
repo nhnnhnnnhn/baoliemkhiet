@@ -32,6 +32,17 @@ router.get(
   controller.getArticlesByAuthor
 );
 
+// Get articles by author (public)
+router.get(
+  "/get-post-author/:authorId",
+  authMiddleware(),
+  controller.getPostArticlesByAuthor
+);
+
+
+// Get articles statistics (public)
+router.get("/statistics/:id", authMiddleware(), controller.getArticlesStatistics);
+
 // Get most 5 liked articles (public)
 router.get("/most-liked", authMiddleware(), controller.getMostLikedArticles);
 

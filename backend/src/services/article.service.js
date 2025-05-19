@@ -256,10 +256,48 @@ module.exports.getArticlesByCategory = async (categoryId) => {
 
 // Get articles by author
 module.exports.getArticlesByAuthor = async (authorId) => {
+  console.log('-----------------Running getArticlesByAuthor with authorId:', authorId);
   const articles = await prisma.article.findMany({
     where: {
       isPublish: true,
       authorId: Number(authorId),
+    }
+  });
+  const numberOfArticles = await prisma.article.count({
+    where: {
+      isPublish: true,
+      authorId: Number(authorId),
+    },
+  });
+  return {articles, numberOfArticles};
+};
+
+// Get articles by author
+module.exports.getPostArticlesByAuthor = async (authorId) => {
+  console.log('-----------------Running getArticlesByAuthor with authorId:', authorId);
+  const articles = await prisma.article.findMany({
+    where: {
+      isPublish: true,
+      authorId: Number(authorId),
+    },
+    include: {
+      category: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      articleTags: {
+        include: {
+          tag: true,
+        },
+      },
+      _count: {
+        select: {
+          articleLikes: true,
+          comments: true,
+        },
+      },
     },
   });
   const numberOfArticles = await prisma.article.count({
@@ -269,6 +307,22 @@ module.exports.getArticlesByAuthor = async (authorId) => {
     },
   });
   return {articles, numberOfArticles};
+};
+
+// Get articles statistics
+module.exports.getArticlesStatistics = async (id) => {
+  const article = await prisma.article.findUnique({
+    where: { id: Number(id) },
+    include: {
+      articleLikes: true,
+      articleComments: true,
+    },
+    _count: {
+      articleLikes: true,
+      articleComments: true,
+    },
+  });
+  return article;
 };
 
 // Get most 5 liked articles
