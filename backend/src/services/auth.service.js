@@ -33,6 +33,12 @@ async function loginUser(email, password) {
       userId: user.id,
     },
   });
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      is_online: true,
+    },
+  });
   return {
     accessToken,
     refreshToken,
@@ -77,6 +83,12 @@ async function registerUser(
 }
 
 async function logoutUser(userId) {
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      is_online: false,
+    },
+  });
   await prisma.jwtToken.deleteMany({
     where: {
       userId,
