@@ -64,10 +64,19 @@ const updateProfile = controllerHandler(async (req, res) => {
   res.status(200).json(updatedUser);
 });
 
+const forgotPassword = controllerHandler(async (req, res) => {
+  const { email } = req.body;
+  await authService.forgotPassword(email);
+  res.status(200).json({ message: "Mã OTP đã được gửi đến email của bạn" });
+});
+
+
+
 module.exports = {
   login,
   register,
   changePassword,
   getProfile,
-  updateProfile
+  updateProfile,
+  forgotPassword
 };
