@@ -40,7 +40,7 @@ async function createLike(user_id, article_id) {
 }
 
 async function deleteLike(user_id, article_id) {
-  const like = await prisma.articleLike.findUnique({
+  const like = await prisma.articleLike.findFirst({
     where: {
       userId: user_id,
       articleId: article_id,
@@ -50,7 +50,7 @@ async function deleteLike(user_id, article_id) {
     throw new Error("Like not found");
   }
 
-  const deletedLike = await prisma.articleLike.delete({
+  const deletedLike = await prisma.articleLike.deleteMany({
     where: {
       userId: user_id,
       articleId: article_id,
@@ -66,11 +66,29 @@ async function getLikesByArticleId(article_id) {
     throw new Error("Article not found");
   }
 
-  const likes_count = await prisma.articleLike.count({
-    where: { articleId: article_id },
-  });
+  const [likes, totalLikes] = await Promise.all([
+    prisma.articleLike.findMany({
+      where: { articleId: article_id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullname: true,
+            email: true,
+            avatar: true,
+          },
+        },
+      },
+    }),
+    prisma.articleLike.count({
+      where: { articleId: article_id },
+    }),
+  ]);
 
-  return likes_count;
+  return {
+    likes,
+    totalLikes,
+  };
 }
 
 module.exports = {

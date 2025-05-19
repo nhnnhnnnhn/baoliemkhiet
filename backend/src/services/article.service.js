@@ -20,51 +20,65 @@ module.exports.createArticle = async (
     let slugify = (text) => {
       return text
         .toString()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
         .toLowerCase()
         .trim()
-        .replace(/\s+/g, '-')
-        .replace(/[^\w\-]+/g, '')
-        .replace(/\-\-+/g, '-');
+        .replace(/\s+/g, "-")
+        .replace(/[^\w\-]+/g, "")
+        .replace(/\-\-+/g, "-");
     };
-    let slug = slugify(title) + '-' + Date.now();
-    
+    let slug = slugify(title) + "-" + Date.now();
+
     // Bước 2: Xử lý trạng thái
-    if (status === 'APPROVED' || status === 'PUBLISHED') {
+    if (status === "APPROVED" || status === "PUBLISHED") {
       // Đặt cờ isPublish = true ngày khi được duyệt
       isPublish = true;
-      
+
       // Bước 3: Xử lý ngày xuất bản
       if (publishedAt) {
         try {
           // Thử xử lý ngày để đảm bảo định dạng chính xác
           const date = new Date(publishedAt);
-          
+
           if (!isNaN(date.getTime())) {
             // Nếu ngày hợp lệ, sử dụng
             publishedDate = date;
-            console.log('[CREATE] Sử dụng ngày xuất bản được chỉ định:', publishedDate.toISOString());
+            console.log(
+              "[CREATE] Sử dụng ngày xuất bản được chỉ định:",
+              publishedDate.toISOString()
+            );
           } else {
             // Nếu ngày không hợp lệ, sử dụng ngày hiện tại
             publishedDate = new Date();
-            console.log('[CREATE] Ngày xuất bản không hợp lệ, sử dụng ngày hiện tại:', publishedDate.toISOString());
+            console.log(
+              "[CREATE] Ngày xuất bản không hợp lệ, sử dụng ngày hiện tại:",
+              publishedDate.toISOString()
+            );
           }
         } catch (error) {
           // Nếu có lỗi, sử dụng ngày hiện tại
           publishedDate = new Date();
-          console.log('[CREATE] Lỗi xử lý ngày xuất bản, sử dụng ngày hiện tại:', publishedDate.toISOString());
+          console.log(
+            "[CREATE] Lỗi xử lý ngày xuất bản, sử dụng ngày hiện tại:",
+            publishedDate.toISOString()
+          );
         }
       } else {
         // Nếu không cung cấp ngày, sử dụng ngày hiện tại
         publishedDate = new Date();
-        console.log('[CREATE] Không có ngày xuất bản, sử dụng ngày hiện tại:', publishedDate.toISOString());
+        console.log(
+          "[CREATE] Không có ngày xuất bản, sử dụng ngày hiện tại:",
+          publishedDate.toISOString()
+        );
       }
     } else {
       // Nếu không phải trạng thái được duyệt, đặt cờ isPublish = false
       isPublish = false;
       publishedDate = null; // Rõ ràng về việc chưa có ngày xuất bản
-      console.log('[CREATE] Bài viết chưa được duyệt, không có ngày xuất bản và không được xuất bản');
+      console.log(
+        "[CREATE] Bài viết chưa được duyệt, không có ngày xuất bản và không được xuất bản"
+      );
     }
 
     const article = await prisma.article.create({
@@ -257,17 +271,20 @@ module.exports.getArticlesByCategory = async (categoryId) => {
       categoryId: Number(categoryId),
     },
   });
-  return {articles, numberOfArticles};
+  return { articles, numberOfArticles };
 };
 
 // Get articles by author
 module.exports.getArticlesByAuthor = async (authorId) => {
-  console.log('-----------------Running getArticlesByAuthor with authorId:', authorId);
+  console.log(
+    "-----------------Running getArticlesByAuthor with authorId:",
+    authorId
+  );
   const articles = await prisma.article.findMany({
     where: {
       isPublish: true,
       authorId: Number(authorId),
-    }
+    },
   });
   const numberOfArticles = await prisma.article.count({
     where: {
@@ -275,12 +292,15 @@ module.exports.getArticlesByAuthor = async (authorId) => {
       authorId: Number(authorId),
     },
   });
-  return {articles, numberOfArticles};
+  return { articles, numberOfArticles };
 };
 
 // Get articles by author
 module.exports.getPostArticlesByAuthor = async (authorId) => {
-  console.log('-----------------Running getArticlesByAuthor with authorId:', authorId);
+  console.log(
+    "-----------------Running getArticlesByAuthor with authorId:",
+    authorId
+  );
   const articles = await prisma.article.findMany({
     where: {
       //isPublish: true,
@@ -312,7 +332,7 @@ module.exports.getPostArticlesByAuthor = async (authorId) => {
       authorId: Number(authorId),
     },
   });
-  return {articles, numberOfArticles};
+  return { articles, numberOfArticles };
 };
 
 // Get articles statistics
@@ -480,18 +500,23 @@ module.exports.getRelatedArticles = async (id) => {
 
   const tagIds = article.articleTags.map((tag) => tag.tagId);
 
-  if (tagIds.length === 0) {
-    return [];
-  }
+  console.log("ccccc");
 
   const relatedArticles = await prisma.article.findMany({
     where: {
       id: { not: Number(id) },
-      articleTags: {
-        some: {
-          tagId: { in: tagIds },
+      OR: [
+        {
+          articleTags: {
+            some: {
+              tagId: { in: tagIds },
+            },
+          },
         },
-      },
+        {
+          categoryId: article.categoryId,
+        },
+      ],
     },
     take: 5,
     include: {
@@ -628,59 +653,80 @@ module.exports.editArticle = async (
     if (!title || !content || !status) {
       throw new Error("Missing required fields");
     }
-    
+
     // Khai báo biến để cập nhật dữ liệu
     let publishedDate = undefined;
     let isPublish = undefined;
-    
+
     // Xử lý trạng thái và ngày xuất bản
-    if (status === 'APPROVED' || status === 'PUBLISHED') {
+    if (status === "APPROVED" || status === "PUBLISHED") {
       // Đặt trạng thái xuất bản
       isPublish = true;
-      
+
       // Xử lý ngày xuất bản
       if (publishedAt) {
         try {
           // Thử xử lý ngày xuất bản được cung cấp
           const date = new Date(publishedAt);
-          
+
           if (!isNaN(date.getTime())) {
             // Nếu ngày hợp lệ, sử dụng
             publishedDate = date;
-            console.log('[EDIT] Sử dụng ngày xuất bản được chỉ định:', publishedDate.toISOString());
+            console.log(
+              "[EDIT] Sử dụng ngày xuất bản được chỉ định:",
+              publishedDate.toISOString()
+            );
           } else {
             // Nếu ngày không hợp lệ, kiểm tra xem có ngày xuất bản cũ không
             if (existingArticle.publishedAt) {
               publishedDate = new Date(existingArticle.publishedAt);
-              console.log('[EDIT] Ngày xuất bản mới không hợp lệ, sử dụng ngày cũ:', publishedDate.toISOString());
+              console.log(
+                "[EDIT] Ngày xuất bản mới không hợp lệ, sử dụng ngày cũ:",
+                publishedDate.toISOString()
+              );
             } else {
               // Nếu không có ngày cũ, sử dụng ngày hiện tại
               publishedDate = new Date();
-              console.log('[EDIT] Không có ngày xuất bản hợp lệ, sử dụng ngày hiện tại:', publishedDate.toISOString());
+              console.log(
+                "[EDIT] Không có ngày xuất bản hợp lệ, sử dụng ngày hiện tại:",
+                publishedDate.toISOString()
+              );
             }
           }
         } catch (error) {
           // Xử lý lỗi - sử dụng ngày hiện tại
           publishedDate = new Date();
-          console.log('[EDIT] Lỗi xử lý ngày xuất bản, sử dụng ngày hiện tại:', publishedDate.toISOString());
+          console.log(
+            "[EDIT] Lỗi xử lý ngày xuất bản, sử dụng ngày hiện tại:",
+            publishedDate.toISOString()
+          );
         }
       } else if (!existingArticle.isPublish || !existingArticle.publishedAt) {
         // Nếu trước đây chưa xuất bản và giờ được duyệt
         publishedDate = new Date();
-        console.log('[EDIT] Bài viết mới được duyệt, sử dụng ngày hiện tại:', publishedDate.toISOString());
+        console.log(
+          "[EDIT] Bài viết mới được duyệt, sử dụng ngày hiện tại:",
+          publishedDate.toISOString()
+        );
       } else if (existingArticle.publishedAt) {
         // Nếu đã có ngày xuất bản, giữ nguyên
         publishedDate = new Date(existingArticle.publishedAt);
-        console.log('[EDIT] Giữ nguyên ngày xuất bản cũ:', publishedDate.toISOString());
+        console.log(
+          "[EDIT] Giữ nguyên ngày xuất bản cũ:",
+          publishedDate.toISOString()
+        );
       }
     } else {
       // Nếu đặt trạng thái không phải APPROVED/PUBLISHED
       isPublish = false;
-      
+
       // Giữ nguyên ngày xuất bản nếu có, để khi duyệt lại sẽ dùng ngày cũ
       if (existingArticle.publishedAt) {
         publishedDate = existingArticle.publishedAt;
-        console.log('[EDIT] Giữ lại ngày xuất bản cho tương lai:', publishedDate);
+        console.log(
+          "[EDIT] Giữ lại ngày xuất bản cho tương lai:",
+          publishedDate
+        );
       }
     }
 
@@ -692,12 +738,12 @@ module.exports.editArticle = async (
       status,
       isPublish,
     };
-    
+
     // Chỉ cập nhật các trường có dữ liệu
     if (publishedDate !== undefined) {
       updateData.publishedAt = publishedDate;
     }
-    
+
     // Cập nhật bài viết
     const article = await prisma.article.update({
       where: { id: Number(id) },

@@ -6,6 +6,17 @@ import { useState, useEffect, useRef, use } from "react";
 import { format, parseISO } from "date-fns";
 import { useAppDispatch, useAppSelector } from "@/src/store";
 import {
+  handleGetLikes,
+  handleCreateLike,
+  handleDeleteLike,
+} from "@/src/thunks/like/likeThunk";
+import {
+  selectLikes,
+  selectLikesLoading,
+  selectLikeActionLoading,
+  selectTotalLikes,
+} from "@/src/thunks/like/likeSlice";
+import {
   handleGetComments,
   handleCreateComment,
   handleUpdateComment,
@@ -40,6 +51,7 @@ import {
   Trash2,
   XCircle,
   CheckCircle,
+  Heart,
 } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { ChatbotButton } from "@/components/chatbot-button";
@@ -238,6 +250,12 @@ export default function ArticlePage({
   const isAuthenticated = useAppSelector(selectIsLoggedIn);
   const currentUser = useAppSelector(selectCurrentUser);
 
+  // Like state
+  const likes = useAppSelector(selectLikes);
+  const totalLikes = useAppSelector(selectTotalLikes);
+  const likesLoading = useAppSelector(selectLikesLoading);
+  const likeActionLoading = useAppSelector(selectLikeActionLoading);
+
   // Load reported comments from localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -274,6 +292,53 @@ export default function ArticlePage({
       );
     }
   }, [reportedComments]);
+
+  // Fetch likes when article loads
+  useEffect(() => {
+    if (article.id) {
+      dispatch(handleGetLikes(Number(article.id)));
+    }
+  }, [article.id, dispatch]);
+
+  // Handle like/unlike
+  const handleLikeToggle = async () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Cần đăng nhập",
+        description: "Bạn cần đăng nhập để thích bài viết.",
+        variant: "default",
+      });
+      router.push("/auth/login");
+      return;
+    }
+
+    if (!currentUser?.id) return;
+
+    try {
+      const isLiked = likes.includes(currentUser.id);
+      if (isLiked) {
+        await dispatch(
+          handleDeleteLike({
+            articleId: Number(article.id),
+            userId: currentUser.id,
+          })
+        ).unwrap();
+        // Let Redux handle the like count
+        dispatch(handleGetLikes(Number(article.id)));
+      } else {
+        await dispatch(handleCreateLike(Number(article.id))).unwrap();
+        // Let Redux handle the like count
+        dispatch(handleGetLikes(Number(article.id)));
+      }
+    } catch (error) {
+      console.error("Failed to toggle like:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể thực hiện thao tác. Vui lòng thử lại sau.",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Fetch dữ liệu bài viết từ API
   useEffect(() => {
@@ -392,7 +457,7 @@ export default function ArticlePage({
               },
           stats: {
             views: response.view || 0,
-            likes: 0, // Chưa có API
+            likes: 0, // Will be updated by Redux state
             shares: 0, // Chưa có API
             comments: 0, // Chưa có API
           },
@@ -404,18 +469,16 @@ export default function ArticlePage({
         // Remove temporary comment data as we're using Redux now
         articleData.comments = [];
 
-        // Gọi API để lấy các bài viết liên quan trong cùng danh mục
+        // Gọi API để lấy các bài viết liên quan
         try {
-          const relatedArticlesData = await articleApi.getArticlesByCategory(
-            response.category_id || 1
+          const relatedArticles = await articleApi.getRelatedArticles(
+            response.id
           );
 
-          // Lọc chỉ lấy các bài viết khác (không lấy bài viết hiện tại)
-          const otherArticles = relatedArticlesData.articles
-            .filter(
-              (item: Article) => item.id !== response.id && item.isPublish
-            )
-            .slice(0, 3); // Chỉ lấy tối đa 3 bài
+          // Lọc bài viết đã xuất bản và giới hạn số lượng
+          const otherArticles = relatedArticles
+            .filter((item: Article) => item.isPublish)
+            .slice(0, 5); // Chỉ lấy tối đa 5 bài
 
           articleData.relatedArticles = otherArticles.map((item: Article) => {
             // Xử lý và định dạng thời gian xuất bản cho các bài viết liên quan
@@ -822,8 +885,25 @@ export default function ArticlePage({
             {article.title}
           </h1>
 
-          {/* Report Button */}
-          <div className="flex justify-end mb-6">
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-2 mb-6">
+            {/* Like Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+              onClick={handleLikeToggle}
+              disabled={likeActionLoading}
+            >
+              <Heart
+                className={`h-4 w-4 ${
+                  currentUser && likes.includes(currentUser.id)
+                    ? "fill-current text-red-500"
+                    : ""
+                }`}
+              />
+              <span>{totalLikes}</span>
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -1252,33 +1332,44 @@ export default function ArticlePage({
         <Separator className="my-10" />
 
         {/* Related Articles */}
-        <div>
-          <h2 className="text-2xl font-bold mb-6">
+        <div className="bg-gray-50 p-6 rounded-lg">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <span className="w-1 h-6 bg-blue-600 rounded-full"></span>
             Bài viết bạn có thể quan tâm
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {article.relatedArticles.map(
               (relatedArticle: any, index: number) => (
-                <Card key={index} className="overflow-hidden">
-                  <div className="relative h-48 w-full">
-                    <Image
-                      src={relatedArticle.thumbnail || "/placeholder.svg"}
-                      alt={relatedArticle.title}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <CardContent className="p-4">
-                    <div className="text-sm text-gray-500 mb-2">
-                      {relatedArticle.category} • {relatedArticle.publishDate}
+                <Card
+                  key={index}
+                  className="overflow-hidden group hover:shadow-lg transition-shadow duration-300"
+                >
+                  <Link
+                    href={`/article/${relatedArticle.slug}`}
+                    className="block"
+                  >
+                    <div className="relative h-48 w-full">
+                      <Image
+                        src={relatedArticle.thumbnail || "/placeholder.svg"}
+                        alt={relatedArticle.title}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     </div>
-                    <Link
-                      href={`/article/${relatedArticle.slug}`}
-                      className="text-lg font-semibold hover:text-blue-600 line-clamp-2"
-                    >
-                      {relatedArticle.title}
-                    </Link>
-                  </CardContent>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                        <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded-full text-xs">
+                          {relatedArticle.category}
+                        </span>
+                        <span>•</span>
+                        <span>{relatedArticle.publishDate}</span>
+                      </div>
+                      <h3 className="text-lg font-semibold group-hover:text-blue-600 line-clamp-2 transition-colors duration-300">
+                        {relatedArticle.title}
+                      </h3>
+                    </CardContent>
+                  </Link>
                 </Card>
               )
             )}
