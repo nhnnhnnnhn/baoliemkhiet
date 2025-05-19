@@ -4,7 +4,13 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Loader2, Save } from "lucide-react"
+import dynamic from "next/dynamic"
 import { useAppDispatch, useAppSelector } from "@/src/store"
+
+const RichTextEditor = dynamic(() => import("@/components/rich-text-editor"), {
+  ssr: false,
+  loading: () => <div className="h-[600px] w-full bg-gray-100 animate-pulse rounded-md" />
+})
 import { handleGetArticleById, handleUpdateArticle, handleApproveArticle } from "@/src/thunks/article/articleThunk"
 import { 
   selectSelectedArticle, 
@@ -53,8 +59,6 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
   const [thumbnailUrl, setThumbnailUrl] = useState('')
   const [publishDate, setPublishDate] = useState<string>('')
   const [useCurrentDate, setUseCurrentDate] = useState(false)
-  const [showImageInsert, setShowImageInsert] = useState(false)
-  const [imageUrl, setImageUrl] = useState('')
   
   // Fetch article, categories and tags on component mount
   useEffect(() => {
@@ -206,21 +210,6 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     dispatch(handleUpdateArticle(updateData))
   }
   
-  // Handle image insertion
-  const handleInsertImage = () => {
-    if (!imageUrl) return
-    
-    const imageMarkdown = `![alt text](${imageUrl})`
-    setContent(prev => {
-      // If there's text selected, replace it with the image markdown
-      // Otherwise, insert at current cursor position or at the end
-      return prev + '\n' + imageMarkdown + '\n'
-    })
-    
-    setImageUrl('')
-    setShowImageInsert(false)
-  }
-
   if (!article) {
     return <div className="flex items-center justify-center h-screen"><Spinner size="lg" /> Đang tải...</div>
   }
@@ -268,46 +257,9 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
           <div className={styles.chartCard}>
             <div className={styles.chartHeader}>
               <h3 className={styles.chartTitle}>Nội dung bài viết</h3>
-              
-              {/* Image insert toggle */}
-              <div className="flex items-center">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setShowImageInsert(!showImageInsert)}
-                >
-                  {showImageInsert ? 'Ẩn công cụ chèn ảnh' : 'Chèn ảnh'}
-                </Button>
-              </div>
             </div>
             <div className="p-6">
               <div className="space-y-4">
-                {/* Image insert tool */}
-                {showImageInsert && (
-                  <div className="p-4 border rounded-md bg-gray-50 mb-4">
-                    <Label htmlFor="imageUrl">URL hình ảnh</Label>
-                    <div className="flex mt-1">
-                      <Input
-                        id="imageUrl"
-                        value={imageUrl}
-                        onChange={(e) => setImageUrl(e.target.value)}
-                        placeholder="Nhập URL hình ảnh"
-                        className="rounded-r-none"
-                      />
-                      <Button 
-                        type="button"
-                        onClick={handleInsertImage}
-                        className="rounded-l-none"
-                      >
-                        Chèn
-                      </Button>
-                    </div>
-                    <div className="text-xs text-gray-500 mt-2">
-                      Hình ảnh sẽ được chèn vào vị trí hiện tại của con trỏ chuột trong nội dung
-                    </div>
-                  </div>
-                )}
               
                 <div>
                   <Label htmlFor="title">Tiêu đề <span className="text-red-500">*</span></Label>
@@ -340,14 +292,18 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                 </div>
                 <div>
                   <Label htmlFor="content">Nội dung <span className="text-red-500">*</span></Label>
-                  <Textarea 
-                    id="content" 
-                    value={content} 
-                    onChange={(e) => setContent(e.target.value)} 
-                    className="mt-1 font-mono" 
-                    rows={15} 
-                    required
-                  />
+                  <div className="mt-1">
+                    <RichTextEditor
+                      value={content}
+                      onChange={(newContent) => setContent(newContent)}
+                    />
+                    <input
+                      type="hidden"
+                      name="content"
+                      value={content}
+                      required
+                    />
+                  </div>
                 </div>
               </div>
             </div>

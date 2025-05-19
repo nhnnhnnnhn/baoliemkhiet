@@ -7,11 +7,11 @@ const authMiddleware = require("../middlewares/auth.middleware");
 // Create a new category
 router.post("/create", authMiddleware(), controller.createCategory);
 
-// Get all categories
-router.get("/get", authMiddleware(), controller.getAllCategories);
+// Get all categories (public)
+router.get("/get", controller.getAllCategories);
 
-// Get a single category by ID
-router.get("/get/:id", authMiddleware(), controller.getCategoryById);
+// Get a single category by ID (public)
+router.get("/get/:id", controller.getCategoryById);
 
 // Edit a category
 router.patch("/edit/:id", authMiddleware(), controller.editCategory);

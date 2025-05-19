@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, use } from "react"
 import { useAppDispatch, useAppSelector } from "@/src/store"
 import { handleGetComments, handleCreateComment, handleUpdateComment, handleDeleteComment } from "@/src/thunks/comment/commentThunk"
 import { 
@@ -160,7 +160,9 @@ const createEmptyArticle = (): ArticleUI => {
   }
 }
 
-export default function ArticlePage({ params }: { params: { slug: string } }) {
+export default function ArticlePage({ params }: { params: Promise<{ slug: string }> | { slug: string } }) {
+  // Unwrap params nếu là Promise
+  const resolvedParams = typeof params === 'object' && !('then' in params) ? params : use(params)
   const [article, setArticle] = useState<ArticleUI>(createEmptyArticle())
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -244,13 +246,16 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
     const fetchArticle = async () => {
       try {
         setIsLoading(true)
-        // Yêu cầu API lấy bài viết theo ID (nếu là số) hoặc theo slug
-        const articleId = !isNaN(Number(params.slug)) ? Number(params.slug) : null
+        setError(null)
+        
+        // Lấy thông tin bài viết từ API
+        const articleId = resolvedParams.slug
         if (!articleId) {
           throw new Error('ID bài viết không hợp lệ')
         }
 
         const response = await articleApi.getArticleById(articleId)
+        
         // Debug detailed API response
         console.log('=== API Response Debug ===');
         console.log('Full response:', response);
@@ -273,31 +278,15 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
           return
         }
         
-        // Xử lý nội dung bài viết
+        // Xử lý nội dung bài viết từ TinyMCE
+        // Với TinyMCE, nội dung đã là HTML đầy đủ, không cần xử lý phức tạp
         const processedContent = [];
         if (response.content) {
-          // Tách nội dung HTML thành các đoạn văn và hình ảnh
-          const contentParts = response.content.split(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/g);
-          
-          for (let i = 0; i < contentParts.length; i++) {
-            if (contentParts[i].trim()) {
-              processedContent.push({
-                type: 'text',
-                value: contentParts[i].trim()
-              });
-            }
-            
-            // Nếu có image URL và caption (tương ứng với các nhóm bắt trong regex)
-            if (i+1 < contentParts.length && contentParts[i+1]?.includes('http')) {
-              processedContent.push({
-                type: 'image',
-                value: '', // Thêm trường value trống để phù hợp với interface
-                url: contentParts[i+1] || '/placeholder.svg?height=500&width=800',
-                caption: contentParts[i+2] || 'Hình minh họa'
-              });
-              i += 2; // Bỏ qua 2 phần tử đã sử dụng (url và caption)
-            }
-          }
+          // Thêm toàn bộ nội dung HTML vào một block
+          processedContent.push({
+            type: 'richtext',
+            value: response.content
+          });
         } else {
           // Nếu không có nội dung, thêm một thông báo mặc định
           processedContent.push({
@@ -379,10 +368,10 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
     fetchArticle()
 
     // Fetch comments when article ID is available
-    if (params.slug && !isNaN(Number(params.slug))) {
-      dispatch(handleGetComments({ articleId: Number(params.slug) }) as any)
+    if (resolvedParams.slug && !isNaN(Number(resolvedParams.slug))) {
+      dispatch(handleGetComments({ articleId: Number(resolvedParams.slug) }) as any)
     }
-  }, [params.slug, dispatch])
+  }, [resolvedParams.slug, dispatch])
 
   // Handle comment submission success and reset state
   useEffect(() => {
@@ -400,9 +389,9 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
       dispatch(clearCreateCommentState())
       
       // Refresh comments to show newly added comment if it's approved
-      dispatch(handleGetComments({ articleId: Number(params.slug) }) as any)
+      dispatch(handleGetComments({ articleId: Number(resolvedParams.slug) }) as any)
     }
-  }, [createCommentSuccess, dispatch, params.slug, toast])
+  }, [createCommentSuccess, dispatch, resolvedParams.slug, toast])
 
   // Handle comment update success and reset state
   useEffect(() => {
@@ -421,7 +410,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
       dispatch(clearUpdateCommentState())
       
       // Refresh comments
-      dispatch(handleGetComments({ articleId: Number(params.slug) }) as any)
+      dispatch(handleGetComments({ articleId: Number(resolvedParams.slug) }) as any)
     }
     
     if (updateCommentError) {
@@ -433,7 +422,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
       
       dispatch(clearUpdateCommentState())
     }
-  }, [updateCommentSuccess, updateCommentError, dispatch, params.slug, toast])
+  }, [updateCommentSuccess, updateCommentError, dispatch, resolvedParams.slug, toast])
 
   // Focus on edit textarea when starting edit
   useEffect(() => {
@@ -546,7 +535,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
       })
       
       // Refresh comments
-      dispatch(handleGetComments({ articleId: Number(params.slug) }))
+      dispatch(handleGetComments({ articleId: Number(resolvedParams.slug) }))
       
       // Close the dialog
       setDeleteDialogOpen(false)
@@ -721,6 +710,14 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
                 <p key={index} className="mb-6 text-gray-800 leading-relaxed">
                   {block.value}
                 </p>
+              )
+            } else if (block.type === "richtext") {
+              return (
+                <div 
+                  key={index} 
+                  className="rich-text-content" 
+                  dangerouslySetInnerHTML={{ __html: block.value }}
+                />
               )
             } else if (block.type === "image") {
               return (
@@ -1015,7 +1012,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
                     <Button variant="outline" onClick={() => {
                       // Load more comments
                       dispatch(handleGetComments({ 
-                        articleId: Number(params.slug),
+                        articleId: Number(resolvedParams.slug),
                         page: Math.ceil(comments.length / 10) + 1
                       }))
                     }}>

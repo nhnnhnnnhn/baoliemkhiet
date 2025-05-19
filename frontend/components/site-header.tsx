@@ -43,11 +43,14 @@ export function SiteHeader({ variant = 'transparent' }: SiteHeaderProps) {
     }
   }, [])
 
+  // Đảm bảo nội dung hiển thị với màu phù hợp dựa trên variant hoặc việc cuộn trang
+  const shouldUseVisibleStyle = isScrolled || variant === 'solid'
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled || variant === 'solid' ? "bg-white shadow-md" : "bg-transparent"
-      }`}
+        shouldUseVisibleStyle ? "bg-white shadow-md" : "bg-transparent"
+      } ${variant === 'solid' ? "shadow-md" : ""}`}
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
@@ -55,7 +58,7 @@ export function SiteHeader({ variant = 'transparent' }: SiteHeaderProps) {
           <div className="flex items-center space-x-6">
             {/* Logo */}
             <Link href="/" className="flex items-center">
-              <div className={`flex items-center font-bold text-xl ${isScrolled ? "text-gray-800" : "text-white"}`}>
+              <div className={`flex items-center font-bold text-xl ${shouldUseVisibleStyle ? "text-gray-800" : "text-white"}`}>
                 <NewspaperIcon className="h-6 w-6 mr-2" />
                 <span className="hidden sm:inline">BÁO LIÊM KHIẾT</span>
               </div>
@@ -66,7 +69,7 @@ export function SiteHeader({ variant = 'transparent' }: SiteHeaderProps) {
               <SafeLink
                 href="/thoi-su"
                 className={`flex items-center px-3 py-2 text-sm font-medium ${
-                  isScrolled ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"
+                  shouldUseVisibleStyle ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"
                 } rounded-md transition-colors whitespace-nowrap`}
               >
                 <TrendingUpIcon className="h-4 w-4 mr-1.5" />
@@ -75,7 +78,7 @@ export function SiteHeader({ variant = 'transparent' }: SiteHeaderProps) {
               <SafeLink
                 href="/the-gioi"
                 className={`flex items-center px-3 py-2 text-sm font-medium ${
-                  isScrolled ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"
+                  shouldUseVisibleStyle ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"
                 } rounded-md transition-colors whitespace-nowrap`}
               >
                 <GlobeIcon className="h-4 w-4 mr-1.5" />
@@ -84,7 +87,7 @@ export function SiteHeader({ variant = 'transparent' }: SiteHeaderProps) {
               <SafeLink
                 href="/kinh-doanh"
                 className={`flex items-center px-3 py-2 text-sm font-medium ${
-                  isScrolled ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"
+                  shouldUseVisibleStyle ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"
                 } rounded-md transition-colors whitespace-nowrap`}
               >
                 <DollarSignIcon className="h-4 w-4 mr-1.5" />
@@ -93,7 +96,7 @@ export function SiteHeader({ variant = 'transparent' }: SiteHeaderProps) {
               <SafeLink
                 href="/cong-nghe"
                 className={`flex items-center px-3 py-2 text-sm font-medium ${
-                  isScrolled ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"
+                  shouldUseVisibleStyle ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"
                 } rounded-md transition-colors whitespace-nowrap`}
               >
                 <MonitorIcon className="h-4 w-4 mr-1.5" />
@@ -102,7 +105,7 @@ export function SiteHeader({ variant = 'transparent' }: SiteHeaderProps) {
               <SafeLink
                 href="/the-thao"
                 className={`flex items-center px-3 py-2 text-sm font-medium ${
-                  isScrolled ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"
+                  shouldUseVisibleStyle ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"
                 } rounded-md transition-colors whitespace-nowrap`}
               >
                 <ActivityIcon className="h-4 w-4 mr-1.5" />
@@ -117,7 +120,7 @@ export function SiteHeader({ variant = 'transparent' }: SiteHeaderProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className={`px-2 ${isScrolled ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"}`}
+                className={`px-2 ${shouldUseVisibleStyle ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"}`}
               >
                 <SearchIcon className="h-5 w-5" />
                 <span className="sr-only">Tìm kiếm</span>
@@ -132,7 +135,7 @@ export function SiteHeader({ variant = 'transparent' }: SiteHeaderProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`${isScrolled ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"}`}
+                  className={`${shouldUseVisibleStyle ? "text-gray-800 hover:text-red-600" : "text-white hover:text-red-200"}`}
                 >
                   ĐĂNG NHẬP
                 </Button>

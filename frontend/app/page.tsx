@@ -28,12 +28,13 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
-  // Các danh mục muốn hiển thị trên trang chủ
+  // Các danh mục muốn hiển thị trên trang chủ (với ID chính xác từ database)
   const categories = [
-    { id: 1, name: 'Thời sự', slug: 'thoi-su', icon: <TrendingUpIcon className="h-5 w-5" /> },
-    { id: 2, name: 'Thế giới', slug: 'the-gioi', icon: <GlobeIcon className="h-5 w-5" /> },
-    { id: 3, name: 'Kinh doanh', slug: 'kinh-doanh', icon: <DollarSignIcon className="h-5 w-5" /> },
-    { id: 4, name: 'Công nghệ', slug: 'cong-nghe', icon: <MonitorIcon className="h-5 w-5" /> }
+    { id: 2, name: 'Thời sự', slug: 'thoi-su', icon: <TrendingUpIcon className="h-5 w-5" /> },
+    { id: 8, name: 'Thế giới', slug: 'the-gioi', icon: <GlobeIcon className="h-5 w-5" /> },
+    { id: 7, name: 'Kinh doanh', slug: 'kinh-doanh', icon: <DollarSignIcon className="h-5 w-5" /> },
+    { id: 9, name: 'Công nghệ', slug: 'cong-nghe', icon: <MonitorIcon className="h-5 w-5" /> },
+    { id: 10, name: 'Thể thao', slug: 'the-thao', icon: <ActivityIcon className="h-5 w-5" /> }
   ]
   
   // Lấy dữ liệu bài viết khi component được mount
@@ -57,17 +58,43 @@ export default function Home() {
           setFeaturedArticle(latestResponse.articles[0])
         }
         
+        console.log('Bắt đầu tải dữ liệu danh mục')
         // Lấy bài viết theo từng danh mục
         const categoryNews: Record<string, Article[]> = {}
+        
+        // Khởi tạo các danh mục với mảng rỗng
+        categories.forEach(cat => {
+          categoryNews[cat.slug] = []
+        })
+        
+        // Lấy bài viết theo từng danh mục
         for (const category of categories) {
           try {
+            console.log(`Đang lấy bài viết danh mục ${category.name} (ID: ${category.id})`)
             const response = await articleApi.getArticlesByCategory(category.id)
-            categoryNews[category.slug] = response || []
+            
+            // Kiểm tra và trích xuất bài viết từ response
+            if (response && response.articles && Array.isArray(response.articles)) {
+              console.log(`Tìm thấy ${response.articles.length} bài viết cho danh mục ${category.name}`)
+              categoryNews[category.slug] = response.articles
+            } else if (Array.isArray(response)) {
+              console.log(`Tìm thấy ${response.length} bài viết cho danh mục ${category.name} (response là mảng)`)
+              categoryNews[category.slug] = response
+            } else {
+              console.log(`Không có bài viết cho danh mục ${category.name} hoặc dữ liệu không đúng định dạng`, response)
+              categoryNews[category.slug] = []
+            }
           } catch (err) {
             console.error(`Lỗi khi lấy bài viết danh mục ${category.name}:`, err)
             categoryNews[category.slug] = []
           }
         }
+        
+        // Hiển thị tổng hợp số lượng bài viết theo danh mục
+        Object.keys(categoryNews).forEach(slug => {
+          console.log(`Danh mục ${slug}: ${categoryNews[slug].length} bài viết`)
+        })
+        
         setNewsByCategory(categoryNews)
       } catch (err) {
         console.error('Lỗi khi lấy dữ liệu bài viết:', err)
@@ -144,85 +171,6 @@ export default function Home() {
 
       {/* Main Content */}
       <main className={styles.mainContent}>
-        {/* Breaking News Ticker */}
-        <div className={styles.breakingNews}>
-          <div className={styles.breakingNewsLabel}>MỚI NHẤT:</div>
-          <div className={styles.breakingNewsContent}>
-            Thủ tướng tiếp Đại sứ Hoa Kỳ • Giá vàng tăng mạnh phiên đầu tuần • Dự báo thời tiết: Miền Bắc đón không khí
-            lạnh
-          </div>
-        </div>
-
-        {/* Latest News Section */}
-        <div className={styles.latestNewsSection}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Tin mới nhất</h2>
-            <Link href="/tin-moi-nhat" className={styles.viewAllLink}>
-              Xem tất cả <ArrowRightIcon className="ml-1 h-4 w-4" />
-            </Link>
-          </div>
-          <div className={styles.newsGrid}>
-            {isLoading ? (
-              // Hiển thị skeleton loading
-              Array(4).fill(0).map((_, index) => (
-                <div key={index} className={styles.newsCard}>
-                  <div className={styles.newsImage}>
-                    <Skeleton className="w-full h-full" />
-                  </div>
-                  <div className={styles.newsContent}>
-                    <Skeleton className="h-5 w-24 mb-2" />
-                    <Skeleton className="h-6 w-full mb-2" />
-                    <Skeleton className="h-16 w-full mb-2" />
-                    <Skeleton className="h-4 w-20" />
-                  </div>
-                </div>
-              ))
-            ) : latestArticles.length === 0 ? (
-              <div className="col-span-full text-center py-8">
-                <p>Không có bài viết nào.</p>
-              </div>
-            ) : (
-              latestArticles.map((article) => (
-                <div key={article.id} className={styles.newsCard}>
-                  <div className={styles.newsImage}>
-                    <img
-                      src={article.thumbnail || `/placeholder.svg?height=200&width=300&text=Bài+viết`}
-                      alt={article.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className={styles.newsContent}>
-                    <span className={styles.newsCategory}>{article.category?.name || 'Tin tức'}</span>
-                    <h3 className={styles.newsTitle}>
-                      <Link href={`/article/${article.id}`}>{article.title}</Link>
-                    </h3>
-                    <p className={styles.newsExcerpt}>
-                      {article.content.length > 100 
-                        ? article.content.substring(0, 100) + '...'
-                        : article.content}
-                    </p>
-                    <span className={styles.newsTime}>
-                      {article.published_at 
-                        ? (() => {
-                            try {
-                              const date = new Date(article.published_at);
-                              return !isNaN(date.getTime())
-                                ? date.toLocaleDateString('vi-VN')
-                                : 'Chưa xuất bản';
-                            } catch (error) {
-                              console.error('Lỗi xử lý ngày xuất bản:', article.published_at, error);
-                              return 'Chưa xuất bản';
-                            }
-                          })()
-                        : 'Chưa xuất bản'}
-                    </span>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
         {/* Category Sections */}
         {categories.map((category) => (
           <div key={category.id} className={styles.categorySection}>
@@ -331,20 +279,35 @@ export default function Home() {
                 </Link>
               </div>
               <div className={styles.smallCategoryGrid}>
-                {[1, 2, 3, 4].map((item) => (
-                  <div key={item} className={styles.smallNewsCard}>
-                    <div className={styles.smallNewsImage}>
-                      <img
-                        src={`/kinh-doanh-concept.png?height=120&width=180&text=Kinh doanh ${item}`}
-                        alt={`Tin kinh doanh ${item}`}
-                        className="w-full h-full object-cover"
-                      />
+                {isLoading ? (
+                  Array(4).fill(0).map((_, index) => (
+                    <div key={index} className={styles.smallNewsCard}>
+                      <div className={styles.smallNewsImage}>
+                        <Skeleton className="w-full h-full" />
+                      </div>
+                      <Skeleton className="h-4 w-full mt-2" />
                     </div>
-                    <h4 className={styles.smallNewsTitle}>
-                      <Link href={`/articles/${item + 30}`}>Thị trường chứng khoán Việt Nam tăng điểm mạnh</Link>
-                    </h4>
+                  ))
+                ) : newsByCategory['kinh-doanh']?.length ? (
+                  newsByCategory['kinh-doanh'].slice(0, 4).map((article) => (
+                    <div key={article.id} className={styles.smallNewsCard}>
+                      <div className={styles.smallNewsImage}>
+                        <img
+                          src={article.thumbnail || `/kinh-doanh-concept.png?height=120&width=180&text=Kinh doanh`}
+                          alt={article.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <h4 className={styles.smallNewsTitle}>
+                        <Link href={`/article/${article.id}`}>{article.title}</Link>
+                      </h4>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-4">
+                    <p>Không có bài viết nào trong danh mục Kinh doanh</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
@@ -362,135 +325,37 @@ export default function Home() {
                 </Link>
               </div>
               <div className={styles.smallCategoryGrid}>
-                {[1, 2, 3, 4].map((item) => (
-                  <div key={item} className={styles.smallNewsCard}>
-                    <div className={styles.smallNewsImage}>
-                      <img
-                        src={`/placeholder-technology.png?height=120&width=180&text=Công nghệ ${item}`}
-                        alt={`Tin công nghệ ${item}`}
-                        className="w-full h-full object-cover"
-                      />
+                {isLoading ? (
+                  Array(4).fill(0).map((_, index) => (
+                    <div key={index} className={styles.smallNewsCard}>
+                      <div className={styles.smallNewsImage}>
+                        <Skeleton className="w-full h-full" />
+                      </div>
+                      <Skeleton className="h-4 w-full mt-2" />
                     </div>
-                    <h4 className={styles.smallNewsTitle}>
-                      <Link href={`/articles/${item + 40}`}>Công nghệ AI đang thay đổi ngành y tế Việt Nam</Link>
-                    </h4>
+                  ))
+                ) : newsByCategory['cong-nghe']?.length ? (
+                  newsByCategory['cong-nghe'].slice(0, 4).map((article) => (
+                    <div key={article.id} className={styles.smallNewsCard}>
+                      <div className={styles.smallNewsImage}>
+                        <img
+                          src={article.thumbnail || `/placeholder-technology.png?height=120&width=180&text=Công nghệ`}
+                          alt={article.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <h4 className={styles.smallNewsTitle}>
+                        <Link href={`/article/${article.id}`}>{article.title}</Link>
+                      </h4>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-4">
+                    <p>Không có bài viết nào trong danh mục Công nghệ</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Thể thao Section */}
-        <div className={styles.categorySection}>
-          <div className={styles.categoryHeader}>
-            <div className={styles.categoryIcon}>
-              <ActivityIcon className="h-5 w-5" />
-            </div>
-            <h2 className={styles.categoryTitle}>Thể thao</h2>
-            <Link href="/the-thao" className={styles.viewAllLink}>
-              Xem tất cả <ArrowRightIcon className="ml-1 h-4 w-4" />
-            </Link>
-          </div>
-          <div className={styles.sportsGrid}>
-            {[1, 2, 3].map((item) => (
-              <div key={item} className={styles.sportsCard}>
-                <div className={styles.sportsImage}>
-                  <img
-                    src={`/the-thao-collage.png?height=250&width=400&text=Thể thao ${item}`}
-                    alt={`Tin thể thao ${item}`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <h3 className={styles.sportsTitle}>
-                  <Link href={`/articles/${item + 50}`}>Đội tuyển Việt Nam chuẩn bị cho vòng loại World Cup</Link>
-                </h3>
-                <p className={styles.sportsExcerpt}>
-                  HLV Park Hang-seo công bố danh sách 30 cầu thủ cho đợt tập trung sắp tới.
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Opinion Section */}
-        <div className={styles.opinionSection}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Góc nhìn</h2>
-            <Link href="/goc-nhin" className={styles.viewAllLink}>
-              Xem tất cả <ArrowRightIcon className="ml-1 h-4 w-4" />
-            </Link>
-          </div>
-          <div className={styles.opinionGrid}>
-            {isLoading ? (
-              Array(3).fill(0).map((_, index) => (
-                <div key={index} className={styles.opinionCard}>
-                  <div className={styles.authorBox}>
-                    <Skeleton className="h-12 w-12 rounded-full" />
-                    <div>
-                      <Skeleton className="h-5 w-32 mb-1" />
-                      <Skeleton className="h-4 w-24" />
-                    </div>
-                  </div>
-                  <Skeleton className="h-6 w-full mb-2" />
-                  <Skeleton className="h-20 w-full" />
-                </div>
-              ))
-            ) : latestArticles.length >= 3 ? (
-              latestArticles.slice(0, 3).map((article, index) => (
-                <div key={article.id} className={styles.opinionCard}>
-                  <div className={styles.authorBox}>
-                    <div className={styles.authorAvatar}></div>
-                    <div>
-                      <h3 className={styles.authorName}>{article.author?.name || 'Tác giả'}</h3>
-                      <p className={styles.authorTitle}>{article.category?.name || 'Biên tập viên'}</p>
-                    </div>
-                  </div>
-                  <h4 className={styles.opinionTitle}>
-                    <Link href={`/article/${article.id}`}>{article.title}</Link>
-                  </h4>
-                  <p className={styles.opinionExcerpt}>
-                    {article.content?.length > 120 ? article.content.substring(0, 120) + '...' : article.content}
-                  </p>
-                </div>
-              ))
-            ) : (
-              <div className={styles.noContent}>
-                <p>Không có bài viết nào trong mục Góc nhìn</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Trending Section */}
-        <div className={styles.trendingSection}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Xu hướng</h2>
-          </div>
-          <div className={styles.trendingGrid}>
-            {isLoading ? (
-              Array(5).fill(0).map((_, index) => (
-                <div key={index} className={styles.trendingItem}>
-                  <span className={styles.trendingNumber}>{index + 1}</span>
-                  <div className={styles.trendingContent}>
-                    <Skeleton className="h-6 w-full mb-1" />
-                    <Skeleton className="h-4 w-20" />
-                  </div>
-                </div>
-              ))
-            ) : (
-              latestArticles.slice(0, 5).map((article, index) => (
-                <div key={article.id} className={styles.trendingItem}>
-                  <span className={styles.trendingNumber}>{index + 1}</span>
-                  <div className={styles.trendingContent}>
-                    <h3 className={styles.trendingTitle}>
-                      <Link href={`/article/${article.id}`}>{article.title}</Link>
-                    </h3>
-                    <span className={styles.trendingViews}>{article.view || 0} lượt đọc</span>
-                  </div>
-                </div>
-              ))
-            )}
           </div>
         </div>
       </main>

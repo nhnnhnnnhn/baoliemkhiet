@@ -3,8 +3,14 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Loader2, Save } from "lucide-react"
+import { ArrowLeft, Loader2, Save, Clock } from "lucide-react"
+import dynamic from "next/dynamic"
 import { useAppDispatch, useAppSelector } from "@/src/store"
+
+const RichTextEditor = dynamic(() => import("@/components/rich-text-editor"), {
+  ssr: false,
+  loading: () => <div className="h-[600px] w-full bg-gray-100 animate-pulse rounded-md" />
+})
 import { handleCreateArticle, handleApproveArticle } from "@/src/thunks/article/articleThunk"
 import {
   selectIsCreatingArticle,
@@ -48,8 +54,6 @@ export default function AddArticlePage() {
   const [thumbnailUrl, setThumbnailUrl] = useState('')
   const [publishDate, setPublishDate] = useState<string>('')
   const [useCurrentDate, setUseCurrentDate] = useState(false)
-  const [showImageInsert, setShowImageInsert] = useState(false)
-  const [imageUrl, setImageUrl] = useState('')
   
   // Fetch categories and tags on component mount
   useEffect(() => {
@@ -216,69 +220,18 @@ export default function AddArticlePage() {
                 </div>
                 <div>
                   <Label htmlFor="content">Nội dung <span className="text-red-500">*</span></Label>
-                  <div className="mb-2 flex justify-between items-center">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setShowImageInsert(!showImageInsert)}>
-                      {showImageInsert ? 'Ẩn công cụ chèn ảnh' : 'Chèn ảnh vào bài viết'}
-                    </Button>
+                  <div className="mt-1">
+                    <RichTextEditor
+                      value={content}
+                      onChange={(newContent) => setContent(newContent)}
+                    />
+                    <input
+                      type="hidden"
+                      name="content"
+                      value={content}
+                      required
+                    />
                   </div>
-                  
-                  {showImageInsert && (
-                    <div className="mb-3 p-4 border rounded-md bg-gray-50">
-                      <Label htmlFor="imageUrl">URL ảnh muốn chèn</Label>
-                      <div className="flex gap-2 mt-1">
-                        <Input
-                          id="imageUrl"
-                          placeholder="Nhập URL ảnh"
-                          value={imageUrl}
-                          onChange={(e) => setImageUrl(e.target.value)}
-                        />
-                        <Button 
-                          type="button" 
-                          onClick={() => {
-                            if (!imageUrl) return;
-                            // Chèn thẻ hình ảnh vào vị trí con trỏ hoặc cuối nội dung
-                            const imageTag = `\n![Hình ảnh](${imageUrl})\n`;
-                            const textarea = document.getElementById('content') as HTMLTextAreaElement;
-                            
-                            if (textarea) {
-                              const start = textarea.selectionStart;
-                              const end = textarea.selectionEnd;
-                              const newContent = content.substring(0, start) + imageTag + content.substring(end);
-                              setContent(newContent);
-                              // Reset image URL sau khi chèn
-                              setImageUrl('');
-                              // Focus lại vào textarea
-                              setTimeout(() => {
-                                textarea.focus();
-                                textarea.selectionStart = start + imageTag.length;
-                                textarea.selectionEnd = start + imageTag.length;
-                              }, 0);
-                            } else {
-                              // Nếu không thể truy cập textarea, thêm vào cuối
-                              setContent(content + imageTag);
-                              setImageUrl('');
-                            }
-                          }}
-                        >
-                          Chèn ảnh
-                        </Button>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2">Hình ảnh sẽ được chèn vào vị trí con trỏ trong nội dung.</p>
-                    </div>
-                  )}
-                  <Textarea 
-                    id="content" 
-                    placeholder="Nhập nội dung bài viết" 
-                    className="mt-1 font-mono" 
-                    rows={20} 
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    required
-                  />
                 </div>
               </div>
             </div>
@@ -295,17 +248,46 @@ export default function AddArticlePage() {
                 <div>
                   <Label htmlFor="status">Trạng thái</Label>
                   <Select value={status} onValueChange={(value: 'APPROVED' | 'DRAFT' | 'PENDING') => setStatus(value)}>
-                    <SelectTrigger id="status" className="mt-1">
+                    <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Chọn trạng thái" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="APPROVED">Đã xuất bản</SelectItem>
-                      <SelectItem value="PENDING">Chờ duyệt</SelectItem>
-                      <SelectItem value="REJECTED">Từ chối</SelectItem>
                       <SelectItem value="DRAFT">Bản nháp</SelectItem>
+                      <SelectItem value="PENDING">Chờ duyệt</SelectItem>
+                      <SelectItem value="APPROVED">Đã duyệt</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+
+                <div>
+                  <Label>Ngày xuất bản</Label>
+                  <div className="flex flex-wrap items-center gap-3 mt-1 w-full">
+                    <Input
+                      type="datetime-local"
+                      value={publishDate}
+                      onChange={(e) => setPublishDate(e.target.value)}
+                      disabled={useCurrentDate}
+                      className="w-[220px] min-w-0 flex-shrink"
+                    />
+                    <Button
+                      type="button"
+                      variant={useCurrentDate ? "default" : "outline"}
+                      className="flex items-center gap-2 rounded-full shadow-sm border border-gray-200 min-w-[180px] mt-2 sm:mt-0"
+                      onClick={() => setUseCurrentDate(!useCurrentDate)}
+                    >
+                      <Clock className="h-4 w-4" />
+                      {useCurrentDate ? 'Đã chọn: Bây giờ' : 'Sử dụng thời gian hiện tại'}
+                    </Button>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1 min-h-[20px]">
+                    {useCurrentDate
+                      ? 'Bài viết sẽ được xuất bản ngay khi lưu.'
+                      : publishDate
+                        ? `Bài viết sẽ được xuất bản vào: ${new Date(publishDate).toLocaleString('vi-VN')}`
+                        : 'Chọn thời gian xuất bản hoặc sử dụng thời gian hiện tại.'}
+                  </div>
+                </div>
+
                 <div>
                   <Label htmlFor="category">Chuyên mục <span className="text-red-500">*</span></Label>
                   <Select value={categoryId} onValueChange={(value) => setCategoryId(value)}>
@@ -350,39 +332,6 @@ export default function AddArticlePage() {
                     onChange={(e) => setThumbnailUrl(e.target.value)}
                   />
                 </div>
-                {status === 'APPROVED' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="published_at">Thời gian đăng bài</Label>
-                    <div className="flex items-center gap-1">
-                      <Input
-                        type="datetime-local"
-                        id="published_at"
-                        value={publishDate}
-                        onChange={(e) => {
-                          setPublishDate(e.target.value);
-                          setUseCurrentDate(false);
-                        }}
-                        disabled={useCurrentDate}
-                        className="mt-0"
-                      />
-                      <Button
-                        type="button"
-                        variant={useCurrentDate ? "default" : "outline"}
-                        className="ml-2 whitespace-nowrap"
-                        onClick={() => setUseCurrentDate(!useCurrentDate)}
-                      >
-                        {useCurrentDate ? 'Đã chọn: Bây giờ' : 'Bây giờ'}
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {useCurrentDate 
-                        ? 'Bài viết sẽ được đăng ngay khi lưu' 
-                        : publishDate 
-                          ? `Bài viết sẽ được đăng vào: ${new Date(publishDate).toLocaleString('vi-VN')}`
-                          : 'Chọn thời gian đăng hoặc sẽ dùng thời gian hiện tại'}
-                    </p>
-                  </div>
-                )}
                 <div className="pt-4 border-t border-gray-200">
                   <Button type="submit" className="w-full" disabled={isCreatingArticle}>
                     {isCreatingArticle ? (

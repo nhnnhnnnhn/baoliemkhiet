@@ -75,7 +75,20 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
               isLoggedIn: false
             }));
             
-            if (!window.location.pathname.includes('/auth/')) {
+            // Không tự động chuyển về trang đăng nhập khi chỉ đọc báo
+            // Chỉ chuyển hướng khi người dùng đang ở các trang yêu cầu đăng nhập
+            const restrictedPaths = [
+              '/author/',
+              '/profile/',
+              '/settings/',
+              '/admin/',
+              '/manager/',
+              '/editor/'
+            ];
+            
+            const isRestrictedPath = restrictedPaths.some(path => window.location.pathname.includes(path));
+            
+            if (isRestrictedPath && !window.location.pathname.includes('/auth/')) {
               router.push("/auth/login");
             }
           } else {
@@ -104,7 +117,22 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
             isLoggedIn: false,
           }),
         )
-        router.push("/auth/login")
+        
+        // Kiểm tra xem có đang ở trang yêu cầu đăng nhập không
+        const restrictedPaths = [
+          '/author/',
+          '/profile/',
+          '/settings/',
+          '/admin/',
+          '/manager/',
+          '/editor/'
+        ];
+        
+        const isRestrictedPath = restrictedPaths.some(path => window.location.pathname.includes(path));
+        
+        if (isRestrictedPath) {
+          router.push("/auth/login")
+        }
       }
     }
 
