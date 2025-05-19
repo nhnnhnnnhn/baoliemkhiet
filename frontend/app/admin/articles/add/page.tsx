@@ -55,6 +55,70 @@ export default function AddArticlePage() {
   const [publishDate, setPublishDate] = useState<string>('')
   const [useCurrentDate, setUseCurrentDate] = useState(false)
   
+  // Validation states
+  const [errors, setErrors] = useState<{
+    title?: string;
+    content?: string;
+    categoryId?: string;
+    thumbnailUrl?: string;
+    publishDate?: string;
+  }>({})
+  
+  // Validate URL function
+  const isValidUrl = (url: string): boolean => {
+    if (!url) return true; // Empty URL is valid (not required)
+    try {
+      new URL(url);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  
+  // Validate publish date
+  const isValidDate = (dateString: string): boolean => {
+    if (!dateString) return true; // Empty date is valid (not required)
+    const date = new Date(dateString);
+    return !isNaN(date.getTime());
+  }
+
+  // Validate form
+  const validateForm = (): boolean => {
+    const newErrors: {
+      title?: string;
+      content?: string;
+      categoryId?: string;
+      thumbnailUrl?: string;
+      publishDate?: string;
+    } = {};
+    
+    // Validate required fields
+    if (!title.trim()) {
+      newErrors.title = "Tiêu đề không được để trống";
+    }
+    
+    if (!content.trim()) {
+      newErrors.content = "Nội dung không được để trống";
+    }
+    
+    if (!categoryId) {
+      newErrors.categoryId = "Vui lòng chọn chuyên mục";
+    }
+    
+    // Validate URL if provided
+    if (thumbnailUrl && !isValidUrl(thumbnailUrl)) {
+      newErrors.thumbnailUrl = "URL ảnh không hợp lệ";
+    }
+    
+    // Validate date if provided and not using current date
+    if (status === 'APPROVED' && !useCurrentDate && publishDate && !isValidDate(publishDate)) {
+      newErrors.publishDate = "Ngày xuất bản không hợp lệ";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }
+  
   // Fetch categories and tags on component mount
   useEffect(() => {
     dispatch(handleGetCategories({}))
@@ -65,13 +129,14 @@ export default function AddArticlePage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!title || !content || !categoryId) {
+    // Validate form before submission
+    if (!validateForm()) {
       toast({
         title: "Lỗi",
-        description: "Vui lòng điền đầy đủ thông tin bắt buộc",
+        description: "Vui lòng kiểm tra lại thông tin bài viết",
         variant: "destructive"
-      })
-      return
+      });
+      return;
     }
     
     // Xử lý ngày xuất bản
@@ -201,11 +266,14 @@ export default function AddArticlePage() {
                   <Input 
                     id="title" 
                     placeholder="Nhập tiêu đề bài viết" 
-                    className="mt-1" 
+                    className={`mt-1 ${errors.title ? 'border-red-500' : ''}`}
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     required
                   />
+                  {errors.title && (
+                    <p className="text-red-500 text-sm mt-1">{errors.title}</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="excerpt">Tóm tắt</Label>
@@ -231,6 +299,9 @@ export default function AddArticlePage() {
                       value={content}
                       required
                     />
+                    {errors.content && (
+                      <p className="text-red-500 text-sm mt-1">{errors.content}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -261,53 +332,66 @@ export default function AddArticlePage() {
 
                 <div>
                   <Label>Ngày xuất bản</Label>
-                  <div className="flex flex-wrap items-center gap-3 mt-1 w-full">
-                    <Input
-                      type="datetime-local"
+                  <div className="flex items-center gap-4">
+                    <Input 
+                      id="publishDate" 
+                      type="datetime-local" 
+                      className={`mt-1 ${errors.publishDate ? 'border-red-500' : ''}`}
                       value={publishDate}
-                      onChange={(e) => setPublishDate(e.target.value)}
+                      onChange={(e) => {
+                        setPublishDate(e.target.value)
+                        if (e.target.value) setUseCurrentDate(false)
+                      }}
                       disabled={useCurrentDate}
-                      className="w-[220px] min-w-0 flex-shrink"
                     />
                     <Button
                       type="button"
                       variant={useCurrentDate ? "default" : "outline"}
-                      className="flex items-center gap-2 rounded-full shadow-sm border border-gray-200 min-w-[180px] mt-2 sm:mt-0"
-                      onClick={() => setUseCurrentDate(!useCurrentDate)}
+                      size="sm"
+                      onClick={() => {
+                        // Toggle useCurrentDate state
+                        setUseCurrentDate(!useCurrentDate)
+                        
+                        // If turning off "Bây giờ", keep the publish date empty 
+                        // so user can select a new date
+                        if (useCurrentDate === false) {
+                          setPublishDate('')
+                        }
+                      }}
+                      className={`gap-2 ${useCurrentDate ? 'bg-primary text-primary-foreground' : ''}`}
                     >
                       <Clock className="h-4 w-4" />
-                      {useCurrentDate ? 'Đã chọn: Bây giờ' : 'Sử dụng thời gian hiện tại'}
+                      Bây giờ
                     </Button>
                   </div>
-                  <div className="text-xs text-gray-500 mt-1 min-h-[20px]">
-                    {useCurrentDate
-                      ? 'Bài viết sẽ được xuất bản ngay khi lưu.'
-                      : publishDate
-                        ? `Bài viết sẽ được xuất bản vào: ${new Date(publishDate).toLocaleString('vi-VN')}`
-                        : 'Chọn thời gian xuất bản hoặc sử dụng thời gian hiện tại.'}
-                  </div>
+                  {errors.publishDate && (
+                    <p className="text-red-500 text-sm mt-1">{errors.publishDate}</p>
+                  )}
+                  {useCurrentDate && (
+                    <p className="text-xs text-gray-500 mt-1">Bài viết sẽ được xuất bản ngay khi lưu.</p>
+                  )}
                 </div>
 
                 <div>
                   <Label htmlFor="category">Chuyên mục <span className="text-red-500">*</span></Label>
-                  <Select value={categoryId} onValueChange={(value) => setCategoryId(value)}>
-                    <SelectTrigger id="category" className="mt-1">
+                  <Select 
+                    value={categoryId} 
+                    onValueChange={setCategoryId}
+                  >
+                    <SelectTrigger className={`${errors.categoryId ? 'border-red-500' : ''}`}>
                       <SelectValue placeholder="Chọn chuyên mục" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.length === 0 ? (
-                        <SelectItem value="loading" disabled>
-                          <Spinner size="sm" /> Đang tải...
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          {category.name}
                         </SelectItem>
-                      ) : (
-                        categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id.toString()}>
-                            {category.name}
-                          </SelectItem>
-                        ))
-                      )}
+                      ))}
                     </SelectContent>
                   </Select>
+                  {errors.categoryId && (
+                    <p className="text-red-500 text-sm mt-1">{errors.categoryId}</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="tags">Thẻ</Label>
@@ -323,14 +407,17 @@ export default function AddArticlePage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="thumbnailUrl">Ảnh đại diện (URL)</Label>
+                  <Label htmlFor="thumbnail">Ảnh đại diện (URL)</Label>
                   <Input 
-                    id="thumbnailUrl" 
+                    id="thumbnail" 
                     placeholder="Nhập URL ảnh đại diện" 
-                    className="mt-1" 
+                    className={`mt-1 ${errors.thumbnailUrl ? 'border-red-500' : ''}`}
                     value={thumbnailUrl}
                     onChange={(e) => setThumbnailUrl(e.target.value)}
                   />
+                  {errors.thumbnailUrl && (
+                    <p className="text-red-500 text-sm mt-1">{errors.thumbnailUrl}</p>
+                  )}
                 </div>
                 <div className="pt-4 border-t border-gray-200">
                   <Button type="submit" className="w-full" disabled={isCreatingArticle}>
