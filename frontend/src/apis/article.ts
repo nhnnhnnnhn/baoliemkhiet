@@ -202,6 +202,37 @@ const articleApi = {
   // Xóa nhiều bài viết
   deleteMultipleArticles: async (data: DeleteMultipleArticlesPayload): Promise<void> => {
     return axiosClient.delete('/articles/delete-multiple', { data })
+  },
+  
+  // Lấy bài đọc đề xuất (kết hợp bài viết được xem nhiều và được thích nhiều)
+  getRecommendedArticles: async (limit: number = 5): Promise<Article[]> => {
+    try {
+      // Lấy bài viết được xem nhiều trong 7 ngày qua
+      const mostViewed = await axiosClient.get('/articles/most-viewed', { params: { timePeriod: '7d' } })
+        .catch(error => {
+          console.error('Lỗi khi lấy bài viết xem nhiều:', error);
+          return { data: [] }; // Trả về mảng rỗng nếu có lỗi
+        });
+      
+      // Lấy bài viết được thích nhiều
+      const mostLiked = await axiosClient.get('/articles/most-liked')
+        .catch(error => {
+          console.error('Lỗi khi lấy bài viết thích nhiều:', error);
+          return { data: [] }; // Trả về mảng rỗng nếu có lỗi
+        });
+      
+      // Kết hợp và loại bỏ trùng lặp
+      const combinedArticles = [...(Array.isArray(mostViewed) ? mostViewed : []), ...(Array.isArray(mostLiked) ? mostLiked : [])];
+      const uniqueArticles = combinedArticles.filter((article, index, self) =>
+        index === self.findIndex((a) => a?.id === article?.id)
+      );
+      
+      // Giới hạn số lượng bài viết trả về
+      return uniqueArticles.slice(0, limit);
+    } catch (error) {
+      console.error('Lỗi trong getRecommendedArticles:', error);
+      return [];
+    }
   }
 }
 
