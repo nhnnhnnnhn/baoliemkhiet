@@ -79,6 +79,7 @@ async function getAllUsers(filters = {}, pagination = {}) {
         is_online: true,
         created_at: true,
         updated_at: true,
+        _count: { select: { articles: true } },
       },
       skip,
       take: limit,
