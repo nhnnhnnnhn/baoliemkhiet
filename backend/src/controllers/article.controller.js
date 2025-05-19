@@ -49,7 +49,6 @@ module.exports.getArticleById = controllerHandler(async (req, res) => {
     return res.status(400).json({ message: "Missing article ID" });
   }
   const article = await service.getArticleById(id);
-  console.log('-----------------Article:', article);
   if (!article) {
     return res.status(404).json({ message: "Article not found" });
   }
@@ -260,3 +259,11 @@ module.exports.deleteMultipleArticles = controllerHandler(async (req, res) => {
   res.status(200).json({ message: "Delete successfully!", articles });
 });
 
+// Author Dashboard
+module.exports.getAuthorDashboard = controllerHandler(async (req, res) => {
+  console.log('-----------------Running getAuthorDashboard with id:', req.params.id);
+  const authorId = req.params.id;
+  const dashboardData = await service.getAuthorDashboard(authorId);
+  console.log('-----------------Dashboard data:', dashboardData);
+  res.status(200).json(dashboardData);
+});

@@ -283,7 +283,7 @@ module.exports.getPostArticlesByAuthor = async (authorId) => {
   console.log('-----------------Running getArticlesByAuthor with authorId:', authorId);
   const articles = await prisma.article.findMany({
     where: {
-      isPublish: true,
+      //isPublish: true,
       authorId: Number(authorId),
     },
     include: {
@@ -1029,3 +1029,134 @@ cron.schedule("0 0 * * *", async () => {
   }
 });
 
+// Author Dashboard
+module.exports.getAuthorDashboard = async (authorId) => {
+  try {
+    // 3 bài viết mới nhất
+    const latestArticles = await prisma.article.findMany({
+      where: {
+        authorId: Number(authorId),
+      },
+      include: {
+        _count: {
+          select: {
+            articleLikes: true,
+            comments: true,
+          },
+        },
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        articleTags: {
+          include: {
+            tag: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 3,
+    });
+
+    // số like tháng này
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const monthlyLikes = await prisma.articleLike.count({
+      where: {
+        article: {
+          authorId: Number(authorId),
+          isPublish: true,
+        },
+        createdAt: {
+          gte: new Date(currentYear, currentMonth, 1),
+          lte: new Date(currentYear, currentMonth + 1, 0),
+        },
+      },
+    });
+
+    // số like tháng trước
+    const previousMonth = new Date().getMonth() - 1;
+    const previousYear = new Date().getFullYear();
+    const previousMonthlyLikes = await prisma.articleLike.count({
+      where: {
+        article: {
+          authorId: Number(authorId),
+          isPublish: true,
+        },
+        createdAt: {
+          gte: new Date(previousYear, previousMonth, 1),
+          lte: new Date(previousYear, previousMonth + 1, 0),
+        },
+      },
+    });
+
+    // tỉ lệ phần trăm
+    let likePercentage = ((monthlyLikes - previousMonthlyLikes) / previousMonthlyLikes) * 100;
+    if (isNaN(likePercentage)) {
+      likePercentage = 0;
+    }
+
+    // số bình luận tháng này
+    const monthlyComments = await prisma.comment.count({
+      where: {
+        article: {
+          authorId: Number(authorId),
+          isPublish: true,
+        },
+        createdAt: {
+          gte: new Date(currentYear, currentMonth, 1),
+          lte: new Date(currentYear, currentMonth + 1, 0),
+        },
+      },
+    });
+
+    // số bình luận tháng trước
+    const previousMonthlyComments = await prisma.comment.count({
+      where: {
+        article: {
+          authorId: Number(authorId),
+          isPublish: true,
+        },
+        createdAt: {
+          gte: new Date(previousYear, previousMonth, 1),
+          lte: new Date(previousYear, previousMonth + 1, 0),
+        },
+      },
+    });
+
+    // tỉ lệ phần trăm
+    let commentPercentage = ((monthlyComments - previousMonthlyComments) / previousMonthlyComments) * 100;
+    if (isNaN(commentPercentage)) {
+      commentPercentage = 0;
+    }
+    // số danh mục tác giả đã viết
+    const categoryCount = await prisma.article.groupBy({
+      by: ["categoryId"],
+      where: {
+        authorId: Number(authorId),
+      },
+      _count: {
+        categoryId: true,
+      },
+    });
+    
+    const uniqueCategoryCount = categoryCount.length;
+    
+    return {
+      latestArticles,
+      monthlyLikes,
+      previousMonthlyLikes,
+      likePercentage,
+      monthlyComments,
+      previousMonthlyComments,
+      commentPercentage,
+      uniqueCategoryCount,
+    };
+  } catch (error) {
+    throw new Error("Error fetching author dashboard: " + error.message);
+  }
+};

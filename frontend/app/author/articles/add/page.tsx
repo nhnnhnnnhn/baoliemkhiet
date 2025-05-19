@@ -1,295 +1,380 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { ArrowLeft, Loader2, Save, Clock } from "lucide-react"
+import dynamic from "next/dynamic"
+import { useAppDispatch, useAppSelector } from "@/src/store"
+import { handleCreateArticle, handleApproveArticle } from "@/src/thunks/article/articleThunk"
 import {
-  ArrowLeft,
-  Bold,
-  Code,
-  Heading1,
-  Heading2,
-  ImageIcon,
-  Italic,
-  LinkIcon,
-  List,
-  ListOrdered,
-  Save,
-  Upload,
-  Loader2,
-} from "lucide-react"
+  selectIsCreatingArticle,
+  selectCreateArticleSuccess,
+  selectCreateArticleError,
+  clearCreateArticleState
+} from "@/src/thunks/article/articleSlice"
+import { handleGetCategories } from "@/src/thunks/category/categoryThunk"
+import { selectCategories } from "@/src/thunks/category/categorySlice"
+import { handleGetTags } from "@/src/thunks/tag/tagThunk"
+import { selectTags } from "@/src/thunks/tag/tagSlice"
+import { selectCurrentUser } from "@/src/thunks/auth/authSlice"
+import { toast } from "@/components/ui/use-toast"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import styles from "../../../admin/admin.module.css"
-import { useToast } from "@/hooks/use-toast"
-import { useAppSelector } from "@/src/store"
-import { selectCurrentUser } from "@/src/thunks/auth/authSlice"
-import articleApi from "@/src/apis/article"
+import { MultiSelect } from "../../../../components/ui/multi-select"
+import { Spinner } from "../../../../components/ui/spinner"
+import styles from "../../author.module.css"
+import { cn } from "@/lib/utils"
+
+// Validation rules
+type ValidationRule = {
+  required: boolean;
+  minLength?: number;
+  maxLength?: number;
+}
+
+const VALIDATION_RULES: Record<string, ValidationRule> = {
+  title: {
+    required: true,
+    minLength: 10,
+    maxLength: 200
+  },
+  content: {
+    required: true,
+    minLength: 100,
+    maxLength: 10000
+  },
+  categoryId: {
+    required: true
+  },
+  thumbnail: {
+    required: true
+  }
+}
+
+// Error messages
+const ERROR_MESSAGES = {
+  title: {
+    required: "Tiêu đề là bắt buộc",
+    minLength: "Tiêu đề phải có ít nhất 10 ký tự",
+    maxLength: "Tiêu đề không được vượt quá 200 ký tự"
+  },
+  content: {
+    required: "Nội dung là bắt buộc",
+    minLength: "Nội dung phải có ít nhất 100 ký tự",
+    maxLength: "Nội dung không được vượt quá 10000 ký tự"
+  },
+  categoryId: {
+    required: "Vui lòng chọn danh mục"
+  },
+  thumbnail: {
+    required: "Vui lòng chọn ảnh đại diện"
+  }
+}
+
+const RichTextEditor = dynamic(() => import("@/components/rich-text-editor"), {
+  ssr: false,
+  loading: () => <div className="h-[600px] w-full bg-gray-100 animate-pulse rounded-md" />
+})
+
+// Thêm style cho error message
+const errorMessageStyle = "text-sm text-red-500 mt-1 flex items-center gap-1.5"
 
 export default function AddArticlePage() {
   const router = useRouter()
-  const { toast } = useToast()
+  const dispatch = useAppDispatch()
+  
+  // Redux selectors
+  const categories = useAppSelector(selectCategories)
+  const tags = useAppSelector(selectTags)
+  const isCreatingArticle = useAppSelector(selectIsCreatingArticle)
+  const createArticleSuccess = useAppSelector(selectCreateArticleSuccess)
+  const createArticleError = useAppSelector(selectCreateArticleError)
   const currentUser = useAppSelector(selectCurrentUser)
-  const [activeTab, setActiveTab] = useState("edit")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [formData, setFormData] = useState({
-    title: "",
-    excerpt: "",
-    content: "",
-    category: "",
-    tags: "",
-    featuredImage: "",
-    status: "draft",
-  })
+  
+  // State for form fields
+  const [title, setTitle] = useState('')
+  const [excerpt, setExcerpt] = useState('')
+  const [content, setContent] = useState('')
+  const [status, setStatus] = useState<'APPROVED' | 'DRAFT' | 'PENDING'>('DRAFT')
+  const [categoryId, setCategoryId] = useState<string>('')
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [thumbnailUrl, setThumbnailUrl] = useState('')
+  const [publishDate, setPublishDate] = useState<string>('')
+  const [useCurrentDate, setUseCurrentDate] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  
+  // Fetch categories and tags on component mount
+  useEffect(() => {
+    dispatch(handleGetCategories({}))
+    dispatch(handleGetTags({}))
+  }, [dispatch])
+  
+  // Validation function
+  const validateField = (name: string, value: any): string | null => {
+    const rules = VALIDATION_RULES[name]
+    if (!rules) return null
 
-  // Preview content
-  const [previewContent, setPreviewContent] = useState("")
+    if (rules.required && !value) {
+      return ERROR_MESSAGES[name as keyof typeof ERROR_MESSAGES].required
+    }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
+    if (name === 'title' && rules.minLength && rules.maxLength) {
+      if (value.length < rules.minLength) {
+        return ERROR_MESSAGES.title.minLength
+      }
+      if (value.length > rules.maxLength) {
+        return ERROR_MESSAGES.title.maxLength
+      }
+    }
+
+    if (name === 'content' && rules.minLength && rules.maxLength) {
+      if (value.length < rules.minLength) {
+        return ERROR_MESSAGES.content.minLength
+      }
+      if (value.length > rules.maxLength) {
+        return ERROR_MESSAGES.content.maxLength
+      }
+    }
+
+    return null
+  }
+
+  // Handle field change with validation
+  const handleFieldChange = (name: string, value: any) => {
+    const error = validateField(name, value)
+    setErrors(prev => ({
       ...prev,
-      [name]: value,
+      [name]: error || ''
     }))
 
-    // Update preview when content changes
-    if (name === "content") {
-      setPreviewContent(value)
+    // Update state based on field name
+    switch (name) {
+      case 'title':
+        setTitle(value || '')
+        break
+      case 'content':
+        setContent(value || '')
+        break
+      case 'categoryId':
+        setCategoryId(value || '')
+        break
+      case 'thumbnail':
+        setThumbnailUrl(value || '')
+        break
+      case 'status':
+        setStatus(value)
+        break
+      case 'tags':
+        setSelectedTags(value || [])
+        break
     }
   }
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-  }
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // In a real app, this would upload the image to a server
-    // For now, we'll just set it in the state
-    if (e.target.files && e.target.files[0]) {
-      const url = URL.createObjectURL(e.target.files[0]);
-      setFormData((prev) => ({
-        ...prev,
-        featuredImage: url,
-      }))
-    }
-  }
-
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.title.trim()) {
+    // Validate all fields (không validate publishedAt)
+    const newErrors: Record<string, string> = {}
+    Object.keys(VALIDATION_RULES).forEach(field => {
+      const value = field === 'categoryId' ? categoryId :
+                   field === 'thumbnail' ? thumbnailUrl :
+                   field === 'content' ? content :
+                   field === 'title' ? title : null
+      const error = validateField(field, value)
+      if (error) {
+        newErrors[field] = error
+      }
+    })
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
       toast({
         title: "Lỗi",
-        description: "Vui lòng nhập tiêu đề bài viết",
-        variant: "destructive",
-      })
-      return
-    }
-    
-    if (!formData.content.trim()) {
-      toast({
-        title: "Lỗi",
-        description: "Vui lòng nhập nội dung bài viết",
-        variant: "destructive",
-      })
-      return
-    }
-    
-    if (!formData.category) {
-      toast({
-        title: "Lỗi",
-        description: "Vui lòng chọn danh mục cho bài viết",
-        variant: "destructive",
+        description: "Vui lòng kiểm tra lại các trường thông tin",
+        variant: "destructive"
       })
       return
     }
     
     if (!currentUser?.id) {
       toast({
-        title: "Lỗi xác thực",
-        description: "Bạn cần đăng nhập để thực hiện hành động này",
-        variant: "destructive",
+        title: "Lỗi",
+        description: "Vui lòng đăng nhập để tạo bài viết",
+        variant: "destructive"
       })
       return
     }
     
-    try {
-      setIsSubmitting(true)
-      
-      const tagIds = formData.tags
-        ? formData.tags.split(',').map(tag => tag.trim())
-          .filter(tag => tag !== '')
-        : []
-      
-      const articleData = {
-        title: formData.title.trim(),
-        content: formData.content.trim(),
-        excerpt: formData.excerpt.trim(),
-        authorId: currentUser.id,
-        categoryId: parseInt(formData.category),
-        status: formData.status.toUpperCase() as any,
-        thumbnail: formData.featuredImage || undefined,
-        tags: tagIds.map(tag => parseInt(tag)).filter(tag => !isNaN(tag))
+    // Xử lý ngày xuất bản: nếu có giá trị thì gửi, không thì bỏ qua
+    let publishDateValue: string | undefined = undefined;
+    if (useCurrentDate) {
+      publishDateValue = new Date().toISOString();
+    } else if (publishDate) {
+      publishDateValue = new Date(publishDate).toISOString();
+    }
+    
+    const tagIds = selectedTags.map(id => parseInt(id))
+    dispatch(handleCreateArticle({
+      title,
+      content,
+      thumbnail: thumbnailUrl || undefined,
+      authorId: currentUser.id,
+      categoryId: parseInt(categoryId),
+      status: status,
+      publishedAt: publishDateValue,
+      tags: tagIds
+    }))
+  }
+  
+  // Handle success/error
+  useEffect(() => {
+    if (createArticleSuccess) {
+      // Nếu tạo bài viết thành công và có id
+      const article = createArticleSuccess as any;
+      if (article && typeof article === 'object' && article.id) {
+        // Không cần gọi handleApproveArticle nữa vì khi tạo bài viết
+        // với status=APPROVED, backend đã tự động đặt isPublish=true
+        
+        toast({
+          title: "Thành công",
+          description: "Đã tạo bài viết mới thành công" + (status === 'APPROVED' ? ' và đã xuất bản' : ''),
+          variant: "success"
+        })
+      } else {
+        toast({
+          title: "Thành công",
+          description: "Đã tạo bài viết mới thành công",
+          variant: "success"
+        })
       }
       
-      console.log("Dữ liệu gửi đi:", articleData)
-      
-      // Gọi API để tạo bài viết mới
-      const response = await articleApi.createArticle(articleData)
-      
-      toast({
-        title: "Thành công",
-        description: `Bài viết đã được ${formData.status === 'draft' ? 'lưu nháp' : 'gửi duyệt'} thành công`,
-      })
-      
-      // Chuyển hướng về trang danh sách bài viết
-      router.push("/author/articles")
-    } catch (error) {
-      console.error("Lỗi khi tạo bài viết:", error)
+      dispatch(clearCreateArticleState())
+      router.push('/author/articles')
+    }
+    
+    if (createArticleError) {
       toast({
         title: "Lỗi",
-        description: "Có lỗi xảy ra khi tạo bài viết. Vui lòng thử lại sau.",
-        variant: "destructive",
+        description: createArticleError,
+        variant: "destructive"
       })
-    } finally {
-      setIsSubmitting(false)
+      dispatch(clearCreateArticleState())
     }
-  }
-
-  // Format toolbar buttons
-  const formatButtons = [
-    { icon: Bold, title: "Đậm" },
-    { icon: Italic, title: "Nghiêng" },
-    { icon: Heading1, title: "Tiêu đề 1" },
-    { icon: Heading2, title: "Tiêu đề 2" },
-    { icon: List, title: "Danh sách" },
-    { icon: ListOrdered, title: "Danh sách có thứ tự" },
-    { icon: LinkIcon, title: "Liên kết" },
-    { icon: ImageIcon, title: "Hình ảnh" },
-    { icon: Code, title: "Mã" },
-  ]
-
+  }, [createArticleSuccess, createArticleError, dispatch, router])
   return (
     <div>
       {/* Page Header */}
       <div className={styles.pageHeader}>
         <div className="flex items-center">
-          <Link href="/author/articles">
+          <Link href="/admin/articles">
             <Button variant="ghost" size="sm" className="mr-4">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Quay lại
             </Button>
           </Link>
           <div>
-            <h1 className={styles.pageTitle}>Viết bài mới</h1>
+            <h1 className={styles.pageTitle}>Thêm bài viết mới</h1>
             <div className={styles.pageBreadcrumb}>
-              <div className={styles.breadcrumbItem}>Tác giả</div>
+              <div className={styles.breadcrumbItem}>Trang chủ</div>
               <div className={styles.breadcrumbDivider}>/</div>
               <div className={styles.breadcrumbItem}>Bài viết</div>
               <div className={styles.breadcrumbDivider}>/</div>
-              <div className={styles.breadcrumbItem}>Viết bài mới</div>
+              <div className={styles.breadcrumbItem}>Thêm mới</div>
             </div>
           </div>
         </div>
-        <div className="flex space-x-2">
-          <Select value={formData.status} onValueChange={(value) => handleSelectChange("status", value)}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Trạng thái" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="draft">Bản nháp</SelectItem>
-              <SelectItem value="pending">Gửi duyệt</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button onClick={handleSubmit}>
-            <Save className="h-4 w-4 mr-2" />
-            Lưu bài viết
-          </Button>
-        </div>
+        <Button onClick={handleSubmit} disabled={isCreatingArticle}>
+          {isCreatingArticle ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Đang lưu...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4 mr-2" />
+              Lưu bài viết
+            </>
+          )}
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Main Content */}
+      {/* Add Article Form */}
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
           <div className={styles.chartCard}>
+            <div className={styles.chartHeader}>
+              <h3 className={styles.chartTitle}>Nội dung bài viết</h3>
+            </div>
             <div className="p-6">
-              <div className="mb-4">
-                <Label htmlFor="title">Tiêu đề</Label>
-                <Input
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  placeholder="Nhập tiêu đề bài viết"
-                  className="text-xl font-semibold mt-1"
-                />
-              </div>
-
-              <div className="mb-4">
-                <Label htmlFor="excerpt">Tóm tắt</Label>
-                <Textarea
-                  id="excerpt"
-                  name="excerpt"
-                  value={formData.excerpt}
-                  onChange={handleChange}
-                  placeholder="Nhập tóm tắt bài viết"
-                  className="mt-1"
-                  rows={3}
-                />
-              </div>
-
-              <Tabs defaultValue="edit" onValueChange={setActiveTab} className="mt-6">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="edit">Soạn thảo</TabsTrigger>
-                  <TabsTrigger value="preview">Xem trước</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="edit" className="mt-4">
-                  {/* Editor Toolbar */}
-                  <div className="flex flex-wrap gap-1 mb-2 p-2 bg-gray-50 rounded-md border">
-                    {formatButtons.map((button, index) => (
-                      <Button key={index} variant="ghost" size="sm" className="h-8 w-8 p-0" title={button.title}>
-                        <button.icon className="h-4 w-4" />
-                      </Button>
-                    ))}
-                  </div>
-
-                  {/* Editor */}
-                  <Textarea
-                    id="content"
-                    name="content"
-                    value={formData.content}
-                    onChange={handleChange}
-                    placeholder="Viết nội dung bài viết của bạn ở đây..."
-                    className="min-h-[400px] font-mono"
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="title">Tiêu đề <span className="text-red-500">*</span></Label>
+                  <Input 
+                    id="title" 
+                    placeholder="Nhập tiêu đề bài viết" 
+                    className={cn("mt-1", errors.title && "border-red-500 focus-visible:ring-red-500")}
+                    value={title}
+                    onChange={(e) => handleFieldChange('title', e.target.value)}
+                    required
                   />
-                </TabsContent>
-
-                <TabsContent value="preview" className="mt-4">
-                  <div className="min-h-[400px] p-4 border rounded-md prose max-w-none">
-                    {previewContent ? (
-                      <div dangerouslySetInnerHTML={{ __html: previewContent.replace(/\n/g, "<br/>") }} />
-                    ) : (
-                      <div className="text-gray-400 italic">Xem trước nội dung bài viết sẽ hiển thị ở đây</div>
-                    )}
+                  {errors.title && (
+                    <p className={errorMessageStyle}>
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M12 8V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M12 16H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      {errors.title}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="excerpt">Tóm tắt</Label>
+                  <Textarea 
+                    id="excerpt" 
+                    placeholder="Nhập tóm tắt bài viết" 
+                    className="mt-1" 
+                    rows={3} 
+                    value={excerpt}
+                    onChange={(e) => setExcerpt(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="content">Nội dung <span className="text-red-500">*</span></Label>
+                  <div className="mt-1">
+                    <RichTextEditor
+                      value={content}
+                      onChange={(newContent) => handleFieldChange('content', newContent)}
+                    />
+                    <input
+                      type="hidden"
+                      name="content"
+                      value={content}
+                      required
+                    />
                   </div>
-                </TabsContent>
-              </Tabs>
+                  {errors.content && (
+                    <p className={errorMessageStyle}>
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M12 8V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M12 16H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      {errors.content}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Sidebar */}
         <div className="md:col-span-1">
           <div className={styles.chartCard}>
             <div className={styles.chartHeader}>
@@ -298,113 +383,146 @@ export default function AddArticlePage() {
             <div className="p-6">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="category">Chuyên mục</Label>
-                  <Select value={formData.category} onValueChange={(value) => handleSelectChange("category", value)}>
-                    <SelectTrigger id="category" className="mt-1">
-                      <SelectValue placeholder="Chọn chuyên mục" />
+                  <Label htmlFor="status">Trạng thái</Label>
+                  <Select 
+                    value={status} 
+                    onValueChange={(value: 'APPROVED' | 'DRAFT' | 'PENDING') => {
+                      if (value !== 'APPROVED') {
+                        handleFieldChange('status', value)
+                      }
+                    }}
+                  >
+                    <SelectTrigger className={cn("mt-1", errors.status && "border-red-500 focus-visible:ring-red-500")}>
+                      <SelectValue placeholder="Chọn trạng thái" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="thoi-su">Thời sự</SelectItem>
-                      <SelectItem value="the-gioi">Thế giới</SelectItem>
-                      <SelectItem value="kinh-doanh">Kinh doanh</SelectItem>
-                      <SelectItem value="cong-nghe">Công nghệ</SelectItem>
-                      <SelectItem value="the-thao">Thể thao</SelectItem>
-                      <SelectItem value="du-lich">Du lịch</SelectItem>
-                      <SelectItem value="suc-khoe">Sức khỏe</SelectItem>
+                      <SelectItem value="DRAFT">Bản nháp</SelectItem>
+                      <SelectItem value="PENDING">Gửi duyệt</SelectItem>
+                      <SelectItem value="PUBLISHED">Xuất bản ngay</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label htmlFor="tags">Thẻ</Label>
-                  <Input
-                    id="tags"
-                    name="tags"
-                    value={formData.tags}
-                    onChange={handleChange}
-                    placeholder="Nhập các thẻ, phân cách bằng dấu phẩy"
-                    className="mt-1"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Ví dụ: kinh tế, tài chính, đầu tư</p>
-                </div>
-
-                <div>
-                  <Label htmlFor="featuredImage">Ảnh đại diện</Label>
-                  {formData.featuredImage ? (
-                    <div className="mt-2 mb-2 relative">
-                      <img
-                        src={formData.featuredImage || "/placeholder.svg"}
-                        alt="Featured"
-                        className="w-full h-auto rounded-lg"
-                      />
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="absolute top-2 right-2"
-                        onClick={() => setFormData((prev) => ({ ...prev, featuredImage: "" }))}
-                      >
-                        Xóa
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="mt-1 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                      <Upload className="h-8 w-8 mx-auto text-gray-400" />
-                      <p className="mt-2 text-sm text-gray-500">Kéo thả hoặc nhấp để tải lên</p>
-                      <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF tối đa 5MB</p>
-                      <Input
-                        id="featuredImage"
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleImageUpload}
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mt-4"
-                        onClick={() => document.getElementById("featuredImage")?.click()}
-                      >
-                        Chọn ảnh
-                      </Button>
-                    </div>
+                  <Label htmlFor="category">Chuyên mục <span className="text-red-500">*</span></Label>
+                  <Select 
+                    value={categoryId} 
+                    onValueChange={(value) => handleFieldChange('categoryId', value)}
+                  >
+                    <SelectTrigger 
+                      id="category" 
+                      className={cn("mt-1", errors.categoryId && "border-red-500 focus-visible:ring-red-500")}
+                    >
+                      <SelectValue placeholder="Chọn chuyên mục" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.length === 0 ? (
+                        <SelectItem value="loading" disabled>
+                          <Spinner size="sm" /> Đang tải...
+                        </SelectItem>
+                      ) : (
+                        categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id.toString()}>
+                            {category.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {errors.categoryId && (
+                    <p className={errorMessageStyle}>
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M12 8V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M12 16H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      {errors.categoryId}
+                    </p>
                   )}
                 </div>
 
+                <div>
+                  <Label htmlFor="tags">Thẻ</Label>
+                  <MultiSelect
+                    options={tags.map(tag => ({
+                      label: tag.name,
+                      value: tag.id.toString()
+                    }))}
+                    selected={selectedTags}
+                    onChange={(value) => handleFieldChange('tags', value)}
+                    placeholder="Chọn thẻ"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="thumbnailUrl">Ảnh đại diện <span className="text-red-500">*</span></Label>
+                  <Input 
+                    id="thumbnailUrl" 
+                    placeholder="Nhập URL ảnh đại diện" 
+                    className={cn("mt-1", errors.thumbnail && "border-red-500 focus-visible:ring-red-500")}
+                    value={thumbnailUrl}
+                    onChange={(e) => handleFieldChange('thumbnail', e.target.value)}
+                  />
+                  {errors.thumbnail && (
+                    <p className={errorMessageStyle}>
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M12 8V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M12 16H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      {errors.thumbnail}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label>Ngày xuất bản</Label>
+                  <div className="flex flex-wrap items-center gap-3 mt-1 w-full">
+                    <Input
+                      type="datetime-local"
+                      value={publishDate}
+                      onChange={(e) => setPublishDate(e.target.value)}
+                      disabled={useCurrentDate}
+                      className="w-[220px] min-w-0 flex-shrink"
+                    />
+                    <Button
+                      type="button"
+                      variant={useCurrentDate ? "default" : "outline"}
+                      className="flex items-center gap-2 rounded-full shadow-sm border border-gray-200 min-w-[180px] mt-2 sm:mt-0"
+                      onClick={() => {
+                        setUseCurrentDate(!useCurrentDate)
+                        if (!useCurrentDate) {
+                          setPublishDate('')
+                        }
+                      }}
+                    >
+                      <Clock className="h-4 w-4" />
+                      {useCurrentDate ? 'Đã chọn: Bây giờ' : 'Sử dụng thời gian hiện tại'}
+                    </Button>
+                  </div>
+                </div>
+
                 <div className="pt-4 border-t border-gray-200">
-                  <Button variant="outline" className="w-full" onClick={() => setActiveTab("preview")}>
-                    Xem trước
+                  <Button type="submit" className="w-full" disabled={isCreatingArticle}>
+                    {isCreatingArticle ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Đang lưu...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Lưu bài viết
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
             </div>
           </div>
-
-          <div className={styles.chartCard + " mt-6"}>
-            <div className={styles.chartHeader}>
-              <h3 className={styles.chartTitle}>Hướng dẫn</h3>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4 text-sm">
-                <p>
-                  <strong>Tiêu đề:</strong> Nên ngắn gọn, hấp dẫn và mô tả chính xác nội dung bài viết.
-                </p>
-                <p>
-                  <strong>Tóm tắt:</strong> Tóm tắt ngắn gọn nội dung chính của bài viết trong 2-3 câu.
-                </p>
-                <p>
-                  <strong>Nội dung:</strong> Viết rõ ràng, mạch lạc, phân đoạn hợp lý và có dẫn chứng cụ thể.
-                </p>
-                <p>
-                  <strong>Ảnh đại diện:</strong> Chọn ảnh chất lượng cao, liên quan đến nội dung bài viết.
-                </p>
-                <p>
-                  <strong>Thẻ:</strong> Thêm 3-5 thẻ liên quan để giúp độc giả tìm kiếm bài viết dễ dàng hơn.
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
+      </form>
     </div>
   )
 }

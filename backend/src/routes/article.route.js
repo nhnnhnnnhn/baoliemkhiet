@@ -90,5 +90,7 @@ router.delete(
   controller.deleteMultipleArticles
 );
 
+// Author Dashboard
+router.get("/author-dashboard/:id", authMiddleware(), controller.getAuthorDashboard);
 
 module.exports = router;
