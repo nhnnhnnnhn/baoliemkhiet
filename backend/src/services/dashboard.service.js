@@ -22,11 +22,13 @@ async function getStatisticByUserId(user_id) {
     const articlesInThisMonth = await prisma.article.findMany({
       where: {
         publishedAt: {
-          lte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
         },
       },
       select: { view: true, articleLikes: true, comments: true },
     });
+    console.log(articlesInThisMonth);
+
     viewsInThisMonth = articlesInThisMonth.reduce((acc, article) => {
       return acc + article.view;
     }, 0);
@@ -62,7 +64,7 @@ async function getStatisticByUserId(user_id) {
       where: {
         userId: user_id,
         publishedAt: {
-          lte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
         },
         authorId: user_id,
       },
@@ -110,22 +112,42 @@ async function getStatisticByUserId(user_id) {
     likesInPreviousMonth: likesInPreviousMonth,
     commentsInThisMonth: commentsInThisMonth,
     commentsInPreviousMonth: commentsInPreviousMonth,
-    viewPercentage: (
-      (viewsInThisMonth - viewsInPreviousMonth) /
-      viewsInPreviousMonth
-    ).toFixed(2),
-    articlePercentage: (
-      (countArticlesInThisMonth - countArticlesInPreviousMonth) /
-      countArticlesInPreviousMonth
-    ).toFixed(2),
-    likePercentage: (
-      (likesInThisMonth - likesInPreviousMonth) /
-      likesInPreviousMonth
-    ).toFixed(2),
-    commentPercentage: (
-      (commentsInThisMonth - commentsInPreviousMonth) /
-      commentsInPreviousMonth
-    ).toFixed(2),
+    viewPercentage:
+      viewsInPreviousMonth === 0
+        ? viewsInThisMonth > 0
+          ? "100.00"
+          : "0.00"
+        : (
+            (viewsInThisMonth - viewsInPreviousMonth) /
+            viewsInPreviousMonth
+          ).toFixed(2),
+    articlePercentage:
+      countArticlesInPreviousMonth === 0
+        ? countArticlesInThisMonth > 0
+          ? "100.00"
+          : "0.00"
+        : (
+            (countArticlesInThisMonth - countArticlesInPreviousMonth) /
+            countArticlesInPreviousMonth
+          ).toFixed(2),
+    likePercentage:
+      likesInPreviousMonth === 0
+        ? likesInThisMonth > 0
+          ? "100.00"
+          : "0.00"
+        : (
+            (likesInThisMonth - likesInPreviousMonth) /
+            likesInPreviousMonth
+          ).toFixed(2),
+    commentPercentage:
+      commentsInPreviousMonth === 0
+        ? commentsInThisMonth > 0
+          ? "100.00"
+          : "0.00"
+        : (
+            (commentsInThisMonth - commentsInPreviousMonth) /
+            commentsInPreviousMonth
+          ).toFixed(2),
   };
 }
 
@@ -143,7 +165,7 @@ async function getViewByWeekInMonth(user_id) {
     const articles = await prisma.article.findMany({
       where: {
         publishedAt: {
-          lte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
         },
       },
       select: { view: true, publishedAt: true },
@@ -161,7 +183,7 @@ async function getViewByWeekInMonth(user_id) {
       where: {
         userId: user_id,
         publishedAt: {
-          lte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
         },
         authorId: user_id,
       },
@@ -196,7 +218,7 @@ async function getMostViewedArticlesInThisMonth(user_id) {
     mostViewedArticles = await prisma.article.findMany({
       where: {
         publishedAt: {
-          lte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
         },
       },
       orderBy: { view: "desc" },
@@ -207,7 +229,7 @@ async function getMostViewedArticlesInThisMonth(user_id) {
       where: {
         userId: user_id,
         publishedAt: {
-          lte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
         },
         authorId: user_id,
       },
