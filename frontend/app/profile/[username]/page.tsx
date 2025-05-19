@@ -3,7 +3,8 @@
 import Image from "next/image"
 import Link from "next/link"
 import { CalendarIcon, MapPinIcon, UserIcon, Users } from "lucide-react"
-import { useEffect, useState, use } from "react"
+import { useEffect, useState } from "react"
+import { useParams } from "next/navigation"
 import { useAppDispatch, useAppSelector } from "@/src/store"
 import { 
   handleGetFollowers, 
@@ -39,9 +40,10 @@ const formatJoinDate = (dateString: string) => {
   }
 };
 
-export default function ProfilePage({ params }: { params: { username: string } }) {
-  // Truy cập params trực tiếp
-  const username = params.username;
+export default function ProfilePage() {
+  // Sử dụng useParams hook từ next/navigation thay vì truy cập params trực tiếp
+  const params = useParams();
+  const username = Array.isArray(params.username) ? params.username[0] : params.username as string;
   
   const dispatch = useAppDispatch()
   const currentUser = useAppSelector(selectCurrentUser)
@@ -57,6 +59,8 @@ export default function ProfilePage({ params }: { params: { username: string } }
   // Articles state
   const [articles, setArticles] = useState<Article[]>([])
   const [articlesLoading, setArticlesLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
   
   // Use real follow data from Redux
   const followers = useAppSelector(selectFollowers)
@@ -83,8 +87,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
         
         // Tìm người dùng phù hợp nhất từ danh sách
         const matchedUser = users.users.find(u => 
-          (u.username && u.username.toLowerCase() === username.toLowerCase()) ||
+          // Kiểm tra email trước vì username không có trong User interface
           (u.email && u.email.split('@')[0].toLowerCase() === username.toLowerCase()) ||
+          // Hoặc kiểm tra tên đầy đủ không có khoảng cách
           u.fullname.replace(/\s+/g, '').toLowerCase() === username.toLowerCase()
         )
         
@@ -113,20 +118,35 @@ export default function ProfilePage({ params }: { params: { username: string } }
   }, [username, isClient])
   
   // Lấy bài viết của người dùng
+  // Xử lý thay đổi trang
+  const handlePageChange = (newPage: number) => {
+    setPage(Math.min(Math.max(1, newPage), totalPages))
+    // Cuộn lên đầu phần bài viết
+    window.scrollTo({ top: document.getElementById('user-articles')?.offsetTop || 0, behavior: 'smooth' })
+  }
+
   const fetchUserArticles = async (userId: number) => {
     try {
       setArticlesLoading(true)
       const response = await articleApi.getArticlesByAuthor(userId)
-      // API trả về {articles, numberOfArticles}
-      setArticles(response.articles || [])
-    } catch (error) {
-      console.error('Error fetching articles:', error)
-      toast({
-        title: "Lỗi",
-        description: "Không thể tải bài viết của người dùng này",
-        variant: "destructive"
+      
+      // Sắp xếp bài viết từ mới đến cũ
+      const sortedArticles = [...(response.articles || [])].sort((a, b) => {
+        const dateA = new Date(a.publishedAt || a.created_at)
+        const dateB = new Date(b.publishedAt || b.created_at)
+        return dateB.getTime() - dateA.getTime()
       })
+
+      // Lưu trữ toàn bộ bài viết đã sắp xếp
+      setArticles(sortedArticles)
+      
+      // Tính toán số trang
+      const articlesPerPage = 5
+      setTotalPages(Math.ceil(sortedArticles.length / articlesPerPage) || 1)
+    } catch (error) {
+      console.error('Error fetching user articles:', error)
       setArticles([])
+      setTotalPages(1)
     } finally {
       setArticlesLoading(false)
     }
@@ -201,7 +221,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeader variant="solid" />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Profile Header */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-8">
@@ -282,9 +302,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
         </div>
 
         {/* Content Tabs */}
-        <Tabs defaultValue="articles">
+        <Tabs defaultValue="articles" id="user-articles">
           <TabsList className="mb-6">
-            <TabsTrigger value="articles">Bài viết</TabsTrigger>
+            <TabsTrigger value="articles">Bài viết ({articles.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="articles" className="space-y-6">
@@ -300,8 +320,9 @@ export default function ProfilePage({ params }: { params: { username: string } }
                 <p className="text-gray-500 mt-1">Người dùng này chưa đăng bài viết nào</p>
               </div>
             ) : (
-              // Articles list
-              articles.map((article) => (
+              // Articles list with pagination
+              // Calculate current page items
+              articles.slice((page - 1) * 5, page * 5).map((article) => (
                 <div key={article.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
                   <div className="flex flex-col md:flex-row">
                     <div className="md:w-1/3 h-48 md:h-auto">
@@ -317,7 +338,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       <div className="flex items-center text-sm text-gray-500 mb-2">
                         <span className="font-medium text-blue-600">{article.category?.name || "Tin tức"}</span>
                         <span className="mx-2">•</span>
-                        <span>{new Date(article.published_at || article.created_at).toLocaleDateString('en-US', {
+                        <span>{new Date(article.publishedAt || article.created_at).toLocaleDateString('vi-VN', {
                           year: 'numeric',
                           month: '2-digit',
                           day: '2-digit'
@@ -326,7 +347,12 @@ export default function ProfilePage({ params }: { params: { username: string } }
                       <h2 className="text-xl font-bold mb-2 hover:text-blue-600">
                         <Link href={`/article/${article.id}`}>{article.title}</Link>
                       </h2>
-                      <p className="text-gray-600 mb-4">{article.excerpt || article.content.substring(0, 150) + '...'}</p>
+                      <p className="text-gray-600 mb-4">
+                        <span dangerouslySetInnerHTML={{ 
+                          __html: article.excerpt || 
+                            (article.content ? article.content.substring(0, 150).replace(/<[^>]*>/g, '') + '...' : '') 
+                        }}></span>
+                      </p>
                       <div className="flex items-center text-sm text-gray-500">
                         <span className="mr-4">{article.view?.toLocaleString() || 0} lượt xem</span>
                       </div>
@@ -334,6 +360,33 @@ export default function ProfilePage({ params }: { params: { username: string } }
                   </div>
                 </div>
               ))
+            )}
+            
+            {/* Phân trang */}
+            {totalPages > 1 && (
+              <div className="mt-6 flex items-center justify-center space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handlePageChange(Math.max(1, page - 1))}
+                  disabled={page === 1}
+                >
+                  Trước
+                </Button>
+                
+                <div className="text-sm text-gray-500">
+                  Trang {page}/{totalPages}
+                </div>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
+                  disabled={page === totalPages}
+                >
+                  Tiếp
+                </Button>
+              </div>
             )}
           </TabsContent>
         </Tabs>
