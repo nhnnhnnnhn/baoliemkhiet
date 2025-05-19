@@ -71,11 +71,8 @@ export default function ArticleDetailPage({ params }: { params: { id: string } }
   const article = useAppSelector(selectSelectedArticle)
   const [loading, setLoading] = useState(true)
   
-  // Tính chuyển đổi HTML từ Markdown
-  const [htmlContent, setHtmlContent] = useState('')
-  
   useEffect(() => {
-    // Fetch bài viết theo ID
+    // Fetch bài viết theo ID và set loading state
     const fetchArticle = async () => {
       try {
         await dispatch(handleGetArticleById(parseInt(params.id)))
@@ -89,36 +86,6 @@ export default function ArticleDetailPage({ params }: { params: { id: string } }
     fetchArticle()
   }, [dispatch, params.id])
   
-  // Xử lý nội dung Markdown sang HTML khi article thay đổi
-  useEffect(() => {
-    if (article && article.content) {
-      // Chuyển đổi nội dung Markdown sang HTML cơ bản
-      // Đây là một bản chuyển đổi đơn giản, có thể sử dụng thư viện như marked.js để xử lý tốt hơn
-      let content = article.content
-        .replace(/\n\n/g, '</p><p>')
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') // Bold
-        .replace(/\*(.+?)\*/g, '<em>$1</em>') // Italic
-        .replace(/!\[(.+?)\]\((.+?)\)/g, '<img alt="$1" src="$2" class="rounded-lg my-4 max-w-full" />') // Images
-        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-blue-600 hover:underline">$1</a>') // Links
-      
-      // Xử lý danh sách
-      content = content.split('\n').map(line => {
-        if (line.trim().startsWith('- ')) {
-          return `<li>${line.trim().substring(2)}</li>`
-        }
-        return line
-      }).join('\n')
-      
-      content = content.replace(/<li>/g, '<ul><li>').replace(/<\/li>\n<\/ul>/g, '</li></ul>')
-      
-      // Bao bọc bằng thẻ paragraph
-      content = `<p>${content}</p>`
-      
-      setHtmlContent(content)
-    } else {
-      setHtmlContent('')
-    }
-  }, [article])
   
   if (loading) {
     return (
@@ -210,7 +177,10 @@ export default function ArticleDetailPage({ params }: { params: { id: string } }
                   </div>
                 )}
               </div>
-              <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: htmlContent }} />
+              <div
+                className="prose max-w-none prose-img:rounded-lg prose-img:my-4 prose-headings:mt-6 prose-p:my-4"
+                dangerouslySetInnerHTML={{ __html: article.content }}
+              />
             </div>
           </div>
         </div>
@@ -260,7 +230,7 @@ export default function ArticleDetailPage({ params }: { params: { id: string } }
                   <div className="text-sm font-medium text-gray-500 mb-1">Ngày xuất bản</div>
                   <div className="flex items-center">
                     <Calendar className="h-4 w-4 text-gray-400 mr-1" />
-                    {formatDate(article.published_at)}
+                    {formatDate(article.publishedAt)}
                   </div>
                 </div>
                 <div>
@@ -272,7 +242,7 @@ export default function ArticleDetailPage({ params }: { params: { id: string } }
                     <div className="text-center">
                       <div className="flex items-center justify-center">
                         <Eye className="h-4 w-4 text-gray-400 mr-1" />
-                        <span className="font-medium">{(article as any).view ? (article as any).view.toLocaleString() : '0'}</span>
+                        <span className="font-medium">{article.view?.toLocaleString() ?? '0'}</span>
                       </div>
                       <div className="text-xs text-gray-500 mt-1">Lượt xem</div>
                     </div>
