@@ -161,9 +161,20 @@ export default function ProfilePage() {
         className: "font-semibold",
         duration: 2000
       })
-      
       // Refresh profile after update
-      await dispatch(handleGetProfile() as any);
+      const profileAction = await dispatch(handleGetProfile() as any);
+      // Cập nhật formValues bằng dữ liệu mới nhất từ currentUser
+      if (handleGetProfile.fulfilled.match(profileAction)) {
+        const updated = profileAction.payload.data || profileAction.payload;
+        setFormValues({
+          fullname: updated.fullname || "",
+          email: updated.email || "",
+          phone: updated.phone || "",
+          address: updated.address || "",
+          bio: updated.bio || "",
+          avatar: updated.avatar || "",
+        });
+      }
     }
   }
 
@@ -204,21 +215,21 @@ export default function ProfilePage() {
       console.log('File upload response:', response);
 
       if (response.success && response.file) {
-        // Get correct image path from response
-        // Response file.path already contains "images/" prefix
-        const avatarPath = response.file.path;
-        console.log('Backend response path:', response.file.path);
-        console.log('Using avatar path:', avatarPath);
-
-        // Update profile with new avatar
+        // Lấy trực tiếp URL trả về từ backend
+        const avatarUrl = response.file.url;
+        // Update profile với avatar là URL
         const updateResult = await dispatch(handleUpdateProfile({
-          avatar: avatarPath
+          avatar: avatarUrl
         }));
 
         if (handleUpdateProfile.fulfilled.match(updateResult)) {
+          // Cập nhật luôn state formValues.avatar để hiển thị ngay
+          setFormValues((prev) => ({
+            ...prev,
+            avatar: avatarUrl
+          }));
           // Force refresh profile
           const profileResult = await dispatch(handleGetProfile() as any);
-          
           if (handleGetProfile.fulfilled.match(profileResult)) {
             toast({
               title: "Thành công",
@@ -279,13 +290,10 @@ export default function ProfilePage() {
               <div className="flex flex-col items-center mb-6">
                 <div className="relative mb-4">
                   <img
-                    src={getImageUrl(formValues.avatar || currentUser?.avatar)}
+                    src={formValues.avatar || currentUser?.avatar || "/placeholder.svg"}
                     alt={currentUser?.fullname}
                     className="h-32 w-32 rounded-full object-cover border-4 border-white shadow-md"
                     onError={(e) => {
-                      console.error('Image load error:', e);
-                      const url = formValues.avatar || currentUser?.avatar;
-                      console.log('Failed loading image URL:', url);
                       e.currentTarget.src = "/placeholder.svg";
                     }}
                   />
@@ -334,18 +342,16 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-gray-500 mb-1">Ngày tạo tài khoản</div>
-                  <div className="flex items-center">
-                    <Calendar className="h-4 w-4 text-gray-400 mr-2" />
-                    {currentUser?.created_at}
-                  </div>
+                  <div className="text-sm font-medium text-gray-500 mb-1">Số điện thoại</div>
+                  <div>{currentUser?.phone || "-"}</div>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-gray-500 mb-1">Cập nhật gần nhất</div>
-                  <div className="flex items-center">
-                    <Calendar className="h-4 w-4 text-gray-400 mr-2" />
-                    {currentUser?.updated_at}
-                  </div>
+                  <div className="text-sm font-medium text-gray-500 mb-1">Địa chỉ</div>
+                  <div>{currentUser?.address || "-"}</div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-500 mb-1">Giới thiệu</div>
+                  <div>{currentUser?.bio || "-"}</div>
                 </div>
               </div>
             </div>

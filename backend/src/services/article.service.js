@@ -625,31 +625,13 @@ module.exports.editArticle = async (
     if (!existingArticle) {
       throw new Error("Article not found");
     }
-    if (!title || !content || !authorId || !categoryId || !status) {
+    if (!title || !content || !status) {
       throw new Error("Missing required fields");
     }
     
     // Khai báo biến để cập nhật dữ liệu
     let publishedDate = undefined;
     let isPublish = undefined;
-    
-    // Tạo slug nếu cần thiết (khi chưa có hoặc tiêu đề thay đổi)
-    let slug = undefined;
-    if (!existingArticle.slug || existingArticle.title !== title) {
-      let slugify = (text) => {
-        return text
-          .toString()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .toLowerCase()
-          .trim()
-          .replace(/\s+/g, '-')
-          .replace(/[^\w\-]+/g, '')
-          .replace(/\-\-+/g, '-');
-      };
-      slug = slugify(title) + '-' + Date.now();
-      console.log('[EDIT] Tạo slug mới:', slug);
-    }
     
     // Xử lý trạng thái và ngày xuất bản
     if (status === 'APPROVED' || status === 'PUBLISHED') {
@@ -707,8 +689,6 @@ module.exports.editArticle = async (
       title,
       content,
       thumbnail,
-      authorId,
-      categoryId,
       status,
       isPublish,
     };
@@ -718,10 +698,6 @@ module.exports.editArticle = async (
       updateData.publishedAt = publishedDate;
     }
     
-    if (slug !== undefined) {
-      updateData.slug = slug;
-    }
-
     // Cập nhật bài viết
     const article = await prisma.article.update({
       where: { id: Number(id) },
