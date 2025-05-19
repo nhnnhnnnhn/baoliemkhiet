@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -18,6 +18,7 @@ import {
   ListOrdered,
   Save,
   Upload,
+  Loader2,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -27,17 +28,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import styles from "../../../admin/admin.module.css"
+import { useToast } from "@/hooks/use-toast"
+import { useAppSelector } from "@/src/store"
+import { selectCurrentUser } from "@/src/thunks/auth/authSlice"
+import articleApi from "@/src/apis/article"
 
 export default function AddArticlePage() {
   const router = useRouter()
+  const { toast } = useToast()
+  const currentUser = useAppSelector(selectCurrentUser)
   const [activeTab, setActiveTab] = useState("edit")
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     title: "",
     excerpt: "",
     content: "",
     category: "",
     tags: "",
-    featuredImage: null,
+    featuredImage: "",
     status: "draft",
   })
 
@@ -68,22 +76,94 @@ export default function AddArticlePage() {
     // In a real app, this would upload the image to a server
     // For now, we'll just set it in the state
     if (e.target.files && e.target.files[0]) {
+      const url = URL.createObjectURL(e.target.files[0]);
       setFormData((prev) => ({
         ...prev,
-        featuredImage: URL.createObjectURL(e.target.files[0]),
+        featuredImage: url,
       }))
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    // In a real app, this would send the data to an API
-    console.log("Article data:", formData)
-
-    // Simulate saving and redirect
-    alert(`Bài viết đã được lưu với trạng thái: ${formData.status}`)
-    router.push("/author/articles")
+    
+    if (!formData.title.trim()) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng nhập tiêu đề bài viết",
+        variant: "destructive",
+      })
+      return
+    }
+    
+    if (!formData.content.trim()) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng nhập nội dung bài viết",
+        variant: "destructive",
+      })
+      return
+    }
+    
+    if (!formData.category) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng chọn danh mục cho bài viết",
+        variant: "destructive",
+      })
+      return
+    }
+    
+    if (!currentUser?.id) {
+      toast({
+        title: "Lỗi xác thực",
+        description: "Bạn cần đăng nhập để thực hiện hành động này",
+        variant: "destructive",
+      })
+      return
+    }
+    
+    try {
+      setIsSubmitting(true)
+      
+      const tagIds = formData.tags
+        ? formData.tags.split(',').map(tag => tag.trim())
+          .filter(tag => tag !== '')
+        : []
+      
+      const articleData = {
+        title: formData.title.trim(),
+        content: formData.content.trim(),
+        excerpt: formData.excerpt.trim(),
+        authorId: currentUser.id,
+        categoryId: parseInt(formData.category),
+        status: formData.status.toUpperCase() as any,
+        thumbnail: formData.featuredImage || undefined,
+        tags: tagIds.map(tag => parseInt(tag)).filter(tag => !isNaN(tag))
+      }
+      
+      console.log("Dữ liệu gửi đi:", articleData)
+      
+      // Gọi API để tạo bài viết mới
+      const response = await articleApi.createArticle(articleData)
+      
+      toast({
+        title: "Thành công",
+        description: `Bài viết đã được ${formData.status === 'draft' ? 'lưu nháp' : 'gửi duyệt'} thành công`,
+      })
+      
+      // Chuyển hướng về trang danh sách bài viết
+      router.push("/author/articles")
+    } catch (error) {
+      console.error("Lỗi khi tạo bài viết:", error)
+      toast({
+        title: "Lỗi",
+        description: "Có lỗi xảy ra khi tạo bài viết. Vui lòng thử lại sau.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   // Format toolbar buttons
@@ -261,7 +341,7 @@ export default function AddArticlePage() {
                         variant="destructive"
                         size="sm"
                         className="absolute top-2 right-2"
-                        onClick={() => setFormData((prev) => ({ ...prev, featuredImage: null }))}
+                        onClick={() => setFormData((prev) => ({ ...prev, featuredImage: "" }))}
                       >
                         Xóa
                       </Button>
