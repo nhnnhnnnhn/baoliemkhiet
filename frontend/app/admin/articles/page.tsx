@@ -2,12 +2,14 @@
 
 import { useEffect, useState, useRef } from "react"
 import Link from "next/link"
-import { ChevronLeftIcon, ChevronRightIcon, Download, Edit, Eye, Filter, Plus, RefreshCw, Search, Trash2 } from "lucide-react"
+import { ChevronLeftIcon, ChevronRightIcon, Download, Edit, Eye, Filter, MoreHorizontal, Plus, RefreshCw, Search, Trash2, CheckCircle, XCircle } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "@/src/store"
 import {
   handleGetArticles,
   handleDeleteArticle,
-  handleDeleteMultipleArticles
+  handleDeleteMultipleArticles,
+  handleApproveArticle,
+  handleRejectArticle
 } from "@/src/thunks/article/articleThunk"
 import {
   selectArticles,
@@ -37,6 +39,12 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { format, isValid, parseISO } from "date-fns"
 import styles from "../admin.module.css"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export default function ArticlesPage() {
   const dispatch = useAppDispatch()
@@ -141,11 +149,7 @@ export default function ArticlesPage() {
   // Confirm delete article
   const confirmDeleteArticle = () => {
     if (!selectedArticleId) return
-    
-    // API yêu cầu ID là số nguyên
-    const articleId = Number(selectedArticleId)
-    const action = handleDeleteArticle(articleId)
-    dispatch(action)
+    onDeleteArticle(selectedArticleId)
   }
   
   // Handle refresh
@@ -210,6 +214,66 @@ export default function ArticlesPage() {
     }
   }, [highlightedArticleId, articles])
 
+  // Add these functions after getStatusClass
+  const onApproveArticle = async (id: number) => {
+    try {
+      const result = await dispatch(handleApproveArticle(id)).unwrap()
+      if (result) {
+        toast({
+          title: "Thành công",
+          description: "Đã duyệt bài viết thành công",
+          variant: "success"
+        })
+        dispatch(handleGetArticles({}))
+      }
+    } catch (error: any) {
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể duyệt bài viết",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const onRejectArticle = async (id: number) => {
+    try {
+      const result = await dispatch(handleRejectArticle(id)).unwrap()
+      if (result) {
+        toast({
+          title: "Thành công",
+          description: "Đã từ chối bài viết thành công",
+          variant: "success"
+        })
+        dispatch(handleGetArticles({}))
+      }
+    } catch (error: any) {
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể từ chối bài viết",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const onDeleteArticle = async (id: number) => {
+    try {
+      await dispatch(handleDeleteArticle(id)).unwrap()
+      toast({
+        title: "Thành công",
+        description: "Đã xóa bài viết thành công",
+        variant: "success"
+      })
+      dispatch(handleGetArticles({}))
+      setIsDeleteDialogOpen(false)
+    } catch (error: any) {
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể xóa bài viết",
+        variant: "destructive"
+      })
+    }
+  }
+
   return (
     <div>
       {/* Page Header */}
@@ -263,8 +327,6 @@ export default function ArticlesPage() {
                 <th className={styles.tableHeaderCell}>Chuyên mục</th>
                 <th className={styles.tableHeaderCell}>Tác giả</th>
                 <th className={styles.tableHeaderCell}>Trạng thái</th>
-                <th className={styles.tableHeaderCell}>Lượt xem</th>
-                <th className={styles.tableHeaderCell}>Bình luận</th>
                 <th className={styles.tableHeaderCell}>Ngày xuất bản</th>
                 <th className={styles.tableHeaderCell}>Hành động</th>
               </tr>
@@ -279,8 +341,6 @@ export default function ArticlesPage() {
                     <td className={styles.tableCell}><Skeleton className="h-4 w-20" /></td>
                     <td className={styles.tableCell}><Skeleton className="h-4 w-20" /></td>
                     <td className={styles.tableCell}><Skeleton className="h-4 w-20" /></td>
-                    <td className={styles.tableCell}><Skeleton className="h-4 w-10" /></td>
-                    <td className={styles.tableCell}><Skeleton className="h-4 w-10" /></td>
                     <td className={styles.tableCell}><Skeleton className="h-4 w-20" /></td>
                     <td className={styles.tableCell}><Skeleton className="h-4 w-20" /></td>
                   </tr>
@@ -306,53 +366,60 @@ export default function ArticlesPage() {
                     <td className={styles.tableCell}>
                       {article.author?.fullname || article.author?.name || 'Không xác định'}
                     </td>
-                    <td className={styles.tableCell}>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(article.status)}`}>
+                    <td className={styles.tableCell + " whitespace-nowrap"}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(article.status)}`}
+                        style={{whiteSpace: 'nowrap'}}>
                         {getStatusDisplay(article.status)}
                       </span>
                     </td>
-                    <td className={styles.tableCell}>{article.view ? article.view.toLocaleString() : '0'}</td>
-                    <td className={styles.tableCell}>0</td>
                     <td className={styles.tableCell}>
-                      {article.isPublish 
-                        ? (() => {
-                            try {
-                              // Hiển thị ngày nếu có, nếu không thì chỉ hiển thị "\u0110\u00e3 xu\u1ea5t b\u1ea3n"
-                              if (!article.published_at) return 'Đã xuất bản';
-                              
-                              const date = new Date(article.published_at);
-                              return !isNaN(date.getTime()) 
-                                ? format(date, 'dd/MM/yyyy') 
-                                : 'Đã xuất bản';
-                            } catch (error) {
-                              console.error('Lỗi xử lý ngày:', article.published_at, error);
-                              return 'Đã xuất bản';
-                            }
-                          })() 
-                        : 'Chưa xuất bản'}
+                      {article.publishedAt ? (
+                        format(new Date(article.publishedAt), 'dd/MM/yyyy HH:mm')
+                      ) : article.status === 'APPROVED' && (article.createdAt || article.created_at) ? (
+                        format(new Date(article.createdAt || article.created_at), 'dd/MM/yyyy HH:mm')
+                      ) : (
+                        <span className="text-gray-500">Chưa xuất bản</span>
+                      )}
                     </td>
-                    <td className={styles.tableCell}>
-                      <div className="flex items-center space-x-1">
-                        <Link href={`/admin/articles/${article.id}`} target="_blank" aria-label="Xem chi tiết bài viết">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Xem bài viết">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                        <Link href={`/admin/articles/${article.id}/edit`}>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Chỉnh sửa bài viết">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                          onClick={() => openDeleteDialog(article.id)}
-                          disabled={isDeletingArticle}
-                          aria-label="Xóa bài viết"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex items-center justify-end gap-2">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                              <Link href={`/admin/articles/${article.id}/edit`}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Chỉnh sửa
+                              </Link>
+                            </DropdownMenuItem>
+                            {article.status === 'PENDING' && (
+                              <>
+                                <DropdownMenuItem onClick={() => onApproveArticle(article.id)}>
+                                  <CheckCircle className="h-4 w-4 mr-2" />
+                                  Duyệt bài viết
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => onRejectArticle(article.id)}>
+                                  <XCircle className="h-4 w-4 mr-2" />
+                                  Từ chối bài viết
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                            <DropdownMenuItem asChild>
+                              <Link href={`/article/${article.slug}`}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                Xem chi tiết
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openDeleteDialog(article.id)} className="text-red-600">
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Xóa bài viết
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </td>
                   </tr>

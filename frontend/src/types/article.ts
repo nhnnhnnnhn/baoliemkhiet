@@ -33,7 +33,7 @@ export interface Article {
   category?: Category;
   tags?: Tag[];
   status: ArticleStatus;
-  published_at?: string;
+  publishedAt?: string;
   updated_at?: string;
   created_at: string;
   view?: number;
@@ -55,7 +55,7 @@ export interface ArticleFormValues {
   categoryId?: number;
   tagIds?: number[];
   status: ArticleStatus;
-  published_at?: string;
+  publishedAt?: string;
 }
 
 /**

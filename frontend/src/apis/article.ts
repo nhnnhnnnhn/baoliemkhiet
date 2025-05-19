@@ -9,7 +9,7 @@ export interface Article {
   category_id: number
   status: 'DRAFT' | 'APPROVED' | 'REJECTED' | 'PENDING' | 'PUBLISHED'
   view?: number
-  published_at?: string
+  publishedAt?: string
   created_at: string
   updated_at: string
   excerpt?: string
