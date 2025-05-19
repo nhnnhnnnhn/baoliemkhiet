@@ -278,31 +278,15 @@ export default function ArticlePage({ params }: { params: Promise<{ slug: string
           return
         }
         
-        // Xử lý nội dung bài viết
+        // Xử lý nội dung bài viết từ TinyMCE
+        // Với TinyMCE, nội dung đã là HTML đầy đủ, không cần xử lý phức tạp
         const processedContent = [];
         if (response.content) {
-          // Tách nội dung HTML thành các đoạn văn và hình ảnh
-          const contentParts = response.content.split(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/g);
-          
-          for (let i = 0; i < contentParts.length; i++) {
-            if (contentParts[i].trim()) {
-              processedContent.push({
-                type: 'text',
-                value: contentParts[i].trim()
-              });
-            }
-            
-            // Nếu có image URL và caption (tương ứng với các nhóm bắt trong regex)
-            if (i+1 < contentParts.length && contentParts[i+1]?.includes('http')) {
-              processedContent.push({
-                type: 'image',
-                value: '', // Thêm trường value trống để phù hợp với interface
-                url: contentParts[i+1] || '/placeholder.svg?height=500&width=800',
-                caption: contentParts[i+2] || 'Hình minh họa'
-              });
-              i += 2; // Bỏ qua 2 phần tử đã sử dụng (url và caption)
-            }
-          }
+          // Thêm toàn bộ nội dung HTML vào một block
+          processedContent.push({
+            type: 'richtext',
+            value: response.content
+          });
         } else {
           // Nếu không có nội dung, thêm một thông báo mặc định
           processedContent.push({
@@ -726,6 +710,14 @@ export default function ArticlePage({ params }: { params: Promise<{ slug: string
                 <p key={index} className="mb-6 text-gray-800 leading-relaxed">
                   {block.value}
                 </p>
+              )
+            } else if (block.type === "richtext") {
+              return (
+                <div 
+                  key={index} 
+                  className="rich-text-content" 
+                  dangerouslySetInnerHTML={{ __html: block.value }}
+                />
               )
             } else if (block.type === "image") {
               return (
