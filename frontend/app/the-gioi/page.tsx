@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { ChevronRightIcon, Globe, Clock } from "lucide-react"
-import { format } from "date-fns"
+import { format, parseISO } from "date-fns"
 import { vi } from "date-fns/locale"
 
 import { Button } from "@/components/ui/button"
@@ -15,10 +15,10 @@ import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { CategoryHeader } from "@/components/category-header"
 import articleApi from "@/src/apis/article"
-import { Article } from "@/src/apis/article"
+import { Article, CategoryArticlesResponse } from "@/src/apis/article"
 
 // ID danh mục Thế giới - đã xác định từ cơ sở dữ liệu
-const CATEGORY_ID = 3 // Xác nhận: category_id của Thế giới là 3
+const CATEGORY_ID = 8 // Xác nhận: category_id của Thế giới là 7
 
 export default function TheGioiPage() {
   const [activeTab, setActiveTab] = useState("all")
@@ -35,10 +35,13 @@ export default function TheGioiPage() {
     const fetchFeaturedArticles = async () => {
       try {
         // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
-        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        const response = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        
+        // Đảm bảo response.articles là một mảng
+        const articleList = response.articles || []
         
         // Lọc các bài viết đã xuất bản (isPublish=true)
-        const publishedArticles = articles.filter(article => article.isPublish)
+        const publishedArticles = articleList.filter(article => article.isPublish)
         
         // Sắp xếp theo lượt xem để lấy bài nổi bật
         const sortedArticles = [...publishedArticles].sort((a, b) => (b.view || 0) - (a.view || 0))
@@ -65,15 +68,18 @@ export default function TheGioiPage() {
       try {
         setLoading(true)
         // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
-        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        const response = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        
+        // Đảm bảo response.articles là một mảng
+        const articleList = response.articles || []
         
         // Lọc các bài viết đã xuất bản (isPublish=true)
-        const publishedArticles = articles.filter(article => article.isPublish)
+        const publishedArticles = articleList.filter(article => article.isPublish)
         
         // Sắp xếp theo thời gian xuất bản mới nhất
         const sortedArticles = [...publishedArticles].sort((a, b) => {
-          const dateA = new Date(a.published_at || a.created_at)
-          const dateB = new Date(b.published_at || b.created_at)
+          const dateA = new Date(a.publishedAt || a.created_at)
+          const dateB = new Date(b.publishedAt || b.created_at)
           return dateB.getTime() - dateA.getTime()
         })
         
@@ -96,20 +102,27 @@ export default function TheGioiPage() {
   useEffect(() => {
     const fetchBreakingNews = async () => {
       try {
-        const response = await articleApi.getArticles({
-          category_id: CATEGORY_ID,
-          limit: 3,
-          page: 1,
-          status: "PUBLISHED",
-          sort: "published_at",
-          order: "desc"
+        // Sử dụng getArticlesByCategory thay vì getArticles để đảm bảo lấy đúng danh mục
+        const response = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        
+        // Đảm bảo response.articles là một mảng
+        const articleList = response.articles || []
+        
+        // Lọc các bài viết đã xuất bản (isPublish=true)
+        const publishedArticles = articleList.filter(article => article.isPublish)
+        
+        // Sắp xếp theo thời gian xuất bản mới nhất
+        const sortedArticles = [...publishedArticles].sort((a, b) => {
+          const dateA = new Date(a.publishedAt || a.created_at)
+          const dateB = new Date(b.publishedAt || b.created_at)
+          return dateB.getTime() - dateA.getTime()
         })
         
-        if (response && response.articles) {
-          setBreakingNews(response.articles)
-        } else {
-          setBreakingNews([])
-        }
+        // Lấy 5 bài viết mới nhất
+        const latestBreakingNews = sortedArticles.slice(0, 5)
+        console.log(`Đã lấy ${latestBreakingNews.length} tin mới nhận từ danh mục Thế giới`)
+        
+        setBreakingNews(latestBreakingNews)
       } catch (error) {
         console.error("Error fetching breaking news:", error)
         setBreakingNews([])
@@ -126,13 +139,17 @@ export default function TheGioiPage() {
         setLoading(true)
         
         // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
-        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        const response = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        
+        // Đảm bảo response.articles là một mảng
+        const articleList = response.articles || []
         
         // Lọc các bài viết đã xuất bản (isPublish=true)
-        let filteredArticles = articles.filter(article => article.isPublish)
+        let filteredArticles = articleList.filter(article => article.isPublish)
         
         // Lọc theo tab nếu không phải "all"
         if (activeTab !== "all") {
+          const beforeFilter = filteredArticles.length;
           filteredArticles = filteredArticles.filter(article => {
             // Lọc theo tag nếu có
             if (article.tags && article.tags.length > 0) {
@@ -140,17 +157,24 @@ export default function TheGioiPage() {
             }
             return false
           })
+          console.log(`Lọc theo tab ${activeTab}: Trước lọc ${beforeFilter}, sau lọc ${filteredArticles.length} bài viết`);
+          
+          // Nếu không có bài viết nào sau khi lọc, hiển thị tất cả bài viết
+          if (filteredArticles.length === 0) {
+            console.log('Không tìm thấy bài viết nào sau khi lọc theo tab, hiển thị tất cả bài viết');
+            filteredArticles = articleList.filter(article => article.isPublish);
+          }
         }
         
         // Sắp xếp theo thời gian xuất bản mới nhất
         const sortedArticles = [...filteredArticles].sort((a, b) => {
-          const dateA = new Date(a.published_at || a.created_at)
-          const dateB = new Date(b.published_at || b.created_at)
+          const dateA = new Date(a.publishedAt || a.created_at)
+          const dateB = new Date(b.publishedAt || b.created_at)
           return dateB.getTime() - dateA.getTime()
         })
         
         // Tính toán phân trang thủ công
-        const limit = 10
+        const limit = 5
         const start = (page - 1) * limit
         const end = start + limit
         const paginatedArticles = sortedArticles.slice(start, end)
@@ -175,10 +199,19 @@ export default function TheGioiPage() {
     fetchArticles()
   }, [activeTab, page])
 
-  // Format thời gian từ now
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString)
-    return format(date, "dd/MM/yyyy HH:mm", { locale: vi })
+  // Format thời gian đẹp hơn
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return ""
+    
+    try {
+      const date = typeof dateString === "string" 
+        ? parseISO(dateString) 
+        : new Date(dateString)
+      
+      return format(date, "HH:mm - dd MMMM, yyyy", { locale: vi })
+    } catch (error) {
+      return ""
+    }
   }
 
   const handleTabChange = (value: string) => {
@@ -204,24 +237,8 @@ export default function TheGioiPage() {
       />
 
       <main className="container mx-auto px-4 py-8 flex-grow">
-        {/* World Map Section */}
-        <div className="mb-12 bg-gray-50 p-6 rounded-lg">
-          <h2 className="text-2xl font-bold mb-6 flex items-center">
-            <Globe className="h-6 w-6 mr-2 text-green-600" />
-            Tin tức theo khu vực
-          </h2>
-          <div className="aspect-[16/9] bg-blue-50 rounded-lg relative overflow-hidden">
-            <img
-              src="/placeholder.svg?height=500&width=1000&text=World Map"
-              alt="World Map"
-              className="w-full h-full object-cover"
-            />
-            {/* Interactive map would go here in a real implementation */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <p className="text-lg font-medium bg-white/80 p-4 rounded-lg">Bản đồ tương tác tin tức thế giới</p>
-            </div>
-          </div>
-        </div>
+        {/* Bài viết mới nhất theo khu vực */}
+        
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content - 2/3 width */}
@@ -275,13 +292,13 @@ export default function TheGioiPage() {
                             <div className="flex items-center text-sm text-gray-500 mb-2">
                               <span className="font-medium text-green-600">{article.category?.name || "Thế giới"}</span>
                               <span className="mx-2">•</span>
-                              <span>{article.published_at ? formatTime(article.published_at) : formatTime(article.created_at)}</span>
+                              <span>{formatDate(article.publishedAt || article.created_at)}</span>
                             </div>
                             <h4 className="text-xl font-bold mb-2 hover:text-green-600">
-                              <Link href={`/articles/${article.id}`}>{article.title}</Link>
+                              <Link href={`/article/${article.id}`}>{article.title}</Link>
                             </h4>
                             <p className="text-gray-600">
-                              {article.content.substring(0, 150).replace(/<[^>]*>/g, '')}...
+                              <span dangerouslySetInnerHTML={{ __html: article.content.substring(0, 150).replace(/<[^>]*>/g, '') + '...' }}></span>
                             </p>
                           </div>
                         ))}
@@ -300,10 +317,10 @@ export default function TheGioiPage() {
                             <div className="flex items-center text-xs text-gray-500 mb-1">
                               <span className="font-medium text-green-600">{article.category?.name || "Thế giới"}</span>
                               <span className="mx-2">•</span>
-                              <span>{article.published_at ? formatTime(article.published_at) : formatTime(article.created_at)}</span>
+                              <span>{formatDate(article.publishedAt || article.created_at)}</span>
                             </div>
                             <h5 className="font-bold hover:text-green-600">
-                              <Link href={`/articles/${article.id}`}>{article.title}</Link>
+                              <Link href={`/article/${article.id}`}>{article.title}</Link>
                             </h5>
                           </div>
                         ))}
@@ -323,15 +340,37 @@ export default function TheGioiPage() {
             {/* Latest News */}
             <div className="mb-12">
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-bold">Tin mới nhất</h3>
-                <Button variant="ghost" className="text-sm flex items-center">
-                  Xem tất cả <ChevronRightIcon className="ml-1 h-4 w-4" />
-                </Button>
+                <h3 className="text-2xl font-bold">Các tin tức thế giới</h3>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">Trang {page}/{totalPages}</span>
+                  <div className="flex">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handlePageChange(Math.max(1, page - 1))}
+                      disabled={page === 1}
+                      className="px-2"
+                    >
+                      <span className="sr-only">Trang trước</span>
+                      &larr;
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
+                      disabled={page === totalPages}
+                      className="px-2"
+                    >
+                      <span className="sr-only">Trang sau</span>
+                      &rarr;
+                    </Button>
+                  </div>
+                </div>
               </div>
 
               {loading ? (
                 <div className="space-y-6">
-                  {[1, 2, 3, 4].map((item) => (
+                  {[1, 2, 3, 4, 5].map((item) => (
                     <div key={item} className="flex gap-4 pb-6 border-b border-gray-200">
                       <div className="flex-1 space-y-3">
                         <Skeleton className="h-4 w-32" />
@@ -345,22 +384,22 @@ export default function TheGioiPage() {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {latestArticles.length > 0 ? (
-                    latestArticles.map((article) => (
+                  {articles.length > 0 ? (
+                    articles.map((article) => (
                       <div key={article.id} className="flex gap-4 pb-6 border-b border-gray-200 last:border-0">
                         <div className="flex-1">
                           <div className="flex items-center text-sm text-gray-500 mb-2">
                             <span className="font-medium text-green-600">{article.category?.name || "Thế giới"}</span>
                             <span className="mx-2">•</span>
-                            <span>{article.published_at ? formatTime(article.published_at) : formatTime(article.created_at)}</span>
+                            <span>{formatDate(article.publishedAt || article.created_at)}</span>
                           </div>
                           <h4 className="text-xl font-bold mb-2 hover:text-green-600">
-                            <Link href={`/articles/${article.id}`}>
+                            <Link href={`/article/${article.id}`}>
                               {article.title}
                             </Link>
                           </h4>
                           <p className="text-gray-600">
-                            {article.content.substring(0, 150).replace(/<[^>]*>/g, '')}...
+                            <span dangerouslySetInnerHTML={{ __html: article.content.substring(0, 150).replace(/<[^>]*>/g, '') + '...' }}></span>
                           </p>
                         </div>
                         <div className="w-32 h-24 bg-gray-100 rounded overflow-hidden shrink-0">
@@ -375,12 +414,23 @@ export default function TheGioiPage() {
                   ) : (
                     <div className="text-center py-8 bg-gray-50 rounded-lg">
                       <Clock className="h-10 w-10 mx-auto text-gray-300 mb-3" />
-                      <h4 className="text-lg font-bold mb-1">Chưa có tin mới nhất</h4>
-                      <p className="text-gray-500">Hãy quay lại sau để xem các tin mới nhất.</p>
+                      <h4 className="text-lg font-bold mb-1">Chưa có tin tức nào</h4>
+                      <p className="text-gray-500">Hiện tại chưa có bài viết nào. Hãy quay lại sau.</p>
                     </div>
                   )}
                 </div>
               )}      
+              
+              {/* Phân trang ở cuối */}
+              {!loading && articles.length > 0 && totalPages > 1 && (
+                <div className="mt-8 flex justify-center">
+                  <Pagination
+                    page={page}
+                    count={totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -408,10 +458,10 @@ export default function TheGioiPage() {
                       breakingNews.map((article, index) => (
                         <div key={article.id} className="pb-4 border-b border-green-100 last:border-0 last:pb-0">
                           <span className="text-xs font-medium text-green-500 block mb-1">
-                            {index === 0 ? "Vừa cập nhật" : article.published_at ? formatTime(article.published_at) : formatTime(article.created_at)}
+                            {index === 0 ? "Vừa cập nhật" : formatDate(article.publishedAt || article.created_at)}
                           </span>
                           <h4 className="font-medium hover:text-green-600">
-                            <Link href={`/articles/${article.id}`}>{article.title}</Link>
+                            <Link href={`/article/${article.id}`}>{article.title}</Link>
                           </h4>
                         </div>
                       ))
@@ -422,87 +472,6 @@ export default function TheGioiPage() {
                     )}
                   </div>
                 )}
-              </CardContent>
-            </Card>
-
-            {/* World Economy */}
-            <Card className="mb-8">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold mb-4 pb-2 border-b">Kinh tế thế giới</h3>
-                {loading ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3, 4].map((item) => (
-                      <div key={item} className="flex gap-3 pb-4 border-b border-gray-100 last:border-0 last:pb-0">
-                        <Skeleton className="w-16 h-16 rounded shrink-0" />
-                        <div className="space-y-2 flex-1">
-                          <Skeleton className="h-4 w-full" />
-                          <Skeleton className="h-3 w-16" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {latestArticles.slice(0, 4).map((article) => (
-                      <div key={article.id} className="flex gap-3 pb-4 border-b border-gray-100 last:border-0 last:pb-0">
-                        <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden shrink-0">
-                          <img
-                            src={article.thumbnail || "/econ-placeholder.png"}
-                            alt={article.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div>
-                          <h4 className="font-medium hover:text-green-600">
-                            <Link href={`/articles/${article.id}`}>{article.title}</Link>
-                          </h4>
-                          <div className="flex items-center text-xs text-gray-500 mt-1">
-                            <span>{article.published_at ? formatTime(article.published_at) : formatTime(article.created_at)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Global Issues */}
-            <Card className="mb-8">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold mb-4 pb-2 border-b">Vấn đề toàn cầu</h3>
-                <div className="space-y-4">
-                  {["Biến đổi khí hậu", "An ninh mạng", "Di cư", "Dịch bệnh", "Khủng bố"].map((issue, index) => (
-                    <div key={index} className="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
-                      <h4 className="font-medium hover:text-green-600 mb-2">
-                        <Link href="#">{issue}</Link>
-                      </h4>
-                      <p className="text-sm text-gray-600">
-                        Các tin tức và phân tích mới nhất về {issue.toLowerCase()} và tác động toàn cầu.
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Subscribe */}
-            <Card className="bg-gray-50 border-gray-200">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold mb-2">Nhận tin thế giới hàng ngày</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Đăng ký nhận bản tin điện tử với những tin tức quan trọng nhất từ khắp nơi trên thế giới.
-                </p>
-                <div className="flex gap-2">
-                  <input
-                    type="email"
-                    placeholder="Email của bạn"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-                  />
-                  <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
-                    Đăng ký
-                  </Button>
-                </div>
               </CardContent>
             </Card>
           </div>
@@ -516,47 +485,6 @@ export default function TheGioiPage() {
               count={totalPages}
               onPageChange={handlePageChange}
             />
-          </div>
-        )}
-
-        {/* Hiển thị danh sách bài viết theo tab và trang */}
-        {!loading && articles.length > 0 && (
-          <div className="mt-12">
-            <h3 className="text-2xl font-bold mb-6">
-              {activeTab === "all" ? "Tất cả bài viết" : `Bài viết ${activeTab.replace(/-/g, " ")}`}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {articles.map((article) => (
-                <div key={article.id} className="border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="aspect-[16/9]">
-                    <img
-                      src={article.thumbnail || "/news-fallback.jpg"}
-                      alt={article.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <div className="flex items-center text-sm text-gray-500 mb-2">
-                      <span className="font-medium text-green-600">{article.category?.name || "Thế giới"}</span>
-                      <span className="mx-2">•</span>
-                      <span>{article.published_at ? formatTime(article.published_at) : formatTime(article.created_at)}</span>
-                    </div>
-                    <h4 className="text-lg font-bold mb-2 hover:text-green-600">
-                      <Link href={`/articles/${article.id}`}>{article.title}</Link>
-                    </h4>
-                    <p className="text-gray-600 text-sm mb-3">
-                      {article.content.substring(0, 120).replace(/<[^>]*>/g, '')}...
-                    </p>
-                    <Link 
-                      href={`/articles/${article.id}`}
-                      className="text-green-600 hover:text-green-800 text-sm font-medium inline-flex items-center"
-                    >
-                      Đọc tiếp <ChevronRightIcon className="ml-1 h-4 w-4" />
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         )}
 

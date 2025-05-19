@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { ChevronRightIcon, FileText } from "lucide-react"
+import { format, parseISO } from "date-fns"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -12,6 +13,7 @@ import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { CategoryHeader } from "@/components/category-header"
 import articleApi, { Article, CategoryArticlesResponse } from "@/src/apis/article"
+import commentApi, { Comment } from "@/src/apis/comment"
 
 export default function ThoiSuPage() {
   const currentDate = new Date().toLocaleDateString("vi-VN", {
@@ -20,7 +22,7 @@ export default function ThoiSuPage() {
     month: "long",
     year: "numeric",
   })
-  
+
   // State cho dữ liệu bài viết
   const [articles, setArticles] = useState<Article[]>([])
   const [featuredArticle, setFeaturedArticle] = useState<Article | null>(null)
@@ -30,15 +32,40 @@ export default function ThoiSuPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalArticles, setTotalArticles] = useState(0)
+  const [recentComments, setRecentComments] = useState<Comment[]>([])
+  const [loadingComments, setLoadingComments] = useState(true)
   
   // ID của danh mục Thời sự
   const CATEGORY_ID = 2 // Thông tin xác nhận: category_id của Thời sự là 2
   
+  // Helper function để định dạng ngày tháng an toàn
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return '';
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      
+      return date.toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Lỗi định dạng ngày tháng:', error);
+      return '';
+    }
+  }
+  
   // Lấy dữ liệu bài viết khi component được mount hoặc tab thay đổi
+  // Lấy dữ liệu bài viết và bình luận khi component được mount hoặc tab thay đổi
   useEffect(() => {
-    const fetchArticles = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true)
+        setLoadingComments(true)
         
         // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
         // Đảm bảo chỉ lấy những bài viết đã được xuất bản (isPublish=true)
@@ -74,18 +101,50 @@ export default function ThoiSuPage() {
         
         // Ghi log để debug
         console.log(`Đã tìm thấy ${publishedArticles.length} bài viết thuộc danh mục Thời sự (ID: ${CATEGORY_ID})`)
-        console.log('Data from API:', response)
+        
+        // Lấy danh sách ID của các bài viết thuộc danh mục Thời sự 
+        const articleIds = publishedArticles.map(article => article.id)
+        
+        // Lấy tất cả bình luận và lọc theo bài viết thuộc danh mục Thời sự
+        try {
+          const commentsResponse = await commentApi.getAllComments(1, 20)
+          let allComments: Comment[] = []
+          
+          if (Array.isArray(commentsResponse)) {
+            allComments = commentsResponse
+          } else if (commentsResponse && 'comments' in commentsResponse) {
+            allComments = commentsResponse.comments
+          }
+          
+          // Lọc các bình luận đã được phê duyệt từ các bài viết thuộc danh mục Thời sự
+          const filteredComments = allComments
+            .filter(comment => 
+              comment.status === "APPROVED" && 
+              comment.article && 
+              articleIds.includes(comment.articleId))
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .slice(0, 5)  // Chỉ lấy 5 bình luận gần nhất
+          
+          setRecentComments(filteredComments)
+          console.log('Recent comments:', filteredComments)
+        } catch (commentErr) {
+          console.error('Lỗi khi lấy bình luận:', commentErr)
+          setRecentComments([])
+        } finally {
+          setLoadingComments(false)
+        }
         
         setError(null)
       } catch (err) {
         console.error('Lỗi khi lấy bài viết:', err)
         setError('Không thể tải dữ liệu bài viết. Vui lòng thử lại sau.')
+        setLoadingComments(false)
       } finally {
         setIsLoading(false)
       }
     }
     
-    fetchArticles()
+    fetchData()
   }, [currentTab, page])
   
   // Xử lý thay đổi tab
@@ -157,9 +216,7 @@ export default function ThoiSuPage() {
                     </span>
                     <span className="mx-2 text-gray-400">|</span>
                     <span className="text-gray-600">
-                      {featuredArticle.published_at 
-                        ? new Date(featuredArticle.published_at).toLocaleDateString('vi-VN') 
-                        : new Date(featuredArticle.created_at).toLocaleDateString('vi-VN')}
+                      {formatDate(featuredArticle.publishedAt || featuredArticle.created_at)}
                     </span>
                   </div>
                   <h1 className="text-3xl font-bold">
@@ -167,11 +224,14 @@ export default function ThoiSuPage() {
                       {featuredArticle.title}
                     </Link>
                   </h1>
-                  <p className="text-gray-600 text-lg">
-                    {featuredArticle.content.length > 200 
-                      ? featuredArticle.content.substring(0, 200) + '...'
-                      : featuredArticle.content}
-                  </p>
+                  <div 
+                    className="text-gray-600 text-lg"
+                    dangerouslySetInnerHTML={{
+                      __html: featuredArticle.content.length > 200 
+                        ? featuredArticle.content.substring(0, 200) + '...'
+                        : featuredArticle.content
+                    }}
+                  />
                   <div className="flex items-center pt-2">
                     <Button variant="outline" className="gap-1 text-red-600 border-red-200 hover:bg-red-50" asChild>
                       <Link href={`/article/${featuredArticle.id}`}>
@@ -232,9 +292,7 @@ export default function ThoiSuPage() {
                         </span>
                         <span className="mx-2 text-gray-400">|</span>
                         <span className="text-gray-600">
-                          {article.published_at 
-                            ? new Date(article.published_at).toLocaleDateString('vi-VN') 
-                            : new Date(article.created_at).toLocaleDateString('vi-VN')}
+                          {formatDate(article.publishedAt || article.created_at)}
                         </span>
                       </div>
                       <h2 className="text-xl font-bold">
@@ -242,11 +300,14 @@ export default function ThoiSuPage() {
                           {article.title}
                         </Link>
                       </h2>
-                      <p className="text-gray-600">
-                        {article.content.length > 150 
-                          ? article.content.substring(0, 150) + '...'
-                          : article.content}
-                      </p>
+                      <div 
+                        className="text-gray-600"
+                        dangerouslySetInnerHTML={{
+                          __html: article.content.length > 150 
+                            ? article.content.substring(0, 150) + '...'
+                            : article.content
+                        }}
+                      />
                       <Button variant="link" className="px-0 gap-1 text-red-600" asChild>
                         <Link href={`/article/${article.id}`}>
                           Đọc tiếp <ChevronRightIcon className="h-4 w-4" />
@@ -288,21 +349,21 @@ export default function ThoiSuPage() {
                           <div className="flex items-center text-sm text-gray-500 mb-2">
                             <span className="font-medium text-red-600">{article.category?.name || 'Thời sự'}</span>
                             <span className="mx-2">•</span>
-                            <span>{article.published_at 
-                              ? new Date(article.published_at).toLocaleDateString('vi-VN') 
-                              : new Date(article.created_at).toLocaleDateString('vi-VN')}
-                            </span>
+                            <span>{formatDate(article.publishedAt || article.created_at)}</span>
                           </div>
                           <h4 className="text-xl font-bold mb-2 hover:text-red-600">
                             <Link href={`/article/${article.id}`}>
                               {article.title}
                             </Link>
                           </h4>
-                          <p className="text-gray-600">
-                            {article.content && article.content.length > 100 
-                              ? article.content.substring(0, 100).replace(/<[^>]*>/g, '') + '...'
-                              : article.content}
-                          </p>
+                          <div 
+                            className="text-gray-600"
+                            dangerouslySetInnerHTML={{
+                              __html: article.content && article.content.length > 100 
+                                ? article.content.substring(0, 100) + '...'
+                                : article.content || ''
+                            }}
+                          />
                         </div>
                         <div className="w-32 h-24 bg-gray-100 rounded overflow-hidden shrink-0">
                           <img
@@ -351,10 +412,7 @@ export default function ThoiSuPage() {
                                 <Link href={`/article/${article.id}`}>{article.title}</Link>
                               </h4>
                               <div className="flex items-center text-xs text-gray-500 mt-1">
-                                <span>{article.published_at 
-                                  ? new Date(article.published_at).toLocaleDateString('vi-VN') 
-                                  : new Date(article.created_at).toLocaleDateString('vi-VN')}
-                                </span>
+                                <span>{formatDate(article.publishedAt || article.created_at)}</span>
                               </div>
                             </div>
                           </div>
@@ -370,14 +428,14 @@ export default function ThoiSuPage() {
               </CardContent>
             </Card>
 
-            {/* Opinion - Góc nhìn */}
+            {/* Bình luận gần đây */}
             <Card className="mb-8">
               <CardContent className="p-6">
-                <h3 className="text-lg font-bold mb-4 pb-2 border-b">Góc nhìn</h3>
+                <h3 className="text-lg font-bold mb-4 pb-2 border-b">Bình luận gần đây</h3>
                 <div className="space-y-4">
-                  {isLoading ? (
+                  {loadingComments ? (
                     Array(3).fill(0).map((_, index) => (
-                      <div key={`skeleton-opinion-${index}`} className="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
+                      <div key={`skeleton-comment-${index}`} className="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                         <div className="flex items-center mb-2">
                           <Skeleton className="w-10 h-10 rounded-full mr-3" />
                           <div>
@@ -390,57 +448,52 @@ export default function ThoiSuPage() {
                       </div>
                     ))
                   ) : (
-                    articles && articles.length > 0 ? (
-                      articles.slice(0, 3).map((article) => (
-                        <div key={`opinion-${article.id}`} className="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
+                    recentComments && recentComments.length > 0 ? (
+                      recentComments.map((comment) => (
+                        <div key={`comment-${comment.id}`} className="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                           <div className="flex items-center mb-2">
                             <div className="w-10 h-10 bg-gray-200 rounded-full mr-3 flex items-center justify-center overflow-hidden">
-                              <span className="text-gray-400 font-bold">{article.author?.name?.charAt(0) || 'A'}</span>
+                              {comment.user?.avatar ? (
+                                <img 
+                                  src={comment.user.avatar} 
+                                  alt={comment.user.fullname} 
+                                  className="w-full h-full object-cover" 
+                                />
+                              ) : (
+                                <span className="text-gray-400 font-bold">
+                                  {comment.user?.fullname?.charAt(0) || '?'}
+                                </span>
+                              )}
                             </div>
-                            <div>
-                              <h5 className="font-medium">{article.author?.name || 'Tác giả'}</h5>
-                              <p className="text-xs text-gray-500">Nhà báo</p>
+                            <div className="flex flex-col">
+                              <h5 className="font-medium">{comment.user?.fullname || 'Người dùng ẩn danh'}</h5>
+                              <span className="text-xs text-gray-500">
+                                {formatDate(comment.createdAt)}
+                              </span>
+                              <Link 
+                                href={`/article/${comment.articleId}`} 
+                                className="text-xs text-red-600 hover:underline mt-1"
+                              >
+                                {comment.article?.title ? comment.article.title : 'Bài viết'}
+                              </Link>
                             </div>
                           </div>
-                          <h4 className="font-medium hover:text-red-600 mb-1">
-                            <Link href={`/article/${article.id}`}>{article.title}</Link>
-                          </h4>
-                          <p className="text-sm text-gray-600">
-                            {article.content && article.content.length > 80 
-                              ? article.content.substring(0, 80).replace(/<[^>]*>/g, '') + '...'
-                              : article.content}
-                          </p>
+                          <div 
+                            className="text-sm text-gray-600 pl-12" 
+                            dangerouslySetInnerHTML={{ 
+                              __html: comment.content.length > 120 
+                                ? comment.content.substring(0, 120) + '...' 
+                                : comment.content 
+                            }} 
+                          />
                         </div>
                       ))
                     ) : (
                       <div className="text-center py-4">
-                        <p className="text-gray-500">Chưa có bài viết nào.</p>
+                        <p className="text-gray-500">Chưa có bình luận nào.</p>
                       </div>
                     )
                   )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Tags */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold mb-4">Chủ đề nổi bật</h3>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    "COVID-19",
-                    "Biến đổi khí hậu",
-                    "Kinh tế số",
-                    "Chuyển đổi số",
-                    "Giáo dục",
-                    "An ninh mạng",
-                    "Giao thông công cộng",
-                    "Phát triển bền vững",
-                  ].map((tag, index) => (
-                    <Link key={index} href="#" className="bg-gray-100 hover:bg-gray-200 rounded-full px-3 py-1 text-sm">
-                      {tag}
-                    </Link>
-                  ))}
                 </div>
               </CardContent>
             </Card>

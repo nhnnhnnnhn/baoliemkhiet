@@ -19,7 +19,7 @@ import articleApi from "@/src/apis/article"
 import { Article } from "@/src/apis/article"
 
 // ID danh mục Thể thao - đã xác định từ cơ sở dữ liệu
-const CATEGORY_ID = 6 // Xác nhận: category_id của Thể thao là 6
+const CATEGORY_ID = 10 // Xác nhận: category_id của Thể thao là 6
 
 export default function TheThaoPage() {
   const [articles, setArticles] = useState<Article[]>([])
@@ -39,10 +39,13 @@ export default function TheThaoPage() {
     const fetchFeaturedArticles = async () => {
       try {
         // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
-        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        const response = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        
+        // Đảm bảo response.articles là một mảng
+        const articleList = response.articles || []
         
         // Lọc các bài viết đã xuất bản (isPublish=true)
-        const publishedArticles = articles.filter(article => article.isPublish)
+        const publishedArticles = articleList.filter((article: Article) => article.isPublish)
         
         // Sắp xếp theo lượt xem để lấy bài nổi bật sử dụng hàm helper
         const sortedArticles = sortByViews(publishedArticles)
@@ -69,15 +72,18 @@ export default function TheThaoPage() {
       try {
         setLoading(true)
         // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
-        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        const response = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        
+        // Đảm bảo response.articles là một mảng
+        const articleList = response.articles || []
         
         // Lọc các bài viết đã xuất bản (isPublish=true)
-        const publishedArticles = articles.filter(article => article.isPublish)
+        const publishedArticles = articleList.filter((article: Article) => article.isPublish)
         
         // Sắp xếp theo thời gian xuất bản mới nhất
         const sortedArticles = [...publishedArticles].sort((a, b) => {
-          const dateA = new Date(a.published_at || a.created_at)
-          const dateB = new Date(b.published_at || b.created_at)
+          const dateA = new Date(a.publishedAt || a.created_at)
+          const dateB = new Date(b.publishedAt || b.created_at)
           return dateB.getTime() - dateA.getTime()
         })
         
@@ -103,20 +109,23 @@ export default function TheThaoPage() {
         setLoading(true)
         
         // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
-        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        const response = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        
+        // Đảm bảo response.articles là một mảng
+        const articleList = response.articles || []
         
         // Lọc các bài viết đã xuất bản (isPublish=true)
-        const publishedArticles = articles.filter(article => article.isPublish)
+        const publishedArticles = articleList.filter((article: Article) => article.isPublish)
                 
         // Sắp xếp theo thời gian xuất bản mới nhất
         const sortedArticles = [...publishedArticles].sort((a, b) => {
-          const dateA = new Date(a.published_at || a.created_at)
-          const dateB = new Date(b.published_at || b.created_at)
+          const dateA = new Date(a.publishedAt || a.created_at)
+          const dateB = new Date(b.publishedAt || b.created_at)
           return dateB.getTime() - dateA.getTime()
         })
         
         // Tính toán phân trang thủ công
-        const limit = 10
+        const limit = 5
         const start = (page - 1) * limit
         const end = start + limit
         const paginatedArticles = sortedArticles.slice(start, end)
@@ -180,16 +189,16 @@ export default function TheThaoPage() {
                   <div className="flex items-center mb-4">
                     <span className="bg-red-600 text-white px-3 py-1 text-sm font-bold rounded-sm mr-3">NỔI BẬT</span>
                     <span className="text-sm opacity-80">
-                      {featuredArticles[0].published_at ? formatTime(featuredArticles[0].published_at) : formatTime(featuredArticles[0].created_at)}
+                      {featuredArticles[0].publishedAt ? formatTime(featuredArticles[0].publishedAt) : formatTime(featuredArticles[0].created_at)}
                     </span>
                   </div>
                   <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
                     {featuredArticles[0].title}
                   </h1>
                   <p className="text-xl mb-6 opacity-90">
-                    {featuredArticles[0].content?.length > 200 ? 
-                      featuredArticles[0].content.substring(0, 200) + '...' : 
-                      featuredArticles[0].content}
+                    <span dangerouslySetInnerHTML={{ __html: featuredArticles[0].content?.length > 200 ? 
+                      featuredArticles[0].content.substring(0, 200).replace(/<[^>]*>/g, '') + '...' : 
+                      featuredArticles[0].content?.replace(/<[^>]*>/g, '') || '' }}></span>
                   </p>
                   <div className="flex items-center mb-6">
                     <div className="w-12 h-12 rounded-full bg-gray-300 mr-3"></div>
@@ -253,14 +262,16 @@ export default function TheThaoPage() {
                     <div className="flex items-center text-sm mb-2">
                       <span className="font-bold text-red-600 mr-2">THỂ THAO</span>
                       <span className="text-gray-500">
-                        {article.published_at ? formatTime(article.published_at) : formatTime(article.created_at)}
+                        {article.publishedAt ? formatTime(article.publishedAt) : formatTime(article.created_at)}
                       </span>
                     </div>
                     <h3 className="text-xl font-bold mb-2 group-hover:text-red-600 transition-colors">
                       <Link href={`/article/${article.id}`}>{article.title}</Link>
                     </h3>
                     <p className="text-gray-600 mb-3">
-                      {article.content?.length > 120 ? article.content.substring(0, 120) + '...' : article.content}
+                      <span dangerouslySetInnerHTML={{ __html: article.content?.length > 120 ? 
+                        article.content.substring(0, 120).replace(/<[^>]*>/g, '') + '...' : 
+                        article.content?.replace(/<[^>]*>/g, '') || '' }}></span>
                     </p>
                     <div className="flex items-center">
                       <div className="w-8 h-8 rounded-full bg-gray-300 mr-2"></div>
@@ -281,7 +292,34 @@ export default function TheThaoPage() {
         <section className="py-12 bg-white">
           <div className="container mx-auto px-4">
             <div className="mb-8">
-              <h2 className="text-2xl font-bold border-l-4 border-red-600 pl-3 mb-6">Danh sách bài viết</h2>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold border-l-4 border-red-600 pl-3">Tin thể thao</h2>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">Trang {page}/{totalPages}</span>
+                  <div className="flex">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handlePageChange(Math.max(1, page - 1))}
+                      disabled={page === 1}
+                      className="px-2"
+                    >
+                      <span className="sr-only">Trang trước</span>
+                      &larr;
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
+                      disabled={page === totalPages}
+                      className="px-2"
+                    >
+                      <span className="sr-only">Trang sau</span>
+                      &rarr;
+                    </Button>
+                  </div>
+                </div>
+              </div>
 
               {loading ? (
                 Array(4).fill(0).map((_, index) => (
@@ -311,12 +349,15 @@ export default function TheThaoPage() {
                         <div className="flex items-center text-xs mb-1">
                           <Calendar className="h-3 w-3 mr-1 text-gray-500" />
                           <span className="text-gray-500">
-                            {article.published_at ? formatTime(article.published_at) : formatTime(article.created_at)}
+                            {article.publishedAt ? formatTime(article.publishedAt) : formatTime(article.created_at)}
                           </span>
                         </div>
                         <h3 className="font-bold mb-1 group-hover:text-red-600 transition-colors">
                           <Link href={`/article/${article.id}`}>{article.title}</Link>
                         </h3>
+                        <p className="text-sm text-gray-600 mb-1">
+                          <span dangerouslySetInnerHTML={{ __html: article.content?.substring(0, 80).replace(/<[^>]*>/g, '') + '...' || '' }}></span>
+                        </p>
                         <div className="flex items-center text-xs text-gray-500">
                           <User className="h-3 w-3 mr-1" />
                           <span>{article.author?.name || 'Báo Liêm Khiết'}</span>
@@ -410,37 +451,6 @@ export default function TheThaoPage() {
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Thể Thao Premium - Mock Section */}
-        <section className="py-12 bg-gray-900 text-white">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col md:flex-row items-center justify-between">
-              <div className="mb-6 md:mb-0 md:mr-8">
-                <div className="flex items-center mb-3">
-                  <Award className="h-6 w-6 text-yellow-400 mr-2" />
-                  <h2 className="text-2xl font-bold">Thể Thao Premium</h2>
-                </div>
-                <p className="text-gray-300 mb-6 max-w-2xl">
-                  Truy cập vào các bài viết chuyên sâu, phân tích chuyên môn và nội dung độc quyền từ các phóng viên
-                  hàng đầu của chúng tôi. Nâng cao trải nghiệm thể thao của bạn với những góc nhìn sâu sắc và độc đáo.
-                </p>
-                <div className="flex flex-wrap gap-4">
-                  <Button className="bg-red-600 hover:bg-red-700 text-white">Đăng ký ngay</Button>
-                  <Button variant="outline" className="border-white text-white hover:bg-white hover:text-gray-900">
-                    Tìm hiểu thêm
-                  </Button>
-                </div>
-              </div>
-              <div className="w-full md:w-1/3 lg:w-1/4">
-                <img
-                  src="/placeholder.svg?height=300&width=300&text=Premium"
-                  alt="Premium Subscription"
-                  className="w-full rounded-lg"
-                />
-              </div>
             </div>
           </div>
         </section>
