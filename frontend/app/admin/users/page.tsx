@@ -1,39 +1,84 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { ChevronLeftIcon, ChevronRightIcon, Download, Filter, Search, Trash2, UserPlus, Edit, Eye } from "lucide-react"
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  Download,
+  Filter,
+  Search,
+  Trash2,
+  UserPlus,
+  Edit,
+  Eye,
+} from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import styles from "../admin.module.css"
-import { useAppDispatch, useAppSelector } from "@/src/store"
-import { handleCreateUser, handleDeleteUser, handleGetUsers } from "@/src/thunks/user/userThunk"
-import { selectCurrentPage, selectError, selectIsLoading, selectTotalPages, selectTotalUsers, selectUsers } from "@/src/thunks/user/userSlice"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { toast } from "@/components/ui/use-toast"
-import { User } from "@/src/apis/user"
-import { format } from "date-fns"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import styles from "../admin.module.css";
+import { useAppDispatch, useAppSelector } from "@/src/store";
+import {
+  handleCreateUser,
+  handleDeleteUser,
+  handleGetUsers,
+} from "@/src/thunks/user/userThunk";
+import {
+  selectCurrentPage,
+  selectError,
+  selectIsLoading,
+  selectTotalPages,
+  selectTotalUsers,
+  selectUsers,
+} from "@/src/thunks/user/userSlice";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "@/components/ui/use-toast";
+import { User } from "@/src/apis/user";
+import { format } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton";
+import { initializeSocket } from "@/src/apis/socket";
 
 export default function UsersPage() {
-  const dispatch = useAppDispatch()
-  const users = useAppSelector(selectUsers)
-  const isLoading = useAppSelector(selectIsLoading)
-  const error = useAppSelector(selectError)
-  const totalUsers = useAppSelector(selectTotalUsers)
-  const currentPage = useAppSelector(selectCurrentPage)
-  const totalPages = useAppSelector(selectTotalPages)
-  
-  const [search, setSearch] = useState("")
-  const [role, setRole] = useState<string | undefined>(undefined)
-  const [userToDelete, setUserToDelete] = useState<User | null>(null)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [addUserDialogOpen, setAddUserDialogOpen] = useState(false)
-  
+  const dispatch = useAppDispatch();
+  const users = useAppSelector(selectUsers);
+  const isLoading = useAppSelector(selectIsLoading);
+  const error = useAppSelector(selectError);
+  const totalUsers = useAppSelector(selectTotalUsers);
+  const currentPage = useAppSelector(selectCurrentPage);
+  const totalPages = useAppSelector(selectTotalPages);
+
+  const [search, setSearch] = useState("");
+  const [role, setRole] = useState<string | undefined>(undefined);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
+  const [onlineUsers, setOnlineUsers] = useState<number[]>([]);
+
   // Form state cho thêm người dùng mới
   const [newUser, setNewUser] = useState({
     fullname: "",
@@ -44,25 +89,48 @@ export default function UsersPage() {
     phone: "",
     address: "",
     bio: "",
-    status: "ACTIVE"  // Chữ hoa để phù hợp với enum của backend
-  })
+    status: "ACTIVE", // Chữ hoa để phù hợp với enum của backend
+  });
 
   // Fetch users on mount and when search/filter changes
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    console.log("[User] Access token:", token);
+
+    if (!token) return;
+
+    const socket = initializeSocket(token);
+    socket.on("connect", () => {
+      console.log("[User] Socket connected successfully");
+
+      socket.on("updateOnlineUsers", (userIds) => {
+        console.log("[User] Received online users list via socket:", userIds);
+        setOnlineUsers(userIds);
+      });
+    });
+
+    // Clean up socket connection when component unmounts
+    return () => {
+      socket.off("updateOnlineUsers");
+      socket.disconnect();
+    };
+  }, []);
+
   useEffect(() => {
     const params = {
       page: currentPage,
       limit: 10,
       search: search || undefined,
-      role: role || undefined
-    }
-    
-    dispatch(handleGetUsers(params))
-  }, [dispatch, currentPage, search, role])
+      role: role || undefined,
+    };
+
+    dispatch(handleGetUsers(params));
+  }, [dispatch, currentPage, search, role]);
 
   // Handle search input
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value)
-  }
+    setSearch(e.target.value);
+  };
 
   // Handle pagination
   const handlePageChange = (page: number) => {
@@ -70,17 +138,17 @@ export default function UsersPage() {
       page,
       limit: 10,
       search: search || undefined,
-      role: role || undefined
-    }
-    
-    dispatch(handleGetUsers(params))
-  }
-  
+      role: role || undefined,
+    };
+
+    dispatch(handleGetUsers(params));
+  };
+
   // Xử lý lọc theo vai trò
   const handleRoleFilter = (selectedRole: string | undefined) => {
-    setRole(selectedRole)
-  }
-  
+    setRole(selectedRole);
+  };
+
   // Xử lý thêm người dùng mới
   const handleAddUser = async () => {
     try {
@@ -90,20 +158,20 @@ export default function UsersPage() {
           title: "Thiếu thông tin",
           description: "Vui lòng nhập đầy đủ họ tên, email và mật khẩu",
           variant: "destructive",
-        })
-        return
+        });
+        return;
       }
-      
+
       // Kiểm tra mật khẩu
       if (newUser.password !== newUser.confirmPassword) {
         toast({
           title: "Mật khẩu không khớp",
           description: "Mật khẩu và xác nhận mật khẩu phải giống nhau",
           variant: "destructive",
-        })
-        return
+        });
+        return;
       }
-      
+
       // Gọi API tạo người dùng
       const userData = {
         fullname: newUser.fullname,
@@ -113,17 +181,17 @@ export default function UsersPage() {
         phone: newUser.phone || null,
         address: newUser.address || null,
         bio: newUser.bio || null,
-        status: newUser.status  // Sử dụng ACTIVE thay vì active
-      }
-      
-      await dispatch(handleCreateUser(userData)).unwrap()
-      
+        status: newUser.status, // Sử dụng ACTIVE thay vì active
+      };
+
+      await dispatch(handleCreateUser(userData)).unwrap();
+
       toast({
         title: "Đã thêm người dùng",
         description: `Người dùng ${newUser.fullname} đã được tạo thành công.`,
         variant: "default",
-      })
-      
+      });
+
       // Reset form và đóng dialog
       setNewUser({
         fullname: "",
@@ -134,67 +202,76 @@ export default function UsersPage() {
         phone: "",
         address: "",
         bio: "",
-        status: "ACTIVE"
-      })
-      setAddUserDialogOpen(false)
-      
+        status: "ACTIVE",
+      });
+      setAddUserDialogOpen(false);
+
       // Tải lại danh sách người dùng
-      dispatch(handleGetUsers({
-        page: currentPage,
-        limit: 10,
-        search: search || undefined,
-        role: role || undefined
-      }))
+      dispatch(
+        handleGetUsers({
+          page: currentPage,
+          limit: 10,
+          search: search || undefined,
+          role: role || undefined,
+        })
+      );
     } catch (error: any) {
       toast({
         title: "Lỗi",
         description: error || "Không thể tạo người dùng mới",
         variant: "destructive",
-      })
+      });
     }
-  }
-  
+  };
+
   // Xử lý thay đổi giá trị form thêm người dùng
   const handleNewUserChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setNewUser(prev => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setNewUser((prev) => ({ ...prev, [name]: value }));
+  };
 
   // Handle user deletion
   const handleDeleteClick = (user: User) => {
-    setUserToDelete(user)
-    setDeleteDialogOpen(true)
-  }
+    setUserToDelete(user);
+    setDeleteDialogOpen(true);
+  };
 
   const confirmDelete = async () => {
-    if (!userToDelete) return
+    if (!userToDelete) return;
 
     try {
-      await dispatch(handleDeleteUser(userToDelete.id)).unwrap()
+      await dispatch(handleDeleteUser(userToDelete.id)).unwrap();
       toast({
         title: "Xóa người dùng thành công",
         description: `Người dùng ${userToDelete.fullname} đã được xóa thành công.`,
         variant: "default",
-      })
-      
+      });
+
       // Refresh user list
-      dispatch(handleGetUsers({
-        page: currentPage,
-        limit: 10,
-        search: search || undefined,
-        role: role || undefined
-      }))
+      dispatch(
+        handleGetUsers({
+          page: currentPage,
+          limit: 10,
+          search: search || undefined,
+          role: role || undefined,
+        })
+      );
     } catch (error) {
       toast({
         title: "Lỗi",
         description: "Không thể xóa người dùng. Vui lòng thử lại.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setDeleteDialogOpen(false)
-      setUserToDelete(null)
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
     }
-  }
+  };
+
+  // Check if user is online
+  const isUserOnline = (userId: number) => {
+    return onlineUsers.includes(userId);
+  };
 
   return (
     <div>
@@ -224,13 +301,15 @@ export default function UsersPage() {
               />
             </div>
             <div className="relative">
-              <Select 
-                value={role || "all"} 
-                onValueChange={(value) => handleRoleFilter(value === "all" ? undefined : value)}
+              <Select
+                value={role || "all"}
+                onValueChange={(value) =>
+                  handleRoleFilter(value === "all" ? undefined : value)
+                }
               >
-                <SelectTrigger 
-                  id="role-filter" 
-                  className="w-[180px]" 
+                <SelectTrigger
+                  id="role-filter"
+                  className="w-[180px]"
                   aria-label="Lọc theo vai trò"
                 >
                   <div className="flex items-center">
@@ -247,7 +326,7 @@ export default function UsersPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button 
+            <Button
               size="sm"
               onClick={() => setAddUserDialogOpen(true)}
               aria-label="Thêm người dùng mới"
@@ -293,9 +372,15 @@ export default function UsersPage() {
                       <div className="flex items-center">
                         <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center mr-3">
                           {user.avatar ? (
-                            <img src={user.avatar} alt={user.fullname} className="h-8 w-8 rounded-full" />
+                            <img
+                              src={user.avatar}
+                              alt={user.fullname}
+                              className="h-8 w-8 rounded-full"
+                            />
                           ) : (
-                            <span className="text-xs font-medium">{user.fullname.charAt(0)}</span>
+                            <span className="text-xs font-medium">
+                              {user.fullname.charAt(0)}
+                            </span>
                           )}
                         </div>
                         <div className="font-medium">{user.fullname}</div>
@@ -304,38 +389,41 @@ export default function UsersPage() {
                     <td className={styles.tableCell}>{user.email}</td>
                     <td className={styles.tableCell}>
                       <span className="capitalize">
-                        {user.role === "ADMIN" ? "Quản trị viên" : 
-                         user.role === "EDITOR" ? "Biên tập viên" : 
-                         user.role === "JOURNALIST" ? "Nhà báo" : "Người dùng"}
+                        {user.role === "ADMIN"
+                          ? "Quản trị viên"
+                          : user.role === "EDITOR"
+                          ? "Biên tập viên"
+                          : user.role === "JOURNALIST"
+                          ? "Nhà báo"
+                          : "Người dùng"}
                       </span>
                     </td>
                     <td className={styles.tableCell}>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          !user.status || user.status === "ACTIVE"
-                            ? "bg-green-100 text-green-800"
-                            : user.status === "BLOCKED"
-                              ? "bg-red-100 text-red-800"
-                              : user.status === "PENDING"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {!user.status || user.status === "ACTIVE" ? "Hoạt động" : 
-                         user.status === "BLOCKED" ? "Bị chặn" : 
-                         user.status === "PENDING" ? "Chưa xác thực" :
-                         user.status}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {isUserOnline(user.id) ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Trực tuyến
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            Ngoại tuyến
+                          </span>
+                        )}
+                      </div>
                     </td>
-                    <td className={styles.tableCell}>{user._count?.articles ?? 0}</td>
-                    <td className={styles.tableCell}>{format(new Date(user.created_at), 'dd/MM/yyyy')}</td>
+                    <td className={styles.tableCell}>
+                      {user._count?.articles ?? 0}
+                    </td>
+                    <td className={styles.tableCell}>
+                      {format(new Date(user.created_at), "dd/MM/yyyy")}
+                    </td>
                     <td className={styles.tableCell}>
                       <div className="flex space-x-2">
                         <Link href={`/admin/users/${user.id}`}>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-8 w-8 p-0" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
                             aria-label="Xem chi tiết người dùng"
                             title="Xem chi tiết người dùng"
                           >
@@ -343,9 +431,9 @@ export default function UsersPage() {
                           </Button>
                         </Link>
                         <Link href={`/admin/users/${user.id}/edit`}>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             className="h-8 w-8 p-0"
                             aria-label="Sửa thông tin người dùng"
                             title="Sửa thông tin người dùng"
@@ -376,12 +464,19 @@ export default function UsersPage() {
             {isLoading ? (
               <Skeleton className="h-4 w-[300px]" />
             ) : (
-              `Hiển thị ${users.length > 0 ? (currentPage - 1) * 10 + 1 : 0} đến ${Math.min(currentPage * 10, totalUsers)} trong tổng số ${totalUsers} người dùng`
+              `Hiển thị ${
+                users.length > 0 ? (currentPage - 1) * 10 + 1 : 0
+              } đến ${Math.min(
+                currentPage * 10,
+                totalUsers
+              )} trong tổng số ${totalUsers} người dùng`
             )}
           </div>
           <div className={styles.paginationControls}>
-            <button 
-              className={`${styles.paginationButton} ${currentPage <= 1 ? styles.paginationButtonDisabled : ''}`} 
+            <button
+              className={`${styles.paginationButton} ${
+                currentPage <= 1 ? styles.paginationButtonDisabled : ""
+              }`}
               disabled={currentPage <= 1 || isLoading}
               onClick={() => handlePageChange(currentPage - 1)}
               aria-label="Trang trước"
@@ -389,13 +484,15 @@ export default function UsersPage() {
             >
               <ChevronLeftIcon className="h-4 w-4" />
             </button>
-            
+
             {[...Array(Math.min(5, totalPages))].map((_, i) => {
               const page = i + 1;
               return (
-                <button 
+                <button
                   key={page}
-                  className={`${styles.paginationButton} ${currentPage === page ? styles.paginationButtonActive : ''}`}
+                  className={`${styles.paginationButton} ${
+                    currentPage === page ? styles.paginationButtonActive : ""
+                  }`}
                   onClick={() => handlePageChange(page)}
                   disabled={isLoading}
                   aria-label={`Trang ${page}`}
@@ -405,9 +502,11 @@ export default function UsersPage() {
                 </button>
               );
             })}
-            
-            <button 
-              className={`${styles.paginationButton} ${currentPage >= totalPages ? styles.paginationButtonDisabled : ''}`}
+
+            <button
+              className={`${styles.paginationButton} ${
+                currentPage >= totalPages ? styles.paginationButtonDisabled : ""
+              }`}
               disabled={currentPage >= totalPages || isLoading}
               onClick={() => handlePageChange(currentPage + 1)}
               aria-label="Trang tiếp theo"
@@ -418,20 +517,20 @@ export default function UsersPage() {
           </div>
         </div>
       </div>
-      
+
       {/* Delete User Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Xác nhận xóa người dùng</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa người dùng {userToDelete?.fullname} không? 
-              Hành động này không thể hoàn tác.
+              Bạn có chắc chắn muốn xóa người dùng {userToDelete?.fullname}{" "}
+              không? Hành động này không thể hoàn tác.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               className="bg-red-600 hover:bg-red-700"
               onClick={confirmDelete}
             >
@@ -440,9 +539,7 @@ export default function UsersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      
 
-      
       {/* Add User Dialog */}
       <Dialog open={addUserDialogOpen} onOpenChange={setAddUserDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
@@ -511,16 +608,18 @@ export default function UsersPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="role" className="text-sm">
                       Vai trò <span className="text-red-500">*</span>
                     </Label>
-                    <Select 
-                      value={newUser.role} 
-                      onValueChange={(value) => setNewUser(prev => ({ ...prev, role: value }))}
+                    <Select
+                      value={newUser.role}
+                      onValueChange={(value) =>
+                        setNewUser((prev) => ({ ...prev, role: value }))
+                      }
                     >
                       <SelectTrigger id="role">
                         <SelectValue placeholder="Chọn vai trò" />
@@ -537,9 +636,11 @@ export default function UsersPage() {
                     <Label htmlFor="status" className="text-sm">
                       Trạng thái
                     </Label>
-                    <Select 
-                      value={newUser.status} 
-                      onValueChange={(value) => setNewUser(prev => ({ ...prev, status: value }))}
+                    <Select
+                      value={newUser.status}
+                      onValueChange={(value) =>
+                        setNewUser((prev) => ({ ...prev, status: value }))
+                      }
                     >
                       <SelectTrigger id="status">
                         <SelectValue placeholder="Chọn trạng thái" />
@@ -597,11 +698,16 @@ export default function UsersPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddUserDialogOpen(false)}>Hủy</Button>
+            <Button
+              variant="outline"
+              onClick={() => setAddUserDialogOpen(false)}
+            >
+              Hủy
+            </Button>
             <Button onClick={handleAddUser}>Tạo người dùng</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
