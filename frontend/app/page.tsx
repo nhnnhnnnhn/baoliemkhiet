@@ -43,7 +43,30 @@ export default function Home() {
       try {
         setIsLoading(true)
         
-        // Lấy bài viết mới nhất
+        // Lấy bài viết mới nhất từ danh mục "Thời sự" (ID: 2) làm bài nổi bật
+        // Trước hết lấy tất cả bài viết thời sự rồi chọn bài mới nhất
+        const thoiSuResponse = await articleApi.getArticlesByCategory(2)
+        
+        // Đặt bài viết thời sự mới nhất làm bài nổi bật
+        if (thoiSuResponse && thoiSuResponse.articles && thoiSuResponse.articles.length > 0) {
+          // Sắp xếp theo thời gian xuất bản mới nhất trước
+          const sortedArticles = [...thoiSuResponse.articles].sort((a, b) => {
+            const dateA = a.publishedAt || a.created_at;
+            const dateB = b.publishedAt || b.created_at;
+            return new Date(dateB).getTime() - new Date(dateA).getTime();
+          });
+          setFeaturedArticle(sortedArticles[0])
+        } else if (Array.isArray(thoiSuResponse) && thoiSuResponse.length > 0) {
+          // Sắp xếp theo thời gian xuất bản mới nhất trước
+          const sortedArticles = [...thoiSuResponse].sort((a, b) => {
+            const dateA = a.publishedAt || a.created_at;
+            const dateB = b.publishedAt || b.created_at;
+            return new Date(dateB).getTime() - new Date(dateA).getTime();
+          });
+          setFeaturedArticle(sortedArticles[0])
+        }
+        
+        // Lấy các bài viết mới nhất cho phần tin mới nhất
         const latestResponse = await articleApi.getArticles({ 
           limit: 4, 
           page: 1, 
@@ -52,11 +75,6 @@ export default function Home() {
           order: 'desc'
         })
         setLatestArticles(latestResponse.articles || [])
-        
-        // Nếu có bài viết mới nhất thì đặt bài đầu tiên làm bài nổi bật
-        if (latestResponse.articles && latestResponse.articles.length > 0) {
-          setFeaturedArticle(latestResponse.articles[0])
-        }
         
         console.log('Bắt đầu tải dữ liệu danh mục')
         // Lấy bài viết theo từng danh mục
@@ -136,14 +154,17 @@ export default function Home() {
           <div className={styles.heroOverlay}>
             <div className={styles.heroContent}>
               <span className={styles.heroCategory}>
-                {featuredArticle.category?.name || 'TIN NỔI BẬT'}
+                {featuredArticle.category?.name || 'THỜI SỰ'}
               </span>
               <h1 className={styles.heroTitle}>{featuredArticle.title}</h1>
-              <p className={styles.heroDescription}>
-                {featuredArticle.content.length > 200 
-                  ? featuredArticle.content.substring(0, 200) + '...'
-                  : featuredArticle.content}
-              </p>
+              <div 
+                className={styles.heroDescription}
+                dangerouslySetInnerHTML={{
+                  __html: featuredArticle.content.length > 200 
+                    ? featuredArticle.content.substring(0, 200) + '...'
+                    : featuredArticle.content
+                }}
+              />
               <Link href={`/article/${featuredArticle.id}`}>
                 <Button className={styles.heroButton}>
                   Đọc tiếp <ArrowRightIcon className="ml-2 h-4 w-4" />
@@ -218,11 +239,14 @@ export default function Home() {
                         {newsByCategory[category.slug][0]?.title || `Tin mới về ${category.name}`}
                       </Link>
                     </h3>
-                    <p className={styles.categoryMainExcerpt}>
-                      {newsByCategory[category.slug][0]?.content?.length > 150
-                        ? newsByCategory[category.slug][0]?.content.substring(0, 150) + '...'
-                        : newsByCategory[category.slug][0]?.content || `Không có nội dung cho tin ${category.name}`}
-                    </p>
+                    <div 
+                      className={styles.categoryMainExcerpt}
+                      dangerouslySetInnerHTML={{
+                        __html: newsByCategory[category.slug][0]?.content?.length > 150
+                          ? newsByCategory[category.slug][0]?.content.substring(0, 150) + '...'
+                          : newsByCategory[category.slug][0]?.content || `Không có nội dung cho tin ${category.name}`
+                      }}
+                    />
                   </div>
                   <div className={styles.categorySubNews}>
                     {newsByCategory[category.slug].slice(1, 4).map((article, index) => (

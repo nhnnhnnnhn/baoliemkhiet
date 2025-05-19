@@ -32,6 +32,10 @@ export interface Article {
     name: string
     slug: string
   }>
+  _count?: {
+    articleLikes: number
+    articleComments: number
+  }
 }
 
 export interface GetArticlesResponse {
@@ -136,7 +140,7 @@ const articleApi = {
 
   // Lấy bài viết theo tác giả
   getArticlesByAuthor: async (authorId: number): Promise<{articles: Article[], numberOfArticles: number}> => {
-    return axiosClient.get(`/articles/get-author/${authorId}`)
+    return axiosClient.get(`/articles/get-post-author/${authorId}`)
   },
 
   // Lấy bài viết được thích nhiều nhất

@@ -84,6 +84,26 @@ module.exports.getArticlesByAuthor = controllerHandler(async (req, res) => {
   res.status(200).json({articles, numberOfArticles});
 });
 
+// Get articles by author
+module.exports.getPostArticlesByAuthor = controllerHandler(async (req, res) => {
+  const { authorId } = req.params;
+  if (!authorId) {
+    return res.status(400).json({ message: "Missing author ID" });
+  }
+  const {articles, numberOfArticles} = await service.getPostArticlesByAuthor(authorId);
+  res.status(200).json({articles, numberOfArticles});
+});
+
+// Get articles statistics
+module.exports.getArticlesStatistics = controllerHandler(async (req, res) => {
+  const { id } = req.params;
+  if (!id) {
+    return res.status(400).json({ message: "Missing article ID" });
+  }
+  const statistics = await service.getArticlesStatistics(id);
+  res.status(200).json(statistics);
+});
+
 // Get most 5 liked articles
 module.exports.getMostLikedArticles = controllerHandler(async (req, res) => {
   const articles = await service.getMostLikedArticles();

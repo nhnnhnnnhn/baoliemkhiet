@@ -268,7 +268,10 @@ const articleSlice = createSlice({
       })
       .addCase(handleGetArticlesByAuthor.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.filteredArticles = action.payload;
+        state.articles = action.payload.articles;
+        state.totalArticles = action.payload.numberOfArticles;
+        state.currentPage = 1;
+        state.totalPages = 1;
       })
       .addCase(handleGetArticlesByAuthor.rejected, (state, action) => {
         state.isLoading = false;
