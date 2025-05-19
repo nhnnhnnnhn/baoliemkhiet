@@ -45,12 +45,14 @@ export function SiteHeader({ variant = 'transparent' }: SiteHeaderProps) {
 
   // Đảm bảo nội dung hiển thị với màu phù hợp dựa trên variant hoặc việc cuộn trang
   const shouldUseVisibleStyle = isScrolled || variant === 'solid'
+  // Chỉ hiển thị shadow khi đã cuộn trang, không quan tâm variant
+  const shouldShowShadow = isScrolled
 
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        shouldUseVisibleStyle ? "bg-white shadow-md" : "bg-transparent"
-      } ${variant === 'solid' ? "shadow-md" : ""}`}
+        shouldUseVisibleStyle ? "bg-white" : "bg-transparent"
+      } ${shouldShowShadow ? "shadow-md" : ""}`}
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">

@@ -3,6 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useState, useEffect, useRef, use } from "react"
+import { format, parseISO } from "date-fns"
 import { useAppDispatch, useAppSelector } from "@/src/store"
 import { handleGetComments, handleCreateComment, handleUpdateComment, handleDeleteComment } from "@/src/thunks/comment/commentThunk"
 import { 
@@ -296,11 +297,33 @@ export default function ArticlePage({ params }: { params: Promise<{ slug: string
         }
         
         // Tạo bài viết với dữ liệu từ API
+        // Xử lý ngày tháng và thời gian xuất bản giống như dashboard admin
+        let publishDateFormatted = 'Chưa xuất bản';
+        let publishTimeFormatted = 'Chưa cập nhật';
+        
+        if (response.publishedAt) {
+          try {
+            const date = new Date(response.publishedAt);
+            publishDateFormatted = format(date, 'dd/MM/yyyy');
+            publishTimeFormatted = format(date, 'HH:mm');
+          } catch (err) {
+            console.error('Lỗi khi định dạng thời gian:', err);
+          }
+        } else if (response.created_at) {
+          try {
+            const date = new Date(response.created_at);
+            publishDateFormatted = format(date, 'dd/MM/yyyy');
+            publishTimeFormatted = format(date, 'HH:mm');
+          } catch (err) {
+            console.error('Lỗi khi định dạng thời gian:', err);
+          }
+        }
+        
         const articleData: ArticleUI = {
           id: response.id.toString(),
           title: response.title,
-          publishDate: formatDate(response.published_at) || new Date().toLocaleDateString('vi-VN'),
-          publishTime: formatTime(response.published_at) || new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+          publishDate: publishDateFormatted,
+          publishTime: publishTimeFormatted,
           category: response.category?.name || 'Tin tức',
           content: processedContent.length > 0 ? processedContent : [{ type: 'text', value: response.content || 'Nội dung đang được cập nhật' }],
           author: response.author ? {
@@ -344,13 +367,34 @@ export default function ArticlePage({ params }: { params: Promise<{ slug: string
             .filter((item: Article) => item.id !== response.id && item.isPublish)
             .slice(0, 3); // Chỉ lấy tối đa 3 bài
           
-          articleData.relatedArticles = otherArticles.map((item: Article) => ({
-            slug: item.id.toString(),
-            title: item.title,
-            publishDate: formatDate(item.published_at) || '',
-            category: item.category?.name || 'Tin tức', 
-            thumbnail: item.thumbnail || '/placeholder.svg?height=200&width=300'
-          }));
+          articleData.relatedArticles = otherArticles.map((item: Article) => {
+            // Xử lý và định dạng thời gian xuất bản cho các bài viết liên quan
+            let publishDateFormatted = '';
+            
+            if (item.publishedAt) {
+              try {
+                const date = new Date(item.publishedAt);
+                publishDateFormatted = format(date, 'dd/MM/yyyy');
+              } catch (err) {
+                console.error('Lỗi khi định dạng thời gian bài viết liên quan:', err);
+              }
+            } else if (item.created_at) {
+              try {
+                const date = new Date(item.created_at);
+                publishDateFormatted = format(date, 'dd/MM/yyyy');
+              } catch (err) {
+                console.error('Lỗi khi định dạng thời gian bài viết liên quan:', err);
+              }
+            }
+            
+            return {
+              slug: item.id.toString(),
+              title: item.title,
+              publishDate: publishDateFormatted,
+              category: item.category?.name || 'Tin tức', 
+              thumbnail: item.thumbnail || '/placeholder.svg?height=200&width=300'
+            };
+          });
         } catch (error) {
           console.log('Không thể lấy bài viết liên quan:', error);
         }
@@ -645,7 +689,7 @@ export default function ArticlePage({ params }: { params: Promise<{ slug: string
   return (
     <>
       <SiteHeader variant="solid" />
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 pt-12 pb-8 max-w-4xl">
         {/* Breadcrumb */}
         <div className="text-sm text-gray-500 mb-4">
           <Link href="/" className="hover:underline">

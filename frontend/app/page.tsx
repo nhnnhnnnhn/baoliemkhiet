@@ -192,8 +192,474 @@ export default function Home() {
 
       {/* Main Content */}
       <main className={styles.mainContent}>
-        {/* Category Sections */}
-        {categories.map((category) => (
+        {/* Hiển thị Thời sự */}
+        {(() => {
+          const thoiSu = categories.find(c => c.slug === 'thoi-su');
+          if (!thoiSu) return null;
+          
+          return (
+            <div key={thoiSu.id} className={styles.categorySection}>
+              <div className={styles.categoryHeader}>
+                <div className={styles.categoryIcon}>
+                  {thoiSu.icon}
+                </div>
+                <h2 className={styles.categoryTitle}>{thoiSu.name}</h2>
+                <Link href={`/${thoiSu.slug}`} className={styles.viewAllLink}>
+                  Xem tất cả <ArrowRightIcon className="ml-1 h-4 w-4" />
+                </Link>
+              </div>
+              <div className={styles.categoryGrid}>
+                {isLoading ? (
+                  <>
+                    {/* Skeleton cho cột trái - 2 tin với ảnh */}
+                    <div className={styles.categorySideNews}>
+                      {Array(2).fill(0).map((_, i) => (
+                        <div key={i} className={styles.categorySideItem}>
+                          <div className={styles.categorySideImage}>
+                            <Skeleton className="w-full h-full" />
+                          </div>
+                          <Skeleton className="h-6 w-full mb-1" />
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Skeleton cho cột giữa - tin chính */}
+                    <div className={styles.categoryMainNews}>
+                      <div className={styles.categoryMainImage}>
+                        <Skeleton className="w-full h-full" />
+                      </div>
+                      <Skeleton className="h-8 w-full mt-2 mb-2" />
+                      <Skeleton className="h-16 w-full" />
+                    </div>
+                    
+                    {/* Skeleton cho cột phải - 7 tin chỉ có tiêu đề */}
+                    <div className={styles.categorySubNews}>
+                      {Array(7).fill(0).map((_, i) => (
+                        <div key={i} className={styles.categorySubItem}>
+                          <Skeleton className="h-6 w-full mb-1" />
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : newsByCategory[thoiSu.slug]?.length ? (
+                  <>
+                    {/* Cột trái: 2 tin ở bên trái có ảnh và tiêu đề */}
+                    <div className={styles.categorySideNews}>
+                      {newsByCategory[thoiSu.slug].slice(1, 3).length > 0 && 
+                        newsByCategory[thoiSu.slug].slice(1, 3).map((article, index) => (
+                          <div key={index} className={styles.categorySideItem}>
+                            <div className={styles.categorySideImage}>
+                              <img
+                                src={article.thumbnail || 
+                                  `https://placehold.co/600x400/eee/999?text=${encodeURIComponent(thoiSu.name)}`}
+                                alt={article.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <h3 className={styles.categorySubTitle}>
+                              <Link href={`/article/${article.id}`}>
+                                {article.title}
+                              </Link>
+                            </h3>
+                          </div>
+                        ))
+                      }
+                    </div>
+                    
+                    {/* Cột giữa: Tin chính ở giữa */}
+                    <div className={styles.categoryMainNews}>
+                      <div className={styles.categoryMainImage}>
+                        <img
+                          src={newsByCategory[thoiSu.slug][0]?.thumbnail || 
+                            `https://placehold.co/600x400/eee/999?text=${encodeURIComponent(thoiSu.name)}`}
+                          alt={newsByCategory[thoiSu.slug][0]?.title || `Tin ${thoiSu.name} chính`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <h3 className={styles.categoryMainTitle}>
+                        <Link href={`/article/${newsByCategory[thoiSu.slug][0]?.id}`}>
+                          {newsByCategory[thoiSu.slug][0]?.title || `Tin mới về ${thoiSu.name}`}
+                        </Link>
+                      </h3>
+                      <div 
+                        className={styles.categoryMainExcerpt}
+                        dangerouslySetInnerHTML={{
+                          __html: newsByCategory[thoiSu.slug][0]?.content?.length > 150
+                            ? newsByCategory[thoiSu.slug][0]?.content.substring(0, 150) + '...'
+                            : newsByCategory[thoiSu.slug][0]?.content || `Không có nội dung cho tin ${thoiSu.name}`
+                        }}
+                      />
+                    </div>
+                    
+                    {/* Cột phải: 7 tin mới ở bên phải, chỉ có tiêu đề */}
+                    <div className={styles.categorySubNews}>
+                      {newsByCategory[thoiSu.slug].slice(3, 10).map((article, index) => (
+                        <div key={index} className={styles.categorySubItem}>
+                          <h3 className={styles.categorySubTitle}>
+                            <Link href={`/article/${article.id}`}>
+                              {article.title}
+                            </Link>
+                          </h3>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="col-span-full text-center py-8">
+                    <p>Không có bài viết nào trong danh mục {thoiSu.name}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+        
+        {/* Hiển thị Thế giới với layout đặc biệt */}
+        {(() => {
+          const theGioi = categories.find(c => c.slug === 'the-gioi');
+          if (!theGioi) return null;
+          
+          return (
+            <div className={styles.categorySection}>
+              <div className={styles.categoryHeader}>
+                <div className={styles.categoryIcon}>
+                  <GlobeIcon className="h-5 w-5" />
+                </div>
+                <h2 className={styles.categoryTitle}>{theGioi.name}</h2>
+                <Link href="/the-gioi" className={styles.viewAllLink}>
+                  Xem tất cả <ArrowRightIcon className="ml-1 h-4 w-4" />
+                </Link>
+              </div>
+              <div className={styles.worldNewsGrid}>
+                {isLoading ? (
+                  <>
+                    {/* Skeleton cho bài chính bên trái */}
+                    <div className={styles.worldNewsMain}>
+                      <div className={styles.worldNewsMainImage}>
+                        <Skeleton className="w-full h-full" />
+                      </div>
+                      <Skeleton className="h-8 w-full mb-2" />
+                      <Skeleton className="h-20 w-full" />
+                    </div>
+                    
+                    {/* Skeleton cho 2 bài bên phải */}
+                    <div className={styles.worldNewsRight}>
+                      {Array(2).fill(0).map((_, i) => (
+                        <div key={i} className={styles.worldNewsItem}>
+                          <div className={styles.worldNewsItemImage}>
+                            <Skeleton className="w-full h-full" />
+                          </div>
+                          <Skeleton className="h-6 w-full" />
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : newsByCategory['the-gioi']?.length ? (
+                  <>
+                    {/* Bài viết chính bên trái */}
+                    <div className={styles.worldNewsMain}>
+                      <div className={styles.worldNewsMainImage}>
+                        <img
+                          src={newsByCategory['the-gioi'][0]?.thumbnail || 
+                            `https://placehold.co/800x400/eee/999?text=${encodeURIComponent('Thế giới')}`}
+                          alt={newsByCategory['the-gioi'][0]?.title || 'Tin thế giới'}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <h3 className={styles.worldNewsMainTitle}>
+                        <Link href={`/article/${newsByCategory['the-gioi'][0]?.id}`}>
+                          {newsByCategory['the-gioi'][0]?.title || 'Tin mới về thế giới'}
+                        </Link>
+                      </h3>
+                      <div 
+                        className={styles.worldNewsMainExcerpt}
+                        dangerouslySetInnerHTML={{
+                          __html: newsByCategory['the-gioi'][0]?.content?.length > 200
+                            ? newsByCategory['the-gioi'][0]?.content.substring(0, 200) + '...'
+                            : newsByCategory['the-gioi'][0]?.content || 'Không có nội dung cho tin thế giới'
+                        }}
+                      />
+                    </div>
+                    
+                    {/* 2 bài viết bên phải */}
+                    <div className={styles.worldNewsRight}>
+                      {newsByCategory['the-gioi'].slice(1, 3).map((article, index) => (
+                        <div key={index} className={styles.worldNewsItem}>
+                          <div className={styles.worldNewsItemImage}>
+                            <img
+                              src={article.thumbnail || 
+                                `https://placehold.co/600x300/eee/999?text=${encodeURIComponent('Thế giới')}`}
+                              alt={article.title}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <h3 className={styles.worldNewsItemTitle}>
+                            <Link href={`/article/${article.id}`}>
+                              {article.title}
+                            </Link>
+                          </h3>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="col-span-full text-center py-8">
+                    <p>Không có bài viết nào trong danh mục Thế giới</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+        
+        {/* Hiển thị Kinh doanh với layout đặc biệt */}
+        {(() => {
+          const kinhDoanh = categories.find(c => c.slug === 'kinh-doanh');
+          if (!kinhDoanh) return null;
+          
+          return (
+            <div className={styles.categorySection}>
+              <div className={styles.categoryHeader}>
+                <div className={styles.categoryIcon}>
+                  <DollarSignIcon className="h-5 w-5" />
+                </div>
+                <h2 className={styles.categoryTitle}>{kinhDoanh.name}</h2>
+                <Link href="/kinh-doanh" className={styles.viewAllLink}>
+                  Xem tất cả <ArrowRightIcon className="ml-1 h-4 w-4" />
+                </Link>
+              </div>
+              <div className={styles.businessGrid}>
+                {isLoading ? (
+                  <>
+                    {/* Skeleton cho bài chính bên trái */}
+                    <div className={styles.businessMainArticle}>
+                      <div className={styles.businessMainContent}>
+                        <Skeleton className="h-8 w-full mb-2" />
+                        <Skeleton className="h-20 w-full" />
+                      </div>
+                      <div className={styles.businessMainImage}>
+                        <Skeleton className="w-full h-full" style={{ minHeight: '300px' }} />
+                      </div>
+                    </div>
+                    
+                    {/* Skeleton cho 3 bài bên phải */}
+                    <div className={styles.businessSideList}>
+                      {Array(3).fill(0).map((_, i) => (
+                        <div key={i} className={styles.businessSideItem}>
+                          <div className={styles.businessSideContent}>
+                            <Skeleton className="h-6 w-full mb-1" />
+                            <Skeleton className="h-4 w-3/4" />
+                          </div>
+                          <div className={styles.businessSideImage}>
+                            <Skeleton className="w-full h-full" style={{ minHeight: '80px' }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : newsByCategory['kinh-doanh']?.length ? (
+                  <>
+                    {/* Bài viết chính bên trái */}
+                    <div className={styles.businessMainArticle}>
+                      <div className={styles.businessMainContent}>
+                        <h3 className={styles.businessMainTitle}>
+                          <Link href={`/article/${newsByCategory['kinh-doanh'][0]?.id}`}>
+                            {newsByCategory['kinh-doanh'][0]?.title || 'Tin mới về kinh doanh'}
+                          </Link>
+                        </h3>
+                        <div 
+                          className={styles.businessMainExcerpt}
+                          dangerouslySetInnerHTML={{
+                            __html: newsByCategory['kinh-doanh'][0]?.content?.length > 200
+                              ? newsByCategory['kinh-doanh'][0]?.content.substring(0, 200) + '...'
+                              : newsByCategory['kinh-doanh'][0]?.content || 'Không có nội dung cho tin kinh doanh'
+                          }}
+                        />
+                      </div>
+                      <div className={styles.businessMainImage}>
+                        <img
+                          src={newsByCategory['kinh-doanh'][0]?.thumbnail || 
+                            `https://placehold.co/800x400/eee/999?text=${encodeURIComponent('Kinh doanh')}`}
+                          alt={newsByCategory['kinh-doanh'][0]?.title || 'Tin kinh doanh'}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* 3 bài viết bên phải */}
+                    <div className={styles.businessSideList}>
+                      {newsByCategory['kinh-doanh'].slice(1, 4).map((article, index) => (
+                        <div key={index} className={styles.businessSideItem}>
+                          <div className={styles.businessSideContent}>
+                            <h3 className={styles.businessSideTitle}>
+                              <Link href={`/article/${article.id}`}>
+                                {article.title}
+                              </Link>
+                            </h3>
+                            <p className={styles.featuredMeta}>
+                              <span>{article.publishedAt 
+                                ? new Date(article.publishedAt).toLocaleDateString('vi-VN')
+                                : 'Chưa xuất bản'}
+                              </span>
+                            </p>
+                          </div>
+                          <div className={styles.businessSideImage}>
+                            <img
+                              src={article.thumbnail || 
+                                `https://placehold.co/600x300/eee/999?text=${encodeURIComponent('Kinh doanh')}`}
+                              alt={article.title}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="col-span-full text-center py-8">
+                    <p>Không có bài viết nào trong danh mục Kinh doanh</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Hiển thị Công nghệ với layout đặc biệt */}
+        {(() => {
+          const congNghe = categories.find(c => c.slug === 'cong-nghe');
+          if (!congNghe) return null;
+          
+          return (
+            <div className={styles.categorySection}>
+              <div className={styles.categoryHeader}>
+                <div className={styles.categoryIcon}>
+                  <MonitorIcon className="h-5 w-5" />
+                </div>
+                <h2 className={styles.categoryTitle}>{congNghe.name}</h2>
+                <Link href="/cong-nghe" className={styles.viewAllLink}>
+                  Xem tất cả <ArrowRightIcon className="ml-1 h-4 w-4" />
+                </Link>
+              </div>
+              <div className={styles.techGrid}>
+                {isLoading ? (
+                  <>
+                    {/* Skeleton cho cột trái - 2 tin với ảnh */}
+                    <div className={styles.techSideNews}>
+                      {Array(2).fill(0).map((_, i) => (
+                        <div key={i} className={styles.techSideItem}>
+                          <div className={styles.techSideImage}>
+                            <Skeleton className="w-full h-full" />
+                          </div>
+                          <Skeleton className="h-6 w-full mb-1" />
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Skeleton cho cột giữa - tin chính */}
+                    <div className={styles.techMainNews}>
+                      <div className={styles.categoryMainImage}>
+                        <Skeleton className="w-full h-full" />
+                      </div>
+                      <Skeleton className="h-8 w-full mt-2 mb-2" />
+                      <Skeleton className="h-16 w-full" />
+                    </div>
+                    
+                    {/* Skeleton cho cột phải - 3 tin có ảnh và tiêu đề */}
+                    <div className={styles.techSubNews}>
+                      {Array(3).fill(0).map((_, i) => (
+                        <div key={i} className={styles.techSubItem}>
+                          <div className={styles.techSubImage}>
+                            <Skeleton className="w-full h-full" />
+                          </div>
+                          <Skeleton className="h-6 w-full mb-1" />
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : newsByCategory['cong-nghe']?.length ? (
+                  <>
+                    {/* Cột trái: 2 tin ở bên trái có ảnh và tiêu đề */}
+                    <div className={styles.techSideNews}>
+                      {newsByCategory['cong-nghe'].slice(1, 3).length > 0 && 
+                        newsByCategory['cong-nghe'].slice(1, 3).map((article, index) => (
+                          <div key={index} className={styles.techSideItem}>
+                            <div className={styles.techSideImage}>
+                              <img
+                                src={article.thumbnail || 
+                                  `https://placehold.co/600x400/eee/999?text=${encodeURIComponent(congNghe.name)}`}
+                                alt={article.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <h3 className={styles.categorySubTitle}>
+                              <Link href={`/article/${article.id}`}>
+                                {article.title}
+                              </Link>
+                            </h3>
+                          </div>
+                        ))
+                      }
+                    </div>
+                    
+                    {/* Cột giữa: Tin chính ở giữa */}
+                    <div className={styles.techMainNews}>
+                      <div className={styles.categoryMainImage}>
+                        <img
+                          src={newsByCategory['cong-nghe'][0]?.thumbnail || 
+                            `https://placehold.co/600x400/eee/999?text=${encodeURIComponent(congNghe.name)}`}
+                          alt={newsByCategory['cong-nghe'][0]?.title || `Tin ${congNghe.name} chính`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <h3 className={styles.categoryMainTitle}>
+                        <Link href={`/article/${newsByCategory['cong-nghe'][0]?.id}`}>
+                          {newsByCategory['cong-nghe'][0]?.title || `Tin mới về ${congNghe.name}`}
+                        </Link>
+                      </h3>
+                      <div 
+                        className={styles.categoryMainExcerpt}
+                        dangerouslySetInnerHTML={{
+                          __html: newsByCategory['cong-nghe'][0]?.content?.length > 150
+                            ? newsByCategory['cong-nghe'][0]?.content.substring(0, 150) + '...'
+                            : newsByCategory['cong-nghe'][0]?.content || `Không có nội dung cho tin ${congNghe.name}`
+                        }}
+                      />
+                    </div>
+                    
+                    {/* Cột phải: 3 tin với ảnh và tiêu đề */}
+                    <div className={styles.techSubNews}>
+                      {newsByCategory['cong-nghe'].slice(3, 6).map((article, index) => (
+                        <div key={index} className={styles.techSubItem}>
+                          <div className={styles.techSubImage}>
+                            <img
+                              src={article.thumbnail || 
+                                `https://placehold.co/600x400/eee/999?text=${encodeURIComponent(congNghe.name)}`}
+                              alt={article.title}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <h3 className={styles.techSubTitle}>
+                            <Link href={`/article/${article.id}`}>
+                              {article.title}
+                            </Link>
+                          </h3>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="col-span-full text-center py-8">
+                    <p>Không có bài viết nào trong danh mục {congNghe.name}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Hiển thị các danh mục còn lại */}
+        {categories.filter(category => !['thoi-su', 'the-gioi', 'kinh-doanh', 'cong-nghe'].includes(category.slug)).map((category) => (
           <div key={category.id} className={styles.categorySection}>
             <div className={styles.categoryHeader}>
               <div className={styles.categoryIcon}>
@@ -206,7 +672,20 @@ export default function Home() {
             </div>
             <div className={styles.categoryGrid}>
               {isLoading ? (
-                <div>
+                <>
+                  {/* Skeleton cho cột trái - 2 tin với ảnh */}
+                  <div className={styles.categorySideNews}>
+                    {Array(2).fill(0).map((_, i) => (
+                      <div key={i} className={styles.categorySideItem}>
+                        <div className={styles.categorySideImage}>
+                          <Skeleton className="w-full h-full" />
+                        </div>
+                        <Skeleton className="h-6 w-full mb-1" />
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Skeleton cho cột giữa - tin chính */}
                   <div className={styles.categoryMainNews}>
                     <div className={styles.categoryMainImage}>
                       <Skeleton className="w-full h-full" />
@@ -214,17 +693,42 @@ export default function Home() {
                     <Skeleton className="h-8 w-full mt-2 mb-2" />
                     <Skeleton className="h-16 w-full" />
                   </div>
+                  
+                  {/* Skeleton cho cột phải - 7 tin chỉ có tiêu đề */}
                   <div className={styles.categorySubNews}>
-                    {Array(3).fill(0).map((_, i) => (
+                    {Array(7).fill(0).map((_, i) => (
                       <div key={i} className={styles.categorySubItem}>
                         <Skeleton className="h-6 w-full mb-1" />
-                        <Skeleton className="h-4 w-20" />
                       </div>
                     ))}
-                </div>
-              </div>
+                  </div>
+                </>
               ) : newsByCategory[category.slug]?.length ? (
-                <div>
+                <>
+                  {/* Cột trái: 2 tin ở bên trái có ảnh và tiêu đề */}
+                  <div className={styles.categorySideNews}>
+                    {newsByCategory[category.slug].slice(1, 3).length > 0 && 
+                      newsByCategory[category.slug].slice(1, 3).map((article, index) => (
+                        <div key={index} className={styles.categorySideItem}>
+                          <div className={styles.categorySideImage}>
+                            <img
+                              src={article.thumbnail || 
+                                `https://placehold.co/600x400/eee/999?text=${encodeURIComponent(category.name)}`}
+                              alt={article.title}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <h3 className={styles.categorySubTitle}>
+                            <Link href={`/article/${article.id}`}>
+                              {article.title}
+                            </Link>
+                          </h3>
+                        </div>
+                      ))
+                    }
+                  </div>
+                  
+                  {/* Cột giữa: Tin chính ở giữa */}
                   <div className={styles.categoryMainNews}>
                     <div className={styles.categoryMainImage}>
                       <img
@@ -248,37 +752,20 @@ export default function Home() {
                       }}
                     />
                   </div>
+                  
+                  {/* Cột phải: 4 tin mới ở bên phải, chỉ có tiêu đề */}
                   <div className={styles.categorySubNews}>
-                    {newsByCategory[category.slug].slice(1, 4).map((article, index) => (
+                    {newsByCategory[category.slug].slice(3, 10).map((article, index) => (
                       <div key={index} className={styles.categorySubItem}>
                         <h3 className={styles.categorySubTitle}>
                           <Link href={`/article/${article.id}`}>
                             {article.title}
                           </Link>
                         </h3>
-                        <p className={styles.featuredMeta}>
-                          <span>{article.category?.name || 'Tin tức'}</span> · 
-                          <span>
-                            {article.published_at 
-                              ? (() => {
-                                  try {
-                                    const date = new Date(article.published_at);
-                                    return !isNaN(date.getTime()) 
-                                      ? date.toLocaleDateString('vi-VN')
-                                      : 'Chưa xuất bản';
-                                  } catch (error) {
-                                    console.error('Lỗi định dạng ngày:', error);
-                                    return 'Chưa xuất bản';
-                                  }
-                                })()
-                              : 'Chưa xuất bản'
-                            }
-                          </span>
-                        </p>
                       </div>
                     ))}
                   </div>
-                </div>
+                </>
               ) : (
                 <div className="col-span-full text-center py-8">
                   <p>Không có bài viết nào trong danh mục {category.name}</p>
@@ -287,101 +774,6 @@ export default function Home() {
             </div>
           </div>
         ))}
-
-        {/* Two Column Layout */}
-        <div className={styles.twoColumnLayout}>
-          <div className={styles.columnLeft}>
-            {/* Kinh doanh Section */}
-            <div className={styles.categorySection}>
-              <div className={styles.categoryHeader}>
-                <div className={styles.categoryIcon}>
-                  <DollarSignIcon className="h-5 w-5" />
-                </div>
-                <h2 className={styles.categoryTitle}>Kinh doanh</h2>
-                <Link href="/kinh-doanh" className={styles.viewAllLink}>
-                  Xem tất cả <ArrowRightIcon className="ml-1 h-4 w-4" />
-                </Link>
-              </div>
-              <div className={styles.smallCategoryGrid}>
-                {isLoading ? (
-                  Array(4).fill(0).map((_, index) => (
-                    <div key={index} className={styles.smallNewsCard}>
-                      <div className={styles.smallNewsImage}>
-                        <Skeleton className="w-full h-full" />
-                      </div>
-                      <Skeleton className="h-4 w-full mt-2" />
-                    </div>
-                  ))
-                ) : newsByCategory['kinh-doanh']?.length ? (
-                  newsByCategory['kinh-doanh'].slice(0, 4).map((article) => (
-                    <div key={article.id} className={styles.smallNewsCard}>
-                      <div className={styles.smallNewsImage}>
-                        <img
-                          src={article.thumbnail || `/kinh-doanh-concept.png?height=120&width=180&text=Kinh doanh`}
-                          alt={article.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <h4 className={styles.smallNewsTitle}>
-                        <Link href={`/article/${article.id}`}>{article.title}</Link>
-                      </h4>
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-full text-center py-4">
-                    <p>Không có bài viết nào trong danh mục Kinh doanh</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.columnRight}>
-            {/* Công nghệ Section */}
-            <div className={styles.categorySection}>
-              <div className={styles.categoryHeader}>
-                <div className={styles.categoryIcon}>
-                  <MonitorIcon className="h-5 w-5" />
-                </div>
-                <h2 className={styles.categoryTitle}>Công nghệ</h2>
-                <Link href="/cong-nghe" className={styles.viewAllLink}>
-                  Xem tất cả <ArrowRightIcon className="ml-1 h-4 w-4" />
-                </Link>
-              </div>
-              <div className={styles.smallCategoryGrid}>
-                {isLoading ? (
-                  Array(4).fill(0).map((_, index) => (
-                    <div key={index} className={styles.smallNewsCard}>
-                      <div className={styles.smallNewsImage}>
-                        <Skeleton className="w-full h-full" />
-                      </div>
-                      <Skeleton className="h-4 w-full mt-2" />
-                    </div>
-                  ))
-                ) : newsByCategory['cong-nghe']?.length ? (
-                  newsByCategory['cong-nghe'].slice(0, 4).map((article) => (
-                    <div key={article.id} className={styles.smallNewsCard}>
-                      <div className={styles.smallNewsImage}>
-                        <img
-                          src={article.thumbnail || `/placeholder-technology.png?height=120&width=180&text=Công nghệ`}
-                          alt={article.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <h4 className={styles.smallNewsTitle}>
-                        <Link href={`/article/${article.id}`}>{article.title}</Link>
-                      </h4>
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-full text-center py-4">
-                    <p>Không có bài viết nào trong danh mục Công nghệ</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
       </main>
 
       {/* Footer */}
