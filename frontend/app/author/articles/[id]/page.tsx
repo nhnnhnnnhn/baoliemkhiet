@@ -1,81 +1,135 @@
 "use client"
 
-import { useEffect } from "react"
-import { use } from "react"
+import { useState, useEffect, use } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { ArrowLeft, Calendar, Clock, Edit, Eye, MessageSquare, Share2, ThumbsUp, User } from "lucide-react"
+import Image from "next/image"
+import { ArrowLeft, Calendar, Edit, User, Loader2 } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "@/src/store"
 import { handleGetArticleById } from "@/src/thunks/article/articleThunk"
 import { selectSelectedArticle } from "@/src/thunks/article/articleSlice"
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
+// Tiện ích và constants
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+
+// Định nghĩa các kiểu dữ liệu
+type ArticleStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'PUBLISHED'
+
+const ARTICLE_STATUS_DISPLAY: Record<ArticleStatus, string> = {
+  'DRAFT': 'Bản nháp',
+  'PENDING': 'Chờ duyệt',
+  'APPROVED': 'Đã xuất bản',
+  'REJECTED': 'Bị từ chối',
+  'PUBLISHED': 'Đã xuất bản'
+}
+
+/**
+ * Định dạng ngày tháng (DD/MM/YYYY HH:MM)
+ * Cải thiện để xử lý tốt hơn các trường hợp ngày không hợp lệ
+ */
+function formatDate(dateInput: string | Date | null | undefined): string {
+  // Trường hợp không có ngày nhập vào
+  if (!dateInput) {
+    return 'Chưa có ngày'
+  }
+  
+  try {
+    let date: Date
+    
+    // Chuyển đổi chuỗi thành Date
+    if (typeof dateInput === 'string') {
+      date = new Date(dateInput)
+    } else {
+      date = dateInput as Date
+    }
+    
+    // Kiểm tra ngày có hợp lệ không
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+      console.log('Ngày không hợp lệ:', dateInput)
+      return 'Ngày không hợp lệ'
+    }
+  
+    // Lấy các thành phần của ngày
+    const day = date.getDate().toString().padStart(2, '0')
+    const month = (date.getMonth() + 1).toString().padStart(2, '0')
+    const year = date.getFullYear()
+    const hours = date.getHours().toString().padStart(2, '0')
+    const minutes = date.getMinutes().toString().padStart(2, '0')
+  
+    return `${day}/${month}/${year} ${hours}:${minutes}`
+  } catch (error) {
+    console.error('Lỗi xử lý ngày tháng:', error)
+    return 'Ngày không hợp lệ'
+  }
+}
+
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import styles from "../../../admin/admin.module.css"
+import { Spinner } from "../../../../components/ui/spinner"
+import styles from "@/app/author/author.module.css"
 
-// Định nghĩa các trạng thái và mapping
-const ARTICLE_STATUS = {
-  APPROVED: {
-    value: "APPROVED",
-    label: "Đã xuất bản",
-    color: "bg-green-100 text-green-800"
-  },
-  PENDING: {
-    value: "PENDING",
-    label: "Chờ duyệt",
-    color: "bg-yellow-100 text-yellow-800"
-  },
-  DRAFT: {
-    value: "DRAFT",
-    label: "Bản nháp",
-    color: "bg-gray-100 text-gray-800"
-  },
-  REJECTED: {
-    value: "REJECTED",
-    label: "Đã từ chối",
-    color: "bg-red-100 text-red-800"
-  }
-} as const
-
-type ArticleStatus = keyof typeof ARTICLE_STATUS
-
-interface RelatedArticle {
-  id: string
-  title: string
+// Thêm interface cho Article
+interface Article {
+  id: number;
+  title: string;
+  content: string;
+  thumbnail?: string;
+  status: string;
+  publishedAt?: string;
+  updated_at?: string;
+  author?: {
+    fullname?: string;
+    name?: string;
+  };
   category?: {
-    name: string
-  }
-  publishedAt?: string
+    name: string;
+  };
+  tags?: Array<{
+    name: string;
+  }>;
 }
 
-interface Tag {
-  id: number
-  name: string
-  slug: string
-}
-
-export default function ArticleDetailPage({ params }: { params: { id: string } }) {
-  const router = useRouter()
+export default function ArticleDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const dispatch = useAppDispatch()
   const article = useAppSelector(selectSelectedArticle)
-  const isLoading = useAppSelector(state => state.article.isLoading)
+  const [loading, setLoading] = useState(true)
   const resolvedParams = use(params)
-
+  
   useEffect(() => {
-    if (resolvedParams.id) {
-      dispatch(handleGetArticleById(Number(resolvedParams.id)))
+    // Fetch bài viết theo ID và set loading state
+    const fetchArticle = async () => {
+      try {
+        await dispatch(handleGetArticleById(parseInt(resolvedParams.id)))
+      } catch (error) {
+        console.error('Error fetching article:', error)
+      } finally {
+        setLoading(false)
+      }
     }
+    
+    fetchArticle()
   }, [dispatch, resolvedParams.id])
-
-  if (isLoading) {
-    return <div>Loading...</div>
+  
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Spinner size="lg" />
+        <span className="ml-2">Đang tải bài viết...</span>
+      </div>
+    )
   }
-
+  
   if (!article) {
-    return <div>Không tìm thấy bài viết</div>
+    return (
+      <div className="p-8 text-center">
+        <h1 className="text-2xl font-bold mb-4">Không tìm thấy bài viết</h1>
+        <p className="mb-6">Bài viết này không tồn tại hoặc đã bị xóa.</p>
+        <Link href="/author/articles">
+          <Button>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Quay lại danh sách bài viết
+          </Button>
+        </Link>
+      </div>
+    )
   }
 
   return (
@@ -84,230 +138,131 @@ export default function ArticleDetailPage({ params }: { params: { id: string } }
       <div className={styles.pageHeader}>
         <div className="flex items-center">
           <Link href="/author/articles">
-            <Button variant="ghost" size="sm" className="mr-2">
-              <ArrowLeft className="h-4 w-4 mr-1" />
+            <Button variant="ghost" size="sm" className="mr-4">
+              <ArrowLeft className="h-4 w-4 mr-2" />
               Quay lại
             </Button>
           </Link>
-          <h1 className={styles.pageTitle}>Chi tiết bài viết</h1>
+          <div>
+            <h1 className={styles.pageTitle}>Chi tiết bài viết</h1>
+            <div className={styles.pageBreadcrumb}>
+              <div className={styles.breadcrumbItem}>Trang chủ</div>
+              <div className={styles.breadcrumbDivider}>/</div>
+              <div className={styles.breadcrumbItem}>Bài viết</div>
+              <div className={styles.breadcrumbDivider}>/</div>
+              <div className={styles.breadcrumbItem}>Chi tiết</div>
+            </div>
+          </div>
         </div>
-        <div className={styles.pageBreadcrumb}>
-          <div className={styles.breadcrumbItem}>Tác giả</div>
-          <div className={styles.breadcrumbDivider}>/</div>
-          <div className={styles.breadcrumbItem}>Bài viết</div>
-          <div className={styles.breadcrumbDivider}>/</div>
-          <div className={styles.breadcrumbItem}>{article.id}</div>
+        <div className="flex space-x-2">
+          <Link href={`/author/articles/${article.id}/edit`}>
+            <Button>
+              <Edit className="h-4 w-4 mr-2" />
+              Chỉnh sửa
+            </Button>
+          </Link>
         </div>
       </div>
 
-      {/* Article Header */}
-      <Card className="mb-6">
-        <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <CardTitle className="text-2xl">{article.title}</CardTitle>
-              <CardDescription className="mt-2 flex flex-wrap items-center gap-2">
-                <Badge
-                  variant={
-                    article.status === "APPROVED"
-                      ? "default"
-                      : article.status === "PENDING"
-                        ? "secondary"
-                        : "outline"
-                  }
-                >
-                  {ARTICLE_STATUS[article.status as ArticleStatus]?.label || article.status}
-                </Badge>
-                <Badge variant="secondary">{article.category?.name || "Chưa phân loại"}</Badge>
-                <span className="flex items-center text-sm text-muted-foreground">
-                  <Calendar className="h-3.5 w-3.5 mr-1" />
-                  {article.publishedAt 
-                    ? new Date(article.publishedAt).toLocaleDateString('vi-VN', {
-                        year: 'numeric',
-                        month: 'numeric',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })
-                    : "Chưa xuất bản"}
-                </span>
-                <span className="flex items-center text-sm text-muted-foreground">
-                  <Clock className="h-3.5 w-3.5 mr-1" />
-                  5 phút
-                </span>
-              </CardDescription>
+      {/* Article Content */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="md:col-span-2">
+          <div className={styles.chartCard}>
+            <div className={styles.chartHeader}>
+              <div className="text-sm font-medium text-gray-500 mb-1">Trạng thái</div>
+              <div
+                className={`inline-flex items-center px-3 py-1 rounded text-sm font-medium ${article.status === "APPROVED"
+                  ? "bg-green-100 text-green-800"
+                  : article.status === "PENDING"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : article.status === "DRAFT"
+                      ? "bg-gray-100 text-gray-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
+              >
+                {ARTICLE_STATUS_DISPLAY[article.status as ArticleStatus] || article.status}
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Link href={`/author/articles/${article.id}/edit`}>
-                <Button>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Chỉnh sửa
-                </Button>
-              </Link>
-              <Button variant="outline">
-                <Share2 className="h-4 w-4 mr-2" />
-                Chia sẻ
-              </Button>
+            <div className="p-6">
+              <h1 className="text-2xl font-bold mb-4">{article.title}</h1>
+              <div className="overflow-hidden rounded-lg">
+                {article.thumbnail ? (
+                  <Image
+                    src={article.thumbnail.startsWith('http') ? article.thumbnail : `${API_URL}${article.thumbnail}`}
+                    alt={article.title}
+                    width={800}
+                    height={400}
+                    className="w-full h-auto rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="bg-gray-200 w-full h-[300px] flex items-center justify-center rounded-lg">
+                    <span className="text-gray-500">Không có ảnh thumbnail</span>
+                  </div>
+                )}
+              </div>
+              <div
+                className="prose max-w-none prose-img:rounded-lg prose-img:my-4 prose-headings:mt-6 prose-p:my-4"
+                dangerouslySetInnerHTML={{ __html: article.content }}
+              />
             </div>
           </div>
-        </CardHeader>
-      </Card>
-
-      {/* Article Content and Metadata */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Article Content */}
-        <div className="md:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Nội dung bài viết</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: article.content }} />
-            </CardContent>
-          </Card>
         </div>
 
-        {/* Article Metadata */}
-        <div className="space-y-6">
-          {/* Article Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Thông tin bài viết</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">Tác giả</h4>
-                <div className="flex items-center">
-                  <Avatar className="h-8 w-8 mr-2">
-                    <AvatarImage src={article.author?.avatar} alt={article.author?.fullname} />
-                    <AvatarFallback>{article.author?.fullname?.charAt(0) || "A"}</AvatarFallback>
-                  </Avatar>
-                  <span>{article.author?.fullname || "Chưa có tác giả"}</span>
-                </div>
-              </div>
-
-              {article.editor_name && (
+        <div className="md:col-span-1">
+          <div className={styles.chartCard}>
+            <div className={styles.chartHeader}>
+              <h3 className={styles.chartTitle}>Thông tin bài viết</h3>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
                 <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Biên tập viên</h4>
-                  <div className="flex items-center">
-                    <User className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span>{article.editor_name}</span>
-                  </div>
+                  <div className="text-sm font-medium text-gray-500 mb-1">ID</div>
+                  <div>{article.id}</div>
                 </div>
-              )}
-
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">Chuyên mục</h4>
-                <Badge variant="secondary">{article.category?.name || "Chưa phân loại"}</Badge>
-              </div>
-
-              {article.tags && article.tags.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Thẻ</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {article.tags.map((tag: Tag) => (
-                      <Badge key={tag.id} variant="outline">
-                        {tag.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">Ngày xuất bản</h4>
-                <div className="flex items-center">
-                  <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <span>
-                    {article.publishedAt 
-                      ? new Date(article.publishedAt).toLocaleDateString('vi-VN', {
-                          year: 'numeric',
-                          month: 'numeric',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })
-                      : "Chưa xuất bản"}
-                  </span>
-                </div>
-              </div>
-
-              {article.updated_at && (
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Cập nhật lần cuối</h4>
-                  <div className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span>
-                      {new Date(article.updated_at).toLocaleDateString('vi-VN', {
-                        year: 'numeric',
-                        month: 'numeric',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Article Stats */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Thống kê</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <ThumbsUp className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <span>Lượt thích</span>
-                </div>
-                <span className="font-medium">{article._count?.articleLikes?.toLocaleString() || 0}</span>
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <MessageSquare className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <span>Bình luận</span>
-                </div>
-                <span className="font-medium">{article._count?.articleComments?.toLocaleString() || 0}</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Related Articles */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Bài viết liên quan</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {article.related_articles && article.related_articles.length > 0 ? (
-                <div className="space-y-4">
-                  {article.related_articles.map((relatedArticle: RelatedArticle) => (
-                    <div key={relatedArticle.id} className="border-b pb-4 last:border-0 last:pb-0">
-                      <Link href={`/author/articles/${relatedArticle.id}`} className="hover:underline">
-                        <h4 className="font-medium mb-1">{relatedArticle.title}</h4>
-                      </Link>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Badge variant="secondary" className="mr-2">
-                          {relatedArticle.category?.name || "Chưa phân loại"}
-                        </Badge>
-                        <Calendar className="h-3.5 w-3.5 mr-1" />
-                        {relatedArticle.publishedAt 
-                          ? new Date(relatedArticle.publishedAt).toLocaleDateString('vi-VN')
-                          : "Chưa xuất bản"}
-                      </div>
+                  <div className="text-sm font-medium text-gray-500 mb-1">Danh mục</div>
+                  {article.category ? (
+                    <div className="inline-flex items-center px-3 py-1 rounded text-sm font-medium bg-blue-100 text-blue-800">
+                      {article.category.name}
                     </div>
-                  ))}
+                  ) : (
+                    <span className="text-gray-400 text-sm">Chưa phân loại</span>
+                  )}
                 </div>
-              ) : (
-                <div className="text-center text-muted-foreground py-4">
-                  Chưa có bài viết liên quan
+                <div>
+                  <div className="text-sm font-medium text-gray-500 mb-1">Thẻ</div>
+                  <div className="flex flex-wrap gap-1">
+                    {article.tags && article.tags.length > 0 ? article.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                      >
+                        {tag.name}
+                      </span>
+                    )) : <span className="text-gray-400 text-sm">Chưa có thẻ</span>}
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                <div>
+                  <div className="text-sm font-medium text-gray-500 mb-1">Tác giả</div>
+                  <div className="flex items-center">
+                    <User className="h-4 w-4 text-gray-400 mr-1" />
+                    {article.author ? (article.author.fullname || article.author.name || 'Không xác định') : 'Không xác định'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-500 mb-1">Ngày xuất bản</div>
+                  <div className="flex items-center">
+                    <Calendar className="h-4 w-4 text-gray-400 mr-1" />
+                    {formatDate(article.publishedAt)}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-500 mb-1">Cập nhật lần cuối</div>
+                  <div>{formatDate(article.updated_at)}</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

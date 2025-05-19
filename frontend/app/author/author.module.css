@@ -198,3 +198,71 @@
 .userAction {
   color: #64748b;
 }
+
+/* Page Header */
+.pageHeader {
+  @apply flex items-center justify-between mb-6;
+}
+
+.pageTitle {
+  @apply text-2xl font-bold text-gray-900;
+}
+
+.pageBreadcrumb {
+  @apply flex items-center text-sm text-gray-500 mt-1;
+}
+
+.breadcrumbItem {
+  @apply text-gray-500 hover:text-gray-700;
+}
+
+.breadcrumbDivider {
+  @apply mx-2 text-gray-400;
+}
+
+/* Table Card */
+.tableCard {
+  @apply bg-white rounded-lg shadow-sm border border-gray-200;
+}
+
+.tableHeader {
+  @apply flex items-center justify-between p-6 border-b border-gray-200;
+}
+
+.tableTitle {
+  @apply text-lg font-semibold text-gray-900;
+}
+
+.tableContent {
+  @apply p-6;
+}
+
+/* Table Styles */
+.table {
+  @apply min-w-full divide-y divide-gray-200;
+}
+
+.tableHeaderCell {
+  @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+}
+
+.tableRow {
+  @apply hover:bg-gray-50;
+}
+
+.tableCell {
+  @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+}
+
+/* Chart Card */
+.chartCard {
+  @apply bg-white rounded-lg shadow-sm border border-gray-200;
+}
+
+.chartHeader {
+  @apply p-6 border-b border-gray-200;
+}
+
+.chartTitle {
+  @apply text-lg font-semibold text-gray-900;
+}
