@@ -8,6 +8,7 @@ const morgan = require("./configs/morgan.config");
 const { initWebSocket } = require("./websocket");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsDoc = require("./swagger-output.json");
+const path = require("path");
 
 const authRoute = require("./routes/auth.route");
 const otpRoute = require("./routes/otp.route");
@@ -38,6 +39,7 @@ app.use(
 );
 
 app.use(express.json());
+app.use(express.static(path.join(__dirname)));  // Serve static files from src directory
 const server = http.createServer(app);
 
 // Initialize WebSocket
