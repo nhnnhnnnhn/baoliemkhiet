@@ -3,6 +3,8 @@
 import type React from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { useSelector } from "react-redux"
+import { selectCurrentUser } from "@/src/thunks/auth/authSlice"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -156,9 +158,19 @@ export default function AdminLayoutClient({
   children: React.ReactNode
 }) {
   const logout = useLogout()
+  const currentUser = useSelector(selectCurrentUser)
   // Define fallback image sources
-  const avatarFallbackSrc = "/abstract-user-icon.png"
-  const smallAvatarFallbackSrc = "/abstract-user-icon.png"
+  const avatarFallbackSrc = "/placeholder.svg"
+
+  // Helper function to get avatar URL
+  const getAvatarUrl = (path: string | null | undefined) => {
+    if (!path) return avatarFallbackSrc;
+    if (path.startsWith('http')) return path;
+    if (path.startsWith('data:image')) return path;
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${baseUrl}${cleanPath}`;
+  };
 
   return (
     <div className={styles.adminLayout}>
@@ -180,9 +192,9 @@ export default function AdminLayoutClient({
             <div className={styles.userCard}>
               <div className={styles.userAvatar}>
                 <ImageWithFallback
-                  src="/secure-admin-panel.png"
+                  src={getAvatarUrl(currentUser?.avatar)}
                   fallbackSrc={avatarFallbackSrc}
-                  alt="User Avatar"
+                  alt={currentUser?.fullname || "User Avatar"}
                   width={40}
                   height={40}
                   className={styles.userAvatarImg}
@@ -190,8 +202,8 @@ export default function AdminLayoutClient({
                 <div className={styles.userStatus}></div>
               </div>
               <div className={styles.userInfo}>
-                <div className={styles.userName}>Admin User</div>
-                <div className={styles.userRole}>Administrator</div>
+                <div className={styles.userName}>{currentUser?.fullname || "Admin User"}</div>
+                <div className={styles.userRole}>{currentUser?.role || "Administrator"}</div>
               </div>
             </div>
           </div>
@@ -222,14 +234,14 @@ export default function AdminLayoutClient({
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 flex items-center gap-2 p-2">
                   <ImageWithFallback
-                    src="/secure-admin-panel.png"
-                    fallbackSrc={smallAvatarFallbackSrc}
-                    alt="User Avatar"
+                    src={getAvatarUrl(currentUser?.avatar)}
+                    fallbackSrc={avatarFallbackSrc}
+                    alt={currentUser?.fullname || "User Avatar"}
                     width={32}
                     height={32}
                     className="rounded-full"
                   />
-                  <span className="font-medium">Admin User</span>
+                  <span className="font-medium">{currentUser?.fullname || "Admin User"}</span>
                   <ChevronDown size={16} />
                 </Button>
               </DropdownMenuTrigger>

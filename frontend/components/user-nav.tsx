@@ -43,13 +43,23 @@ export function UserNav() {
       .toUpperCase()
   }
 
+  // Helper function to get avatar URL
+  const getAvatarUrl = (path: string | null | undefined) => {
+    if (!path) return `/placeholder.svg?height=32&width=32&text=${user?.fullname?.substring(0, 2).toUpperCase() || 'U'}`;
+    if (path.startsWith('http')) return path;
+    if (path.startsWith('data:image')) return path;
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${baseUrl}${cleanPath}`;
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
             <AvatarImage
-              src={`/placeholder.svg?height=32&width=32&text=${user?.fullname?.substring(0, 2).toUpperCase() || 'U'}`}
+              src={getAvatarUrl(user?.avatar)}
               alt={user?.fullname || 'User'}
             />
             <AvatarFallback>{getInitials(user?.fullname || 'User')}</AvatarFallback>
