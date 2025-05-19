@@ -40,6 +40,12 @@ function initWebSocket(server) {
         // Check if user_id is valid
 
         if (user_id != null && !onlineUser.has(user_id)) {
+          prisma.user.update({
+            where: { id: user_id },
+            data: {
+              is_online: true,
+            },
+          });
           // Check if user is already online
           onlineUser.set(user_id, clientId); // Store user_id and clientId in onlineUser map
           console.log(`User ${user_id} logged in`);
@@ -59,6 +65,13 @@ function initWebSocket(server) {
             process.env.ACCESS_TOKEN_SECRET
           ); // Verify JWT token
           user_id = decoded.id; // Extract user_id from the decoded token
+
+          prisma.user.update({
+            where: { id: user_id },
+            data: {
+              is_online: false,
+            },
+          });
         } catch (err) {
           console.error("Token verification error:", err);
           socket.emit("error", { message: "Invalid token" });
@@ -118,8 +131,11 @@ function initWebSocket(server) {
 
 async function sendNotification(receiver_id, content, type, article_id) {
   try {
-    console.log(`[NOTIFICATION DEBUG] Attempting to send notification to user ${receiver_id}:`, { content, type, article_id });
-    
+    console.log(
+      `[NOTIFICATION DEBUG] Attempting to send notification to user ${receiver_id}:`,
+      { content, type, article_id }
+    );
+
     // Always create the notification in the database regardless of online status
     const notification = await prisma.notification.create({
       data: {
@@ -129,12 +145,16 @@ async function sendNotification(receiver_id, content, type, article_id) {
         article_id,
       },
     });
-    
-    console.log(`[NOTIFICATION DEBUG] Successfully created notification in database with ID: ${notification.id}`);
+
+    console.log(
+      `[NOTIFICATION DEBUG] Successfully created notification in database with ID: ${notification.id}`
+    );
 
     // Only send real-time notification if the user is online
     if (onlineUser.has(receiver_id)) {
-      console.log(`[NOTIFICATION DEBUG] User ${receiver_id} is online, sending via socket`);
+      console.log(
+        `[NOTIFICATION DEBUG] User ${receiver_id} is online, sending via socket`
+      );
       const clientId = onlineUser.get(receiver_id);
       const clientSocket = connectedClients.get(clientId);
 
@@ -148,17 +168,26 @@ async function sendNotification(receiver_id, content, type, article_id) {
 
         // Emit the notification to the specific client
         clientSocket.emit("notification", socketNotification);
-        console.log(`[NOTIFICATION DEBUG] Socket notification sent successfully to user ${receiver_id}`);
+        console.log(
+          `[NOTIFICATION DEBUG] Socket notification sent successfully to user ${receiver_id}`
+        );
       } else {
-        console.log(`[NOTIFICATION DEBUG] Client socket not found for user ${receiver_id} despite being online`);
+        console.log(
+          `[NOTIFICATION DEBUG] Client socket not found for user ${receiver_id} despite being online`
+        );
       }
     } else {
-      console.log(`[NOTIFICATION DEBUG] User ${receiver_id} is not online. Notification saved to database only.`);
+      console.log(
+        `[NOTIFICATION DEBUG] User ${receiver_id} is not online. Notification saved to database only.`
+      );
     }
-    
+
     return notification;
   } catch (error) {
-    console.error(`[NOTIFICATION ERROR] Error sending notification to user ${receiver_id}:`, error);
+    console.error(
+      `[NOTIFICATION ERROR] Error sending notification to user ${receiver_id}:`,
+      error
+    );
   }
 }
 

@@ -19,6 +19,15 @@ const fileApi = {
   uploadFile: async (file: File): Promise<UploadResponse> => {
     try {
       console.log('[API] Uploading file:', file.name);
+
+      // Convert file to base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = error => reject(error);
+      });
+
       const formData = new FormData();
       formData.append('file', file);
 
@@ -27,6 +36,11 @@ const fileApi = {
           'Content-Type': 'multipart/form-data',
         },
       });
+
+      // Override the URL with base64 data
+      if (response.data.success && response.data.file) {
+        response.data.file.url = base64;
+      }
 
       console.log('[API] File upload response:', response);
       return response.data;
