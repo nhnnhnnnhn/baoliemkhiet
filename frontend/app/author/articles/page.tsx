@@ -5,14 +5,26 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ChevronLeftIcon, ChevronRightIcon, Edit, Eye, Filter, Heart, MessageSquare, PenSquare, Search, Trash2 } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "@/src/store"
-import { handleGetArticlesByAuthor } from "@/src/thunks/article/articleThunk"
+import { handleGetArticlesByAuthor, handleDeleteArticle } from "@/src/thunks/article/articleThunk"
 import { selectArticles, selectIsLoading } from "@/src/thunks/article/articleSlice"
 import { handleGetProfile } from "@/src/thunks/auth/authThunk"
+import { selectCurrentUser } from "@/src/thunks/auth/authSlice"
+import { toast } from "@/components/ui/use-toast"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import styles from "../../admin/admin.module.css"
+import styles from "../author.module.css"
 
 // Định nghĩa các trạng thái và mapping
 const ARTICLE_STATUS = {
@@ -95,7 +107,7 @@ export default function AuthorArticlesPage() {
   const dispatch = useAppDispatch()
   const articles = useAppSelector(selectArticles)
   const isLoading = useAppSelector(selectIsLoading)
-  const currentUser = useAppSelector(state => state.auth.user)
+  const currentUser = useAppSelector(selectCurrentUser)
   const authorId = currentUser?.id
 
   // State for search and filter
@@ -103,6 +115,7 @@ export default function AuthorArticlesPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [timeFilter, setTimeFilter] = useState("all")
   const [sortBy, setSortBy] = useState<"likes" | "comments" | null>(null)
+  const [articleToDelete, setArticleToDelete] = useState<number | null>(null)
 
   // Filtered and sorted articles
   const filteredArticles = articles?.filter(article => {
@@ -167,7 +180,15 @@ export default function AuthorArticlesPage() {
 
   // Load user profile when component mounts
   useEffect(() => {
-    dispatch(handleGetProfile())
+    const loadProfile = async () => {
+      try {
+        const result = await dispatch(handleGetProfile())
+        console.log("Profile loaded:", result)
+      } catch (error) {
+        console.error("Error loading profile:", error)
+      }
+    }
+    loadProfile()
   }, [dispatch])
 
   useEffect(() => {
@@ -179,16 +200,41 @@ export default function AuthorArticlesPage() {
 
     if (authorId) {
       console.log("Fetching articles for author:", authorId)
-      dispatch(handleGetArticlesByAuthor(authorId))
-        .then((response) => {
-          console.log("API Response:", response)
-          console.log("Articles after API call:", articles)
-        })
-        .catch((error) => {
-          console.error("API Error:", error)
-        })
+      const fetchArticles = async () => {
+        try {
+          const result = await dispatch(handleGetArticlesByAuthor(authorId))
+          console.log("Articles API Response:", result)
+          console.log("Articles in Redux store:", articles)
+        } catch (error) {
+          console.error("Error fetching articles:", error)
+        }
+      }
+      fetchArticles()
     }
   }, [dispatch, authorId, currentUser, router])
+
+  // Handle delete article
+  const handleDelete = async (articleId: number) => {
+    try {
+      await dispatch(handleDeleteArticle(articleId))
+      toast({
+        title: "Thành công",
+        description: "Đã xóa bài viết thành công",
+        variant: "success"
+      })
+      // Refresh articles list
+      if (authorId) {
+        dispatch(handleGetArticlesByAuthor(authorId))
+      }
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể xóa bài viết",
+        variant: "destructive"
+      })
+    }
+    setArticleToDelete(null)
+  }
 
   // If not authenticated, don't render the page
   if (!currentUser) {
@@ -267,38 +313,38 @@ export default function AuthorArticlesPage() {
         </div>
         <div className={styles.tableContent}>
           <div className="overflow-x-auto">
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th className={styles.tableHeaderCell}>ID</th>
-                  <th className={styles.tableHeaderCell}>Tiêu đề</th>
-                  <th className={styles.tableHeaderCell}>Trạng thái</th>
-                  <th className={styles.tableHeaderCell}>Chuyên mục</th>
-                  <th className={styles.tableHeaderCell}>Ngày xuất bản</th>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th className={styles.tableHeaderCell}>ID</th>
+                <th className={styles.tableHeaderCell}>Tiêu đề</th>
+                <th className={styles.tableHeaderCell}>Trạng thái</th>
+                <th className={styles.tableHeaderCell}>Chuyên mục</th>
+                <th className={styles.tableHeaderCell}>Ngày xuất bản</th>
                   <th className={styles.tableHeaderCell}>Lượt thích</th>
                   <th className={styles.tableHeaderCell}>Bình luận</th>
-                  <th className={styles.tableHeaderCell}>Hành động</th>
-                </tr>
-              </thead>
-              <tbody>
+                <th className={styles.tableHeaderCell}>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
                 {filteredArticles && filteredArticles.length > 0 ? (
                   filteredArticles.map((article) => (
-                  <tr key={article.id} className={styles.tableRow}>
-                    <td className={styles.tableCell}>{article.id}</td>
-                    <td className={styles.tableCell}>
+                <tr key={article.id} className={styles.tableRow}>
+                  <td className={styles.tableCell}>{article.id}</td>
+                  <td className={styles.tableCell}>
                       <div className="font-medium max-w-[300px] truncate">{article.title}</div>
-                    </td>
-                    <td className={styles.tableCell}>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  </td>
+                  <td className={styles.tableCell}>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           ARTICLE_STATUS[article.status as ArticleStatus]?.color || "bg-gray-100 text-gray-800"
                         }`}
                       >
                         {ARTICLE_STATUS[article.status as ArticleStatus]?.label || article.status}
-                      </span>
-                    </td>
-                    <td className={styles.tableCell}>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    </span>
+                  </td>
+                  <td className={styles.tableCell}>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {article.category?.name || "Chưa phân loại"}
                       </span>
                     </td>
@@ -321,26 +367,31 @@ export default function AuthorArticlesPage() {
                       <div className="flex items-center gap-1 text-gray-600">
                         <MessageSquare className="h-4 w-4" />
                         <span>{article._count?.articleComments || 0}</span>
-                      </div>
-                    </td>
-                    <td className={styles.tableCell}>
+                    </div>
+                  </td>
+                  <td className={styles.tableCell}>
                       <div className="flex items-center gap-2">
-                        <Link href={`/author/articles/${article.id}`}>
+                      <Link href={`/author/articles/${article.id}`}>
                           <Button variant="ghost" size="icon">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                        <Link href={`/author/articles/${article.id}/edit`}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Link href={`/author/articles/${article.id}/edit`}>
                           <Button variant="ghost" size="icon">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                        <Button variant="ghost" size="icon" className="text-destructive">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="text-destructive"
+                          onClick={() => setArticleToDelete(article.id)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
-                      </div>
-                    </td>
-                  </tr>
+                    </div>
+                  </td>
+                </tr>
                   ))
                 ) : (
                   <tr>
@@ -349,11 +400,32 @@ export default function AuthorArticlesPage() {
                     </td>
                   </tr>
                 )}
-              </tbody>
-            </table>
+            </tbody>
+          </table>
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!articleToDelete} onOpenChange={() => setArticleToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => articleToDelete && handleDelete(articleToDelete)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Xóa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

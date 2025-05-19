@@ -5,18 +5,37 @@ import { useSelector } from "react-redux"
 import { selectCurrentUser } from "@/src/thunks/auth/authSlice"
 import { Button } from "@/components/ui/button"
 import styles from "../admin/admin.module.css"
-
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useAppDispatch } from "@/src/store"
 import { handleGetProfile } from "@/src/thunks/auth/authThunk"
+import articleApi, { AuthorDashboardData } from "@/src/apis/article"
 
 export default function AuthorDashboard() {
   const dispatch = useAppDispatch()
   const currentUser = useSelector(selectCurrentUser)
+  const [dashboardData, setDashboardData] = useState<AuthorDashboardData | null>(null)
   
   useEffect(() => {
     dispatch(handleGetProfile() as any)
   }, [dispatch])
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (!currentUser?.id) return
+      
+      try {
+        const response = await articleApi.getAuthorDashboard(currentUser.id)
+        console.log('Dashboard Response:', response)
+        if (response) {
+          setDashboardData(response)
+        }
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error)
+      }
+    }
+
+    fetchDashboardData()
+  }, [currentUser?.id])
 
   // Calculate statistics from currentUser articles
   const stats = {
@@ -24,44 +43,12 @@ export default function AuthorDashboard() {
     published: currentUser?.articles?.filter(a => a.status === "PUBLISHED")?.length || 0,
     pending: currentUser?.articles?.filter(a => a.status === "PENDING")?.length || 0,
     draft: currentUser?.articles?.filter(a => a.status === "DRAFT")?.length || 0,
-    views: currentUser?.articles?.reduce((sum, article) => sum + (article.views || 0), 0) || 0,
-    likes: currentUser?.articles?.reduce((sum, article) => sum + (article.likes || 0), 0) || 0,
-    comments: currentUser?.articles?.reduce((sum, article) => sum + (article.comments || 0), 0) || 0
+    views: currentUser?.articles?.reduce((sum, article) => sum + (article.views || 0), 0) || 0
   }
 
-  // Mock recent articles
-  const recentArticles = [
-    {
-      id: "ART-001",
-      title: "Đội tuyển Việt Nam giành chiến thắng ấn tượng tại vòng loại World Cup",
-      status: "Đã xuất bản",
-      category: "Thể thao",
-      publishedAt: "04/04/2025",
-      views: 10876,
-      likes: 543,
-      comments: 78,
-    },
-    {
-      id: "ART-002",
-      title: "Thị trường bất động sản phía Nam khởi sắc trong quý II",
-      status: "Đã xuất bản",
-      category: "Kinh doanh",
-      publishedAt: "03/04/2025",
-      views: 8932,
-      likes: 421,
-      comments: 56,
-    },
-    {
-      id: "ART-003",
-      title: "Dự báo tăng trưởng GDP Việt Nam năm 2025",
-      status: "Chờ duyệt",
-      category: "Kinh tế",
-      publishedAt: "-",
-      views: 0,
-      likes: 0,
-      comments: 0,
-    },
-  ]
+  // Calculate percentages for likes and comments
+  const likePercentage = dashboardData?.likePercentage ?? 0
+  const commentPercentage = dashboardData?.commentPercentage ?? 0
 
   return (
     <div>
@@ -81,7 +68,7 @@ export default function AuthorDashboard() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
-                Xin chào {currentUser?.fullname || currentUser?.name || "Tác giả"}!
+                Xin chào {currentUser?.fullname || "Tác giả"}!
               </h2>
               <p className="mt-1 text-gray-600">Chào mừng bạn quay trở lại với trang quản lý tác giả.</p>
             </div>
@@ -116,29 +103,15 @@ export default function AuthorDashboard() {
 
         <div className={styles.statCard}>
           <div className={styles.statHeader}>
-            <div className={styles.statTitle}>Lượt xem</div>
-            <div className={`${styles.statIconContainer} ${styles.statIconGreen}`}>
-              <Eye className="h-4 w-4" />
-            </div>
-          </div>
-          <div className={styles.statValue}>{stats.likes.toLocaleString()}</div>
-          <div className={`${styles.statChange} ${styles.statChangePositive}`}>
-            <ArrowRight className={styles.statChangeIcon} />
-            <span>5.2% so với tháng trước</span>
-          </div>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statHeader}>
             <div className={styles.statTitle}>Lượt thích</div>
             <div className={`${styles.statIconContainer} ${styles.statIconYellow}`}>
               <ThumbsUp className="h-4 w-4" />
             </div>
           </div>
-          <div className={styles.statValue}>{stats.views.toLocaleString()}</div>
-          <div className={`${styles.statChange} ${styles.statChangePositive}`}>
+          <div className={styles.statValue}>{dashboardData?.monthlyLikes ?? 0}</div>
+          <div className={`${styles.statChange} ${likePercentage > 0 ? styles.statChangePositive : styles.statChangeNegative}`}>
             <ArrowRight className={styles.statChangeIcon} />
-            <span>7.8% so với tháng trước</span>
+            <span>{Math.abs(likePercentage)}% so với tháng trước</span>
           </div>
         </div>
 
@@ -149,10 +122,23 @@ export default function AuthorDashboard() {
               <MessageSquare className="h-4 w-4" />
             </div>
           </div>
-          <div className={styles.statValue}>{stats.comments.toLocaleString()}</div>
-          <div className={`${styles.statChange} ${styles.statChangePositive}`}>
+          <div className={styles.statValue}>{dashboardData?.monthlyComments ?? 0}</div>
+          <div className={`${styles.statChange} ${commentPercentage > 0 ? styles.statChangePositive : styles.statChangeNegative}`}>
             <ArrowRight className={styles.statChangeIcon} />
-            <span>3.4% so với tháng trước</span>
+            <span>{Math.abs(commentPercentage)}% so với tháng trước</span>
+          </div>
+        </div>
+
+        <div className={styles.statCard}>
+          <div className={styles.statHeader}>
+            <div className={styles.statTitle}>Số danh mục</div>
+            <div className={`${styles.statIconContainer} ${styles.statIconGreen}`}>
+              <Eye className="h-4 w-4" />
+            </div>
+          </div>
+          <div className={styles.statValue}>{dashboardData?.uniqueCategoryCount ?? 0}</div>
+          <div className="text-sm text-gray-500">
+            Danh mục đã sử dụng
           </div>
         </div>
       </div>
@@ -169,61 +155,67 @@ export default function AuthorDashboard() {
             </Link>
           </div>
           <div className={styles.tableContent}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th className={styles.tableHeaderCell}>Tiêu đề</th>
-                  <th className={styles.tableHeaderCell}>Trạng thái</th>
-                  <th className={styles.tableHeaderCell}>Chuyên mục</th>
-                  <th className={styles.tableHeaderCell}>Ngày xuất bản</th>
-                  <th className={styles.tableHeaderCell}>Lượt xem</th>
-                  <th className={styles.tableHeaderCell}>Hành động</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentArticles.map((article) => (
-                  <tr key={article.id} className={styles.tableRow}>
-                    <td className={styles.tableCell}>
-                      <div className="font-medium">{article.title}</div>
-                    </td>
-                    <td className={styles.tableCell}>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          article.status === "Đã xuất bản"
-                            ? "bg-green-100 text-green-800"
-                            : article.status === "Chờ duyệt"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {article.status}
-                      </span>
-                    </td>
-                    <td className={styles.tableCell}>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {article.category}
-                      </span>
-                    </td>
-                    <td className={styles.tableCell}>{article.publishedAt}</td>
-                    <td className={styles.tableCell}>{article.views.toLocaleString()}</td>
-                    <td className={styles.tableCell}>
-                      <div className="flex space-x-2">
-                        <Link href={`/author/articles/${article.id}`}>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                        <Link href={`/author/articles/${article.id}/edit`}>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                      </div>
-                    </td>
+            {dashboardData?.latestArticles && dashboardData.latestArticles.length > 0 ? (
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th className={styles.tableHeaderCell}>Tiêu đề</th>
+                    <th className={styles.tableHeaderCell}>Trạng thái</th>
+                    <th className={styles.tableHeaderCell}>Chuyên mục</th>
+                    <th className={styles.tableHeaderCell}>Ngày xuất bản</th>
+                    <th className={styles.tableHeaderCell}>Hành động</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {dashboardData.latestArticles.map((article) => (
+                    <tr key={article.id} className={styles.tableRow}>
+                      <td className={styles.tableCell}>
+                        <div className="font-medium">{article.title}</div>
+                      </td>
+                      <td className={styles.tableCell}>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            article.status === "PUBLISHED"
+                              ? "bg-green-100 text-green-800"
+                              : article.status === "PENDING"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {article.status === "PUBLISHED" ? "Đã xuất bản" :
+                           article.status === "PENDING" ? "Chờ duyệt" :
+                           "Bản nháp"}
+                        </span>
+                      </td>
+                      <td className={styles.tableCell}>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {article.category?.name || 'Chưa phân loại'}
+                        </span>
+                      </td>
+                      <td className={styles.tableCell}>
+                        {article.publishedAt ? new Date(article.publishedAt).toLocaleDateString('vi-VN') : '-'}
+                      </td>
+                      <td className={styles.tableCell}>
+                        <div className="flex space-x-2">
+                          <Link href={`/author/articles/${article.id}`}>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          <Link href={`/author/articles/${article.id}/edit`}>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="text-center py-4 text-gray-500">Không có bài viết nào</div>
+            )}
           </div>
         </div>
       </div>

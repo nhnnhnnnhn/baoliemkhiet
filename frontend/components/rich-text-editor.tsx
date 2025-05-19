@@ -23,7 +23,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, id = '
           'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
           'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
           'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount',
-          'emoticons', 'paste'
+          'emoticons'
         ],
         toolbar1: 'undo redo | blocks | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist | link image media | forecolor backcolor emoticons',
         toolbar2: 'styleselect | outdent indent | removeformat | code fullscreen | preview | help',

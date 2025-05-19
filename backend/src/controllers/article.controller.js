@@ -43,6 +43,7 @@ module.exports.getAllPostedArticles = controllerHandler(async (req, res) => {
 
 // Get a single article by ID
 module.exports.getArticleById = controllerHandler(async (req, res) => {
+  console.log('-----------------Running getArticleById with id:', req.params.id);
   const { id } = req.params;
   if (!id) {
     return res.status(400).json({ message: "Missing article ID" });
@@ -256,4 +257,13 @@ module.exports.deleteMultipleArticles = controllerHandler(async (req, res) => {
     return res.status(404).json({ message: "Articles not found" });
   }
   res.status(200).json({ message: "Delete successfully!", articles });
+});
+
+// Author Dashboard
+module.exports.getAuthorDashboard = controllerHandler(async (req, res) => {
+  console.log('-----------------Running getAuthorDashboard with id:', req.params.id);
+  const authorId = req.params.id;
+  const dashboardData = await service.getAuthorDashboard(authorId);
+  console.log('-----------------Dashboard data:', dashboardData);
+  res.status(200).json(dashboardData);
 });

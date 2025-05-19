@@ -112,6 +112,17 @@ export interface CategoryArticlesResponse {
   numberOfArticles: number;
 }
 
+export interface AuthorDashboardData {
+  latestArticles: Article[]
+  monthlyLikes: number
+  previousMonthlyLikes: number
+  likePercentage: number
+  monthlyComments: number
+  previousMonthlyComments: number
+  commentPercentage: number
+  uniqueCategoryCount: number
+}
+
 const articleApi = {
   // Lấy danh sách bài viết
   getArticles: async (params?: GetArticlesParams): Promise<GetArticlesResponse> => {
@@ -237,6 +248,11 @@ const articleApi = {
       console.error('Lỗi trong getRecommendedArticles:', error);
       return [];
     }
+  },
+
+  // Lấy dữ liệu dashboard cho tác giả
+  getAuthorDashboard: (authorId: number): Promise<AuthorDashboardData> => {
+    return axiosClient.get(`/articles/author-dashboard/${authorId}`)
   }
 }
 
