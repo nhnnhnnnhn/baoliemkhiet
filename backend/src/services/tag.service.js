@@ -24,14 +24,6 @@ async function deleteTag(id) {
     throw new Error("Tag not found");
   }
 
-  // Check if tag is used in any articles
-  const usedInArticles = await prisma.articleTag.findFirst({
-    where: { tagId: id },
-  });
-  if (usedInArticles) {
-    throw new Error("Cannot delete tag that is used in articles");
-  }
-
   const deletedTag = await prisma.tag.delete({
     where: { id },
   });
@@ -42,7 +34,15 @@ async function getAllTags() {
   const tags = await prisma.tag.findMany({
     orderBy: { name: "asc" },
   });
-  return tags;
+  const tagsWithArticleCount = await Promise.all(
+    tags.map(async (tag) => {
+      const articleCount = await prisma.articleTag.count({
+        where: { tagId: tag.id },
+      });
+      return { ...tag, articleCount };
+    })
+  );
+  return tagsWithArticleCount;
 }
 
 async function getTagById(id) {
@@ -65,10 +65,34 @@ async function getTagsByArticle(articleId) {
   return articleTags.map(at => at.tag);
 }
 
+async function updateTag(id, name) {
+  const tag = await prisma.tag.findUnique({
+    where: { id },
+  });
+  if (!tag) {
+    throw new Error("Tag not found");
+  }
+
+  const existingTag = await prisma.tag.findUnique({
+    where: { name },
+  });
+  if (existingTag) {
+    throw new Error("Tag already exists");
+  }
+
+  const updatedTag = await prisma.tag.update({  
+    where: { id },
+    data: { name},
+  });
+  return updatedTag;
+}
+
+
 module.exports = {
   createTag,
   deleteTag,
   getAllTags,
   getTagById,
   getTagsByArticle,
+  updateTag,
 };
