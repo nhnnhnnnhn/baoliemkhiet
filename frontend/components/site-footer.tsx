@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin, Tag } from "lucide-react"
+import { Mail, Phone, MapPin } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 
@@ -17,20 +17,6 @@ export function SiteFooter() {
               Báo Liêm Khiết là trang tin tức uy tín, cung cấp thông tin chính xác và khách quan về các sự kiện trong
               nước và quốc tế.
             </p>
-            <div className="flex space-x-4">
-              <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white">
-                <Facebook className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white">
-                <Twitter className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white">
-                <Instagram className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white">
-                <Youtube className="h-5 w-5" />
-              </Button>
-            </div>
           </div>
 
           {/* Column 2: Categories */}
@@ -62,12 +48,6 @@ export function SiteFooter() {
                   Thể thao
                 </Link>
               </li>
-              <li>
-                <Link href="/tags" className="text-gray-400 hover:text-white flex items-center">
-                  <Tag className="h-4 w-4 mr-1" />
-                  Chủ đề
-                </Link>
-              </li>
             </ul>
           </div>
 
@@ -77,7 +57,7 @@ export function SiteFooter() {
             <ul className="space-y-3">
               <li className="flex items-start">
                 <MapPin className="h-5 w-5 text-gray-400 mr-2 mt-0.5" />
-                <span className="text-gray-400">123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh</span>
+                <span className="text-gray-400">Km10, đường Nguyễn Trãi, Phường Mộ Lao, Quận Hà Đông, Thành phố Hà Nội</span>
               </li>
               <li className="flex items-center">
                 <Phone className="h-5 w-5 text-gray-400 mr-2" />
