@@ -18,7 +18,6 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { handleSendOtp, handleVerifyOtp, handleRegister } from "@/src/thunks/auth/authThunk"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -43,7 +42,6 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     accountType: "user",
-    agreeTerms: false,
     otp: "",
   })
 
@@ -59,13 +57,6 @@ export default function RegisterPage() {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }))
-  }
-
-  const handleCheckboxChange = (checked: boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      agreeTerms: checked,
     }))
   }
 
@@ -166,11 +157,6 @@ export default function RegisterPage() {
 
     if (formData.password !== formData.confirmPassword) {
       setError("❌ Mật khẩu xác nhận không khớp với mật khẩu đã nhập!")
-      return
-    }
-
-    if (!formData.agreeTerms) {
-      setError("❌ Bạn cần đồng ý với điều khoản dịch vụ để tiếp tục!")
       return
     }
 
@@ -415,7 +401,7 @@ export default function RegisterPage() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-full px-3 hover:bg-transparent hover:text-blue-600 text-gray-500"
+                      className="h-full hover:bg-transparent hover:text-blue-600 text-gray-500"
                       onClick={handleSendOtpClick}
                       disabled={loading || !formData.email}
                     >
@@ -484,28 +470,13 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <div className="flex items-center">
-            <Checkbox id="agree-terms" checked={formData.agreeTerms} onCheckedChange={handleCheckboxChange} required />
-            <Label htmlFor="agree-terms" className="ml-2 block text-sm text-gray-900">
-              Tôi đồng ý với{" "}
-              <Link href="/terms" className="font-medium text-blue-600 hover:text-blue-500">
-                Điều khoản dịch vụ
-              </Link>{" "}
-              và{" "}
-              <Link href="/privacy" className="font-medium text-blue-600 hover:text-blue-500">
-                Chính sách bảo mật
-              </Link>
-            </Label>
-          </div>
-
-          <div>
+          <div className="mt-8">
             <Button
               type="submit"
-              className="w-full"
-              disabled={otpSending || otpVerifying || !otpVerified}
+              className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              disabled={loading || !formData.email || !formData.password || !formData.confirmPassword || !formData.fullName || !otpVerified}
             >
-              {otpSending ? "Đang gửi OTP..." :
-               otpVerifying ? "Đang xác thực OTP..." : "Đăng ký"}
+              Đăng ký
             </Button>
           </div>
         </form>

@@ -74,17 +74,6 @@ export function SiteFooter() {
         <div className="border-t border-gray-800 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">© 2025 Báo Liêm Khiết. Tất cả các quyền được bảo lưu.</p>
-            <div className="flex space-x-4 mt-4 md:mt-0">
-              <Link href="/privacy-policy" className="text-gray-400 hover:text-white text-sm">
-                Chính sách bảo mật
-              </Link>
-              <Link href="/terms-of-service" className="text-gray-400 hover:text-white text-sm">
-                Điều khoản sử dụng
-              </Link>
-              <Link href="/contact" className="text-gray-400 hover:text-white text-sm">
-                Liên hệ
-              </Link>
-            </div>
           </div>
         </div>
       </div>
