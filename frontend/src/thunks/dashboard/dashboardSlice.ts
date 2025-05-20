@@ -1,4 +1,5 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { RootState } from '@/src/store';
 import { DashboardStatistics, WeeklyViews } from '@/src/apis/dashboard';
 import { handleGetStatistics, handleGetWeeklyViews, handleGetMostViewedArticles } from './dashboardThunk';
 
@@ -24,52 +25,54 @@ const dashboardSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // Handle get statistics
-      .addCase(handleGetStatistics.pending, (state) => {
+      .addCase(handleGetStatistics.pending, (state: DashboardState) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(handleGetStatistics.fulfilled, (state, action) => {
-        state.isLoading = false;
+      .addCase(handleGetWeeklyViews.pending, (state: DashboardState) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(handleGetMostViewedArticles.pending, (state: DashboardState) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      // Handle success cases
+      .addCase(handleGetStatistics.fulfilled, (state: DashboardState, action) => {
         state.statistics = action.payload;
-      })
-      .addCase(handleGetStatistics.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
-      })
-      // Handle get weekly views
-      .addCase(handleGetWeeklyViews.pending, (state) => {
-        state.isLoading = true;
         state.error = null;
       })
-      .addCase(handleGetWeeklyViews.fulfilled, (state, action) => {
-        state.isLoading = false;
+      .addCase(handleGetWeeklyViews.fulfilled, (state: DashboardState, action) => {
         state.weeklyViews = action.payload;
-      })
-      .addCase(handleGetWeeklyViews.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
-      })
-      // Handle get most viewed articles
-      .addCase(handleGetMostViewedArticles.pending, (state) => {
-        state.isLoading = true;
         state.error = null;
       })
-      .addCase(handleGetMostViewedArticles.fulfilled, (state, action) => {
-        state.isLoading = false;
+      .addCase(handleGetMostViewedArticles.fulfilled, (state: DashboardState, action) => {
         state.mostViewedArticles = action.payload;
-      })
-      .addCase(handleGetMostViewedArticles.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        state.error = null;
+      })
+      // Handle error cases
+      .addCase(handleGetStatistics.rejected, (state: DashboardState, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Error fetching statistics';
+      })
+      .addCase(handleGetWeeklyViews.rejected, (state: DashboardState, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Error fetching weekly views';
+      })
+      .addCase(handleGetMostViewedArticles.rejected, (state: DashboardState, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Error fetching most viewed articles';
       });
   }
 });
 
-export const selectDashboardStatistics = (state: any) => state.dashboard.statistics;
-export const selectWeeklyViews = (state: any) => state.dashboard.weeklyViews;
-export const selectMostViewedArticles = (state: any) => state.dashboard.mostViewedArticles;
-export const selectDashboardLoading = (state: any) => state.dashboard.isLoading;
-export const selectDashboardError = (state: any) => state.dashboard.error;
+export const selectDashboardStatistics = (state: RootState) => state.dashboard.statistics;
+export const selectWeeklyViews = (state: RootState) => state.dashboard.weeklyViews;
+export const selectMostViewedArticles = (state: RootState) => state.dashboard.mostViewedArticles;
+export const selectDashboardLoading = (state: RootState) => state.dashboard.isLoading;
+export const selectDashboardError = (state: RootState) => state.dashboard.error;
 
 export default dashboardSlice.reducer; 

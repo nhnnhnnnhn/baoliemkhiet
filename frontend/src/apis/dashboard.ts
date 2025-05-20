@@ -1,5 +1,18 @@
 import axiosClient from './axiosClient';
 
+export interface Article {
+  id: string;
+  title: string;
+  publishedAt: string;
+  view: number;
+  categoryId?: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+}
+
 export interface DashboardStatistics {
   viewsInThisMonth: number;
   viewsInPreviousMonth: number;
@@ -27,9 +40,7 @@ const dashboardApi = {
   getStatistics: async (): Promise<DashboardStatistics> => {
     try {
       console.log('[API] Fetching dashboard statistics');
-      const response = await axiosClient.get<DashboardStatistics>('/dashboard/statistic');
-      console.log('[API] Dashboard statistics:', response);
-      return response.data;
+      return await axiosClient.get('/dashboard/statistic');
     } catch (error) {
       console.error('[API] Error fetching dashboard statistics:', error);
       throw error;
@@ -40,9 +51,7 @@ const dashboardApi = {
   getWeeklyViews: async (): Promise<WeeklyViews> => {
     try {
       console.log('[API] Fetching weekly views');
-      const response = await axiosClient.get<WeeklyViews>('/dashboard/view-week');
-      console.log('[API] Weekly views:', response);
-      return response.data;
+      return await axiosClient.get('/dashboard/view-week');
     } catch (error) {
       console.error('[API] Error fetching weekly views:', error);
       throw error;
@@ -50,12 +59,10 @@ const dashboardApi = {
   },
 
   // Get most viewed articles
-  getMostViewedArticles: async () => {
+  getMostViewedArticles: async (): Promise<Article[]> => {
     try {
       console.log('[API] Fetching most viewed articles');
-      const response = await axiosClient.get('/dashboard/most-viewed-articles');
-      console.log('[API] Most viewed articles:', response);
-      return response.data;
+      return await axiosClient.get('/dashboard/most-viewed-articles');
     } catch (error) {
       console.error('[API] Error fetching most viewed articles:', error);
       throw error;
