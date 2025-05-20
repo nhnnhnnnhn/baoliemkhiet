@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { Check, X, Eye, AlertCircle, RefreshCw } from "lucide-react";
+import styles from "./comments.module.css";
 import commentApi from "@/src/apis/comment";
 import type {
   Comment as ApiComment,
@@ -78,9 +80,61 @@ export default function CommentsClientPage() {
     setIsLoading(false);
   };
 
+  const searchParams = useSearchParams();
+
   useEffect(() => {
     fetchComments();
   }, [currentPage]);
+
+  // Add highlight styles
+  useEffect(() => {
+    const highlightStyles = `
+      @keyframes highlightAnimation {
+        0% { background-color: rgba(59, 130, 246, 0.4); }
+        50% { background-color: rgba(59, 130, 246, 0.6); }
+        100% { background-color: transparent; }
+      }
+      
+      .highlight-row {
+        background-color: rgba(59, 130, 246, 0.15);
+      }
+      
+      .highlight-animation {
+        animation: highlightAnimation 2s ease-in-out;
+      }
+    `;
+
+    const styleEl = document.createElement('style');
+    styleEl.innerHTML = highlightStyles;
+    document.head.appendChild(styleEl);
+
+    return () => {
+      document.head.removeChild(styleEl);
+    };
+  }, []);
+
+  // Handle highlighting
+  const highlightedCommentId = searchParams.get('highlight');
+  const highlightedRowRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (highlightedCommentId && highlightedRowRef.current && comments.length > 0) {
+      // Scroll to the highlighted row
+      highlightedRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      // Add highlight animation
+      highlightedRowRef.current.classList.add('highlight-animation');
+      
+      // Remove the animation class after it completes
+      const timer = setTimeout(() => {
+        if (highlightedRowRef.current) {
+          highlightedRowRef.current.classList.remove('highlight-animation');
+        }
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedCommentId, comments]);
 
   const handleView = (comment: Comment) => {
     setSelectedComment(comment);
@@ -157,7 +211,10 @@ export default function CommentsClientPage() {
             {comments.map((comment) => (
               <div
                 key={comment.id}
-                className="flex items-center gap-4 rounded-md border p-4"
+                ref={highlightedCommentId && comment.id.toString() === highlightedCommentId ? highlightedRowRef : null}
+                className={`flex items-center gap-4 rounded-md border p-4 transition-all duration-300 ${
+                  highlightedCommentId && comment.id.toString() === highlightedCommentId ? 'highlight-row' : ''
+                }`}
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-2">

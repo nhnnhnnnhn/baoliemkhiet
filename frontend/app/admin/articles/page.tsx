@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react"
 import Link from "next/link"
-import { ChevronLeftIcon, ChevronRightIcon, Download, Edit, Eye, Filter, MoreHorizontal, Plus, RefreshCw, Search, Trash2, CheckCircle, XCircle } from "lucide-react"
+import { ChevronLeftIcon, ChevronRightIcon, Download, Edit, Eye, Filter, MoreHorizontal, Plus, RefreshCw, Search, Trash2, CheckCircle, XCircle, ArrowUp, ArrowDown } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "@/src/store"
 import {
   handleGetArticles,
@@ -71,7 +71,8 @@ export default function ArticlesPage() {
   const [isSearching, setIsSearching] = useState(false)
   const [selectedArticleId, setSelectedArticleId] = useState<number | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [itemsPerPage] = useState(10)
+  const [sortField, setSortField] = useState<string>('id')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   
   // Add highlight styles to the document
   useEffect(() => {
@@ -100,10 +101,15 @@ export default function ArticlesPage() {
     };
   }, []);
   
-  // Fetch articles on component mount
+  // Fetch articles on component mount or when page changes
   useEffect(() => {
-    dispatch(handleGetArticles({}))
-  }, [dispatch])
+    dispatch(handleGetArticles({
+      page: currentPage,
+      limit: 10,
+      sort: sortField,
+      order: sortOrder
+    }))
+  }, [dispatch, currentPage, sortField, sortOrder])
   
   // Handle search input change with debounce
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
@@ -122,7 +128,12 @@ export default function ArticlesPage() {
       if (value.trim() === '') {
         // If search query is empty, get all articles
         setIsSearching(false)
-        dispatch(handleGetArticles({}))
+        dispatch(handleGetArticles({
+          page: currentPage,
+          limit: 10,
+          sort: sortField,
+          order: sortOrder
+        }))
       } else {
         // Otherwise use the search API
         setIsSearching(true)
@@ -138,7 +149,12 @@ export default function ArticlesPage() {
     if (e.key === 'Enter') {
       if (searchQuery.trim() === '') {
         setIsSearching(false)
-        dispatch(handleGetArticles({}))
+        dispatch(handleGetArticles({
+          page: currentPage, 
+          limit: 10, 
+          sort: sortField, 
+          order: sortOrder
+        }))
       } else {
         setIsSearching(true)
         dispatch(handleSearchArticles(searchQuery))
@@ -170,7 +186,30 @@ export default function ArticlesPage() {
   
   // Pagination handlers
   const handlePageChange = (page: number) => {
-    dispatch(handleGetArticles({ page, limit: itemsPerPage }))
+    dispatch(handleGetArticles({
+      page,
+      limit: 10,
+      sort: sortField,
+      order: sortOrder
+    }))
+  }
+  
+  // Handle sort
+  const handleSort = (field: string) => {
+    // If clicking on the same field, toggle the sort order
+    const newOrder = field === sortField ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc';
+    
+    // Update state
+    setSortField(field);
+    setSortOrder(newOrder);
+    
+    // Reset to first page when sorting
+    dispatch(handleGetArticles({
+      page: 1,
+      limit: 10,
+      sort: field,
+      order: newOrder
+    }));
   }
   
   // Open delete confirmation dialog
@@ -187,7 +226,12 @@ export default function ArticlesPage() {
   
   // Handle refresh
   const handleRefresh = () => {
-    dispatch(handleGetArticles({}))
+    dispatch(handleGetArticles({
+      page: 1,
+      limit: 10,
+      sort: sortField,
+      order: sortOrder
+    }))
   }
   
   // Mapping status values to Vietnamese display text
@@ -257,7 +301,12 @@ export default function ArticlesPage() {
           description: "Đã duyệt bài viết thành công",
           variant: "success"
         })
-        dispatch(handleGetArticles({}))
+        dispatch(handleGetArticles({
+          page: currentPage,
+          limit: 10,
+          sort: sortField,
+          order: sortOrder
+        }))
       }
     } catch (error: any) {
       toast({
@@ -277,7 +326,12 @@ export default function ArticlesPage() {
           description: "Đã từ chối bài viết thành công",
           variant: "success"
         })
-        dispatch(handleGetArticles({}))
+        dispatch(handleGetArticles({
+          page: currentPage,
+          limit: 10,
+          sort: sortField,
+          order: sortOrder
+        }))
       }
     } catch (error: any) {
       toast({
@@ -296,7 +350,12 @@ export default function ArticlesPage() {
         description: "Đã xóa bài viết thành công",
         variant: "success"
       })
-      dispatch(handleGetArticles({}))
+      dispatch(handleGetArticles({
+        page: currentPage,
+        limit: 10,
+        sort: sortField,
+        order: sortOrder
+      }))
       setIsDeleteDialogOpen(false)
     } catch (error: any) {
       toast({
@@ -305,6 +364,15 @@ export default function ArticlesPage() {
         variant: "destructive"
       })
     }
+  }
+
+  // Render sort indicator
+  const renderSortIndicator = (field: string) => {
+    if (field !== sortField) return null;
+    
+    return sortOrder === 'asc' ? 
+      <ArrowUp className="h-4 w-4 ml-1" /> : 
+      <ArrowDown className="h-4 w-4 ml-1" />;
   }
 
   return (
@@ -351,7 +419,14 @@ export default function ArticlesPage() {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th className={styles.tableHeaderCell}>ID</th>
+                <th 
+                  className={`${styles.tableHeaderCell} cursor-pointer`} 
+                  onClick={() => handleSort('id')}
+                >
+                  <div className="flex items-center">
+                    ID {renderSortIndicator('id')}
+                  </div>
+                </th>
                 <th className={styles.tableHeaderCell}>Tiêu đề</th>
                 <th className={styles.tableHeaderCell}>Chuyên mục</th>
                 <th className={styles.tableHeaderCell}>Tác giả</th>
@@ -363,7 +438,7 @@ export default function ArticlesPage() {
             <tbody>
               {isLoading ? (
                 // Loading skeleton
-                Array(5).fill(0).map((_, index) => (
+                Array(10).fill(0).map((_, index) => (
                   <tr key={index} className={styles.tableRow}>
                     <td className={styles.tableCell}><Skeleton className="h-4 w-10" /></td>
                     <td className={styles.tableCell}><Skeleton className="h-4 w-full" /></td>
@@ -466,41 +541,75 @@ export default function ArticlesPage() {
             {isLoading ? (
               <Skeleton className="h-4 w-40" />
             ) : (
-              `Hiển thị ${(currentPage - 1) * itemsPerPage + 1} đến ${Math.min(currentPage * itemsPerPage, totalArticles)} trong tổng số ${totalArticles} bài viết`
+              `Hiển thị ${articles.length > 0 ? (currentPage - 1) * 10 + 1 : 0} đến ${Math.min(currentPage * 10, totalArticles)} trong tổng số ${totalArticles} bài viết`
             )}
           </div>
           <div className={styles.paginationControls}>
-            <button 
-              className={`${styles.paginationButton} ${currentPage <= 1 ? styles.paginationButtonDisabled : ''}`} 
+            {/* First page */}
+            <button
+              className={`${styles.paginationButton} ${currentPage <= 1 ? styles.paginationButtonDisabled : ''}`}
+              onClick={() => handlePageChange(1)}
               disabled={currentPage <= 1 || isLoading}
+              aria-label="Trang đầu tiên"
+            >
+              <ChevronLeftIcon className="h-4 w-4 mr-[-0.5rem]" />
+              <ChevronLeftIcon className="h-4 w-4" />
+            </button>
+
+            {/* Previous page */}
+            <button
+              className={`${styles.paginationButton} ${currentPage <= 1 ? styles.paginationButtonDisabled : ''}`}
               onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage <= 1 || isLoading}
               aria-label="Trang trước"
             >
               <ChevronLeftIcon className="h-4 w-4" />
             </button>
-            
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+
+            {/* Page numbers */}
+            {Array.from({ length: totalPages }).map((_, i) => {
               const page = i + 1;
-              return (
-                <button 
-                  key={page}
-                  className={`${styles.paginationButton} ${page === currentPage ? styles.paginationButtonActive : ''}`}
-                  onClick={() => handlePageChange(page)}
-                  disabled={isLoading}
-                  aria-label={`Trang ${page}`}
-                  aria-current={page === currentPage ? 'page' : undefined}
-                >
-                  {page}
-                </button>
-              );
+              if (
+                page === 1 ||
+                page === totalPages ||
+                (page >= currentPage - 2 && page <= currentPage + 2)
+              ) {
+                return (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`${styles.paginationButton} ${page === currentPage ? styles.paginationButtonActive : ''}`}
+                    disabled={isLoading}
+                    aria-label={`Trang ${page}`}
+                    aria-current={page === currentPage ? 'page' : undefined}
+                  >
+                    {page}
+                  </button>
+                );
+              } else if (page === currentPage - 3 || page === currentPage + 3) {
+                return <span key={page} className={styles.paginationEllipsis}>...</span>;
+              }
+              return null;
             })}
-            
-            <button 
-              className={`${styles.paginationButton} ${currentPage >= totalPages ? styles.paginationButtonDisabled : ''}`} 
-              disabled={currentPage >= totalPages || isLoading}
+
+            {/* Next page */}
+            <button
+              className={`${styles.paginationButton} ${currentPage >= totalPages ? styles.paginationButtonDisabled : ''}`}
               onClick={() => handlePageChange(currentPage + 1)}
-              aria-label="Trang tiếp theo"
+              disabled={currentPage >= totalPages || isLoading}
+              aria-label="Trang sau"
             >
+              <ChevronRightIcon className="h-4 w-4" />
+            </button>
+
+            {/* Last page */}
+            <button
+              className={`${styles.paginationButton} ${currentPage >= totalPages ? styles.paginationButtonDisabled : ''}`}
+              onClick={() => handlePageChange(totalPages)}
+              disabled={currentPage >= totalPages || isLoading}
+              aria-label="Trang cuối cùng"
+            >
+              <ChevronRightIcon className="h-4 w-4 ml-[-0.5rem]" />
               <ChevronRightIcon className="h-4 w-4" />
             </button>
           </div>

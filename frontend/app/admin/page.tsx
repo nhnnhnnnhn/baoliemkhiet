@@ -3,9 +3,10 @@
 import Link from "next/link"
 import Image from "next/image"
 import { ArrowDownIcon, ArrowUpIcon, Eye, MessageSquare, PenSquare } from "lucide-react"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useAppDispatch, useAppSelector } from "@/src/store"
 import { handleGetStatistics, handleGetWeeklyViews, handleGetMostViewedArticles } from "@/src/thunks/dashboard/dashboardThunk"
+import categoryApi from "@/src/apis/category"
 import { selectDashboardStatistics, selectDashboardLoading, selectWeeklyViews } from "@/src/thunks/dashboard/dashboardSlice"
 
 import { Button } from "@/components/ui/button"
@@ -17,12 +18,35 @@ export default function AdminDashboard() {
   const weeklyViews = useAppSelector(selectWeeklyViews)
   const mostViewedArticles = useAppSelector((state) => state.dashboard.mostViewedArticles)
   const isLoading = useAppSelector(selectDashboardLoading)
+  const [categories, setCategories] = useState<{[key: string]: string}>({})
 
   useEffect(() => {
     dispatch(handleGetStatistics())
     dispatch(handleGetWeeklyViews())
     dispatch(handleGetMostViewedArticles())
   }, [dispatch])
+
+  useEffect(() => {
+    if (mostViewedArticles && mostViewedArticles.length > 0) {
+      // Lấy unique categoryIds
+      const uniqueCategoryIds = [...new Set(mostViewedArticles
+        .map(article => article.categoryId)
+        .filter(id => id != null))] as number[]
+
+      // Fetch thông tin của tất cả categories
+      Promise.all(
+        uniqueCategoryIds.map(id =>
+          categoryApi.getCategoryById(id)
+            .then(category => [id.toString(), category.name])
+        )
+      ).then(results => {
+        const categoryMap = Object.fromEntries(results)
+        setCategories(categoryMap)
+      }).catch(error => {
+        console.error('Error fetching categories:', error)
+      })
+    }
+  }, [mostViewedArticles])
 
   // Calculate percentage changes
   const viewsChange = statistics ? parseFloat(statistics.viewPercentage) : 0
@@ -68,15 +92,17 @@ export default function AdminDashboard() {
           <div className={styles.statValue}>
             {isLoading ? "Loading..." : statistics?.viewsInThisMonth?.toLocaleString() || "0"}
           </div>
-          <div
-            className={`${styles.statChange} ${viewsChange >= 0 ? styles.statChangePositive : styles.statChangeNegative}`}
-          >
+          <div className={styles.statChange}>
+            <span>{Math.abs(viewsChange).toFixed(1)}%</span>
             {viewsChange >= 0 ? (
-              <ArrowUpIcon className={styles.statChangeIcon} />
+              <span className={styles.statChangePositive}>
+                <ArrowUpIcon className={styles.statChangeIcon} /> tăng so với tháng trước
+              </span>
             ) : (
-              <ArrowDownIcon className={styles.statChangeIcon} />
+              <span className={styles.statChangeNegative}>
+                <ArrowDownIcon className={styles.statChangeIcon} /> giảm so với tháng trước
+              </span>
             )}
-            <span>{Math.abs(viewsChange).toFixed(1)}% so với tháng trước</span>
           </div>
         </div>
 
@@ -90,21 +116,23 @@ export default function AdminDashboard() {
           <div className={styles.statValue}>
             {isLoading ? "Loading..." : statistics?.countArticlesInThisMonth || "0"}
           </div>
-          <div
-            className={`${styles.statChange} ${articlesChange >= 0 ? styles.statChangePositive : styles.statChangeNegative}`}
-          >
+          <div className={styles.statChange}>
+            <span>{Math.abs(articlesChange).toFixed(1)}%</span>
             {articlesChange >= 0 ? (
-              <ArrowUpIcon className={styles.statChangeIcon} />
+              <span className={styles.statChangePositive}>
+                <ArrowUpIcon className={styles.statChangeIcon} /> tăng so với tháng trước
+              </span>
             ) : (
-              <ArrowDownIcon className={styles.statChangeIcon} />
+              <span className={styles.statChangeNegative}>
+                <ArrowDownIcon className={styles.statChangeIcon} /> giảm so với tháng trước
+              </span>
             )}
-            <span>{Math.abs(articlesChange).toFixed(1)}% so với tháng trước</span>
           </div>
         </div>
 
         <div className={styles.statCard}>
           <div className={styles.statHeader}>
-            <div className={styles.statTitle}>Bình luận trong tuần</div>
+            <div className={styles.statTitle}>Bình luận trong tháng</div>
             <div className={`${styles.statIconContainer} ${styles.statIconYellow}`}>
               <MessageSquare className="h-4 w-4" />
             </div>
@@ -112,15 +140,17 @@ export default function AdminDashboard() {
           <div className={styles.statValue}>
             {isLoading ? "Loading..." : statistics?.commentsInThisMonth || "0"}
           </div>
-          <div
-            className={`${styles.statChange} ${commentsChange >= 0 ? styles.statChangePositive : styles.statChangeNegative}`}
-          >
+          <div className={styles.statChange}>
+            <span>{Math.abs(commentsChange).toFixed(1)}%</span>
             {commentsChange >= 0 ? (
-              <ArrowUpIcon className={styles.statChangeIcon} />
+              <span className={styles.statChangePositive}>
+                <ArrowUpIcon className={styles.statChangeIcon} /> tăng so với tuần trước
+              </span>
             ) : (
-              <ArrowDownIcon className={styles.statChangeIcon} />
+              <span className={styles.statChangeNegative}>
+                <ArrowDownIcon className={styles.statChangeIcon} /> giảm so với tuần trước
+              </span>
             )}
-            <span>{Math.abs(commentsChange).toFixed(1)}% so với tuần trước</span>
           </div>
         </div>
       </div>
@@ -199,14 +229,21 @@ export default function AdminDashboard() {
                   </td>
                 </tr>
               ) : mostViewedArticles && mostViewedArticles.length > 0 ? (
-                mostViewedArticles.map((article) => (
+                mostViewedArticles.map((article) => {
+                  console.log('Article data:', {
+                    id: article.id,
+                    title: article.title,
+                    category: article.category,
+                    categoryName: article.category?.name
+                  });
+                  return (
                   <tr key={article.id} className={styles.tableRow}>
                     <td className={styles.tableCell}>
                       <div className="font-medium">{article.title}</div>
                     </td>
                     <td className={styles.tableCell}>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {article.category?.name || 'Chưa phân loại'}
+                        {article.categoryId ? categories[article.categoryId] || 'Đang tải...' : 'Chưa phân loại'}
                       </span>
                     </td>
                     <td className={styles.tableCell}>
@@ -231,7 +268,7 @@ export default function AdminDashboard() {
                       </div>
                     </td>
                   </tr>
-                ))
+                )})
               ) : (
                 <tr>
                   <td colSpan={5} className={styles.tableCell}>

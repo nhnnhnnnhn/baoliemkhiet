@@ -538,13 +538,15 @@ export default function AdminReportsPage() {
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuLabel>Hành động</DropdownMenuLabel>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => {
-                                    setReportToView(report)
-                                    setViewDialogOpen(true)
-                                  }}>
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    Xem chi tiết
-                                  </DropdownMenuItem>
+                                  <Link
+                                    href={`/admin/comments?highlight=${report.comment?.id}`}
+                                    className="w-full"
+                                  >
+                                    <DropdownMenuItem>
+                                      <Eye className="h-4 w-4 mr-2" />
+                                      Xem trong trang quản trị
+                                    </DropdownMenuItem>
+                                  </Link>
                                   <EditReportMenuItem 
                                     reportId={report.id} 
                                     openEditDialog={setReportToEdit} 
@@ -724,12 +726,12 @@ export default function AdminReportsPage() {
                       
                       {reportToView.comment && (
                         <div className="mt-4">
-                          <Link 
-                            href="/admin/comments"
+                          <Link
+                            href={`/admin/comments?highlight=${reportToView.comment?.id}`}
                             className="text-blue-600 hover:underline text-sm flex items-center gap-1"
                           >
                             <Eye className="h-4 w-4" />
-                            Xem chi tiết bình luận báo cáo
+                            Xem bình luận trong trang quản trị
                           </Link>
                         </div>
                       )}
