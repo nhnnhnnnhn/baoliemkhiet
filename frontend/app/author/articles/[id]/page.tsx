@@ -12,14 +12,13 @@ import { selectSelectedArticle } from "@/src/thunks/article/articleSlice"
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 // Định nghĩa các kiểu dữ liệu
-type ArticleStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'PUBLISHED'
+type ArticleStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED'
 
 const ARTICLE_STATUS_DISPLAY: Record<ArticleStatus, string> = {
   'DRAFT': 'Bản nháp',
   'PENDING': 'Chờ duyệt',
   'APPROVED': 'Đã xuất bản',
-  'REJECTED': 'Bị từ chối',
-  'PUBLISHED': 'Đã xuất bản'
+  'REJECTED': 'Bị từ chối'
 }
 
 /**

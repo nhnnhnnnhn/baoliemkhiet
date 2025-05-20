@@ -7,7 +7,7 @@ export interface Article {
   thumbnail?: string
   author_id: number
   category_id: number
-  status: 'DRAFT' | 'APPROVED' | 'REJECTED' | 'PENDING' | 'PUBLISHED'
+  status: 'DRAFT' | 'APPROVED' | 'REJECTED' | 'PENDING'
   view?: number
   publishedAt?: string
   created_at: string
@@ -65,7 +65,7 @@ export interface CreateArticlePayload {
   thumbnail?: string
   authorId: number
   categoryId: number
-  status?: 'DRAFT' | 'PUBLISHED' | 'PENDING' | 'APPROVED' | 'APPROVED'
+  status?: 'DRAFT' | 'PENDING' | 'APPROVED'
   publishedAt?: string
   tags?: number[]
   excerpt?: string
@@ -77,7 +77,7 @@ export interface EditArticlePayload {
   thumbnail?: string
   authorId?: number
   categoryId?: number
-  status?: 'DRAFT' | 'APPROVED' | 'PENDING' | 'REJECTED' | 'PUBLISHED'
+  status?: 'DRAFT' | 'APPROVED' | 'PENDING' | 'REJECTED'
   publishedAt?: string
   tags?: number[]
   excerpt?: string

@@ -70,8 +70,8 @@ export default function Home() {
         const latestResponse = await articleApi.getArticles({ 
           limit: 4, 
           page: 1, 
-          status: 'PUBLISHED',
-          sort: 'published_at',
+          status: 'APPROVED',
+          sort: 'publishedAt',
           order: 'desc'
         })
         setLatestArticles(latestResponse.articles || [])

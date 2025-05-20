@@ -398,7 +398,7 @@ export default function AddArticlePage() {
                     <SelectContent>
                       <SelectItem value="DRAFT">Bản nháp</SelectItem>
                       <SelectItem value="PENDING">Gửi duyệt</SelectItem>
-                      <SelectItem value="PUBLISHED">Xuất bản ngay</SelectItem>
+                      <SelectItem value="APPROVED">Xuất bản ngay</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
