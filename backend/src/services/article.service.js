@@ -134,8 +134,68 @@ module.exports.createArticle = async (
 };
 
 // Get all articles
-module.exports.getAllArticles = async () => {
+module.exports.getAllArticles = async (params = {}) => {
+  const { 
+    page = 1, 
+    limit = 10, 
+    sort = 'id', 
+    order = 'asc',
+    search = '', 
+    status,
+    category_id,
+    author_id
+  } = params;
+  
+  // Tính toán số lượng bản ghi cần bỏ qua
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+  
+  // Xây dựng điều kiện tìm kiếm
+  const where = {};
+  
+  // Thêm điều kiện tìm kiếm nếu có
+  if (search) {
+    where.OR = [
+      { title: { contains: search, mode: 'insensitive' } },
+      { content: { contains: search, mode: 'insensitive' } }
+    ];
+  }
+  
+  // Thêm điều kiện lọc theo trạng thái
+  if (status) {
+    where.status = status;
+  }
+  
+  // Thêm điều kiện lọc theo danh mục
+  if (category_id) {
+    where.categoryId = parseInt(category_id);
+  }
+  
+  // Thêm điều kiện lọc theo tác giả
+  if (author_id) {
+    where.authorId = parseInt(author_id);
+  }
+  
+  // Xây dựng điều kiện sắp xếp
+  let orderBy = {};
+  if (sort === 'id') {
+    // Đảm bảo sắp xếp theo ID bằng số nguyên, không phải chuỗi
+    orderBy.id = order.toLowerCase();
+  } else if (sort) {
+    orderBy[sort] = order.toLowerCase();
+  }
+  
+  // Thực hiện truy vấn để lấy số lượng tổng các bài viết
+  const totalArticles = await prisma.article.count({ where });
+  
+  // Tính tổng số trang
+  const totalPages = Math.ceil(totalArticles / parseInt(limit));
+  
+  // Thực hiện truy vấn để lấy danh sách bài viết với phân trang và sắp xếp
   const articles = await prisma.article.findMany({
+    where,
+    skip,
+    take: parseInt(limit),
+    orderBy,
     include: {
       author: {
         select: {
@@ -152,7 +212,14 @@ module.exports.getAllArticles = async () => {
       },
     },
   });
-  return articles;
+  
+  // Trả về kết quả bao gồm cả thông tin phân trang
+  return {
+    articles,
+    totalArticles,
+    currentPage: parseInt(page),
+    totalPages
+  };
 };
 
 // Get all posted articles

@@ -30,8 +30,29 @@ module.exports.createArticle = controllerHandler(async (req, res) => {
 
 // Get all articles
 module.exports.getAllArticles = controllerHandler(async (req, res) => {
-  const articles = await service.getAllArticles();
-  res.status(200).json(articles);
+  const { 
+    page, 
+    limit, 
+    sort, 
+    order, 
+    search, 
+    status, 
+    category_id, 
+    author_id 
+  } = req.query;
+  
+  const result = await service.getAllArticles({
+    page,
+    limit,
+    sort,
+    order,
+    search,
+    status,
+    category_id,
+    author_id
+  });
+  
+  res.status(200).json(result);
 });
 
 // Get all posted articles
