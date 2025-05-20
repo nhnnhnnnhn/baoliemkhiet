@@ -78,13 +78,13 @@ export default function ArticlesPage() {
   useEffect(() => {
     const highlightStyles = `
       @keyframes highlightAnimation {
-        0% { background-color: rgba(59, 130, 246, 0.4); }
-        50% { background-color: rgba(59, 130, 246, 0.6); }
-        100% { background-color: transparent; }
+        0% { background-color: rgba(255, 82, 82, 0.4); }
+        50% { background-color: rgba(255, 82, 82, 0.7); }
+        100% { background-color: rgba(255, 82, 82, 0.3); }
       }
       
       .highlight-row {
-        background-color: rgba(59, 130, 246, 0.15);
+        background-color: rgba(255, 82, 82, 0.3);
       }
       
       .highlight-animation {
@@ -274,25 +274,81 @@ export default function ArticlesPage() {
     }
   }
 
+  // Tìm trang chứa bài viết được highlight
+  useEffect(() => {
+    if (highlightedArticleId && !isLoading) {
+      // Tìm bài viết trong danh sách hiện tại
+      const found = articles.some(article => article.id.toString() === highlightedArticleId);
+      
+      if (!found && totalPages > 1) {
+        // Nếu không tìm thấy và có nhiều trang, thì tìm kiếm qua các trang
+        
+        // Hàm kiểm tra từng trang
+        const checkPage = async (page: number): Promise<number | false> => {
+          if (page > totalPages) return false;
+          
+          try {
+            const result = await dispatch(handleGetArticles({
+              page, 
+              limit: 10,
+              sort: sortField,
+              order: sortOrder
+            })).unwrap();
+            
+            // Kiểm tra xem bài viết có trong kết quả không
+            const foundInPage = result.articles.some(article => article.id.toString() === highlightedArticleId);
+            
+            if (foundInPage) {
+              return page;
+            } else {
+              return checkPage(page + 1);
+            }
+          } catch (error) {
+            console.error("Lỗi khi tìm bài viết:", error);
+            return false;
+          }
+        };
+        
+        // Bắt đầu kiểm tra từ trang 1
+        checkPage(1).then(foundPage => {
+          if (foundPage && foundPage !== currentPage) {
+            handlePageChange(foundPage);
+          }
+        });
+      }
+    }
+  }, [highlightedArticleId, isLoading, articles, currentPage, totalPages, dispatch, sortField, sortOrder, handlePageChange]);
+
   // Handle highlighting the reported article
   useEffect(() => {
-    if (highlightedArticleId && highlightedRowRef.current) {
-      // Scroll to the highlighted row
-      highlightedRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    if (highlightedArticleId && !isLoading) {
+      // Tìm bài viết trong danh sách hiện tại
+      const articleToHighlight = articles.find(
+        article => article.id.toString() === highlightedArticleId
+      );
       
-      // Add highlight animation
-      highlightedRowRef.current.classList.add('highlight-animation')
-      
-      // Remove the animation class after it completes
-      const timer = setTimeout(() => {
-        if (highlightedRowRef.current) {
-          highlightedRowRef.current.classList.remove('highlight-animation')
-        }
-      }, 2000)
-      
-      return () => clearTimeout(timer)
+      // Nếu tìm thấy và có ref
+      if (articleToHighlight && highlightedRowRef.current) {
+        // Scroll đến bài viết
+        highlightedRowRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center'
+        });
+        
+        // Thêm animation
+        highlightedRowRef.current.classList.add('highlight-animation');
+        
+        // Giữ highlight và loại bỏ animation sau khi hoàn tất
+        const timer = setTimeout(() => {
+          if (highlightedRowRef.current) {
+            highlightedRowRef.current.classList.remove('highlight-animation');
+          }
+        }, 2000);
+        
+        return () => clearTimeout(timer);
+      }
     }
-  }, [highlightedArticleId, articles])
+  }, [highlightedArticleId, articles, isLoading]);
 
   // Add these functions after getStatusClass
   const onApproveArticle = async (id: number) => {

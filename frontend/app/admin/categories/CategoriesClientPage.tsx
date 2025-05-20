@@ -7,7 +7,8 @@ import {
   handleCreateCategory,
   handleDeleteCategory as deleteCategory,
   handleGetCategories,
-  handleUpdateCategory
+  handleUpdateCategory,
+  handleGetArticlesCount
 } from "@/src/thunks/category/categoryThunk"
 import {
   selectCategories,
@@ -26,7 +27,8 @@ import {
   clearCreateCategoryState,
   clearUpdateCategoryState,
   clearDeleteCategoryState,
-  clearCategoryError
+  clearCategoryError,
+  selectArticlesCount
 } from "@/src/thunks/category/categorySlice"
 import { toast } from "@/components/ui/use-toast"
 
@@ -51,6 +53,7 @@ export default function CategoriesClientPage() {
   const isDeletingCategory = useAppSelector(selectIsDeletingCategory)
   const deleteCategoryError = useAppSelector(selectDeleteCategoryError)
   const deleteCategorySuccess = useAppSelector(selectDeleteCategorySuccess)
+  const articlesCount = useAppSelector(selectArticlesCount)
 
   // Local state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
@@ -64,11 +67,13 @@ export default function CategoriesClientPage() {
   // Fetch categories when component mounts
   useEffect(() => {
     dispatch(handleGetCategories({}))
+    dispatch(handleGetArticlesCount())
   }, [dispatch])
 
   // Handle refresh categories
   const handleRefresh = () => {
     dispatch(handleGetCategories({}))
+    dispatch(handleGetArticlesCount())
   }
 
   // Handle create category success/error
@@ -205,6 +210,23 @@ export default function CategoriesClientPage() {
       .replace(/\s+/g, "-")
   }
 
+  // Get article count for a category
+  const getCategoryArticlesCount = (categoryId: number) => {
+    // Kiểm tra xem articlesCount có phải là một mảng (được trả về từ API)
+    if (Array.isArray(articlesCount)) {
+      // Tìm category theo ID trong mảng
+      const category = articlesCount.find(cat => cat.id === categoryId);
+      // Trả về articlesCount nếu tìm thấy, ngược lại trả về 0
+      return category ? category.articlesCount : 0;
+    } 
+    // Nếu articlesCount là object theo key-value (categoryId: count)
+    else if (typeof articlesCount === 'object') {
+      return articlesCount[categoryId.toString()] || 0;
+    }
+    
+    return 0;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -247,7 +269,7 @@ export default function CategoriesClientPage() {
                 >
                   <td className="p-4 align-middle">{category.id}</td>
                   <td className="p-4 align-middle font-medium">{category.name}</td>
-                  <td className="border px-4 py-2 text-center">{category.count || 0}</td>
+                  <td className="border px-4 py-2 text-center">{getCategoryArticlesCount(category.id)}</td>
                   <td className="p-4 align-middle">
                     <div className="flex items-center gap-2">
                       <button
