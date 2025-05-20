@@ -40,10 +40,13 @@ export default function CongNghePage() {
     const fetchFeaturedArticles = async () => {
       try {
         // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
-        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        const response = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        
+        // Đảm bảo response.articles là một mảng
+        const articleList = response.articles || []
         
         // Lọc các bài viết đã xuất bản (isPublish=true)
-        const publishedArticles = articles.filter(article => article.isPublish)
+        const publishedArticles = articleList.filter((article: Article) => article.isPublish)
         
         // Sắp xếp theo lượt xem để lấy bài nổi bật sử dụng hàm helper
         const sortedArticles = sortByViews(publishedArticles)
@@ -70,10 +73,13 @@ export default function CongNghePage() {
       try {
         setLoading(true)
         // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
-        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        const response = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        
+        // Đảm bảo response.articles là một mảng
+        const articleList = response.articles || []
         
         // Lọc các bài viết đã xuất bản (isPublish=true)
-        const publishedArticles = articles.filter(article => article.isPublish)
+        const publishedArticles = articleList.filter((article: Article) => article.isPublish)
         
         // Sắp xếp theo thời gian xuất bản mới nhất sử dụng hàm helper
         const sortedArticles = sortByLatest(publishedArticles)
@@ -100,17 +106,20 @@ export default function CongNghePage() {
         setLoading(true)
         
         // Sử dụng API chuyên biệt để lấy bài viết theo danh mục
-        const articles = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        const response = await articleApi.getArticlesByCategory(CATEGORY_ID)
+        
+        // Đảm bảo response.articles là một mảng
+        const articleList = response.articles || []
         
         // Lọc các bài viết đã xuất bản (isPublish=true)
-        let filteredArticles = articles.filter(article => article.isPublish)
+        let filteredArticles = articleList.filter((article: Article) => article.isPublish)
         
         // Lọc theo tab nếu không phải "all"
         if (activeTab !== "all") {
-          filteredArticles = filteredArticles.filter(article => {
+          filteredArticles = filteredArticles.filter((article: Article) => {
             // Lọc theo tag nếu có
             if (article.tags && article.tags.length > 0) {
-              return article.tags.some(tag => tag.slug === activeTab)
+              return article.tags.some((tag: any) => tag.slug === activeTab)
             }
             return false
           })
@@ -120,7 +129,7 @@ export default function CongNghePage() {
         const sortedArticles = sortByLatest(filteredArticles)
         
         // Tính toán phân trang thủ công
-        const limit = 10
+        const limit = 4
         const start = (page - 1) * limit
         const end = start + limit
         const paginatedArticles = sortedArticles.slice(start, end)
@@ -182,7 +191,7 @@ export default function CongNghePage() {
                   />
                 </div>
                 <h2 className="text-3xl font-serif font-bold mb-3 hover:text-purple-600">
-                  <Link href={`/bai-viet/${featuredArticles[0].id}`}>
+                  <Link href={`/article/${featuredArticles[0].id}`}>
                     {featuredArticles[0].title}
                   </Link>
                 </h2>
@@ -192,7 +201,7 @@ export default function CongNghePage() {
                 <div className="flex items-center text-sm text-gray-500">
                   <span className="font-medium text-purple-600">Công nghệ</span>
                   <span className="mx-2">•</span>
-                  <span>{formatTime(featuredArticles[0].published_at || featuredArticles[0].created_at)}</span>
+                  <span>{formatTime(featuredArticles[0].publishedAt || featuredArticles[0].created_at)}</span>
                 </div>
               </div>
             ) : loading ? (
@@ -217,16 +226,38 @@ export default function CongNghePage() {
             {/* Tech News Grid */}
             <div className="mb-12">
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold">Tin công nghệ mới nhất</h3>
-                <Button variant="ghost" className="text-sm flex items-center">
-                  Xem tất cả <ChevronRightIcon className="ml-1 h-4 w-4" />
-                </Button>
+                <h3 className="text-xl font-bold">Tin công nghệ</h3>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">Trang {page}/{totalPages}</span>
+                  <div className="flex">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handlePageChange(Math.max(1, page - 1))}
+                      disabled={page === 1}
+                      className="px-2"
+                    >
+                      <span className="sr-only">Trang trước</span>
+                      &larr;
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
+                      disabled={page === totalPages}
+                      className="px-2"
+                    >
+                      <span className="sr-only">Trang sau</span>
+                      &rarr;
+                    </Button>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {loading ? (
                   // Loading skeletons
-                  Array(4).fill(0).map((_, index) => (
+                  Array(5).fill(0).map((_, index) => (
                     <div key={`skeleton-${index}`} className="border-b pb-6 mb-6 last:border-0 last:mb-0 last:pb-0">
                       <div className="flex flex-col md:flex-row gap-4">
                         <div className="md:w-1/3">
@@ -240,29 +271,29 @@ export default function CongNghePage() {
                       </div>
                     </div>
                   ))
-                ) : latestArticles.length > 0 ? (
+                ) : articles.length > 0 ? (
                   // Bài viết đã tải
-                  latestArticles.slice(0, 4).map((article) => (
+                  articles.map((article, index) => (
                     <div key={article.id} className="border-b pb-6 mb-6 last:border-0 last:mb-0 last:pb-0">
                       <div className="flex flex-col md:flex-row gap-4">
                         <div className="md:w-1/3 aspect-[4/3]">
                           <img
-                            src={article.thumbnail || `https://placehold.co/300x200/eee/999?text=Tech`}
+                            src={article.thumbnail || `https://placehold.co/300x200/eee/999?text=Tech+${index + 1}`}
                             alt={article.title}
                             className="w-full h-full object-cover rounded"
                           />
                         </div>
                         <div className="md:w-2/3">
                           <h4 className="text-lg font-bold mb-2 hover:text-purple-600">
-                            <Link href={`/bai-viet/${article.id}`}>{article.title}</Link>
+                            <Link href={`/article/${article.id}`}>{article.title}</Link>
                           </h4>
                           <p className="text-gray-600 text-sm mb-2">
-                            {article.content?.substring(0, 100)?.replace(/<[^>]*>/g, '') || ''}...
+                            <span dangerouslySetInnerHTML={{ __html: article.content?.substring(0, 100)?.replace(/<[^>]*>/g, '') + '...' || '...' }}></span>
                           </p>
                           <div className="flex items-center text-xs text-gray-500">
                             <span className="font-medium text-purple-600">Công nghệ</span>
                             <span className="mx-2">•</span>
-                            <span>{formatTime(article.published_at || article.created_at)}</span>
+                            <span>{formatTime(article.publishedAt || article.created_at)}</span>
                           </div>
                         </div>
                       </div>
@@ -276,67 +307,15 @@ export default function CongNghePage() {
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* More Articles with Pagination */}
-            <div className="mb-12">
-              <div className="flex items-center mb-6">
-                <div className="w-1 h-6 bg-purple-600 mr-3"></div>
-                <h3 className="text-xl font-bold">Tin tức công nghệ khác</h3>
-              </div>
-
-              {loading ? (
-                // Loading skeletons
-                <div className="space-y-6">
-                  {Array(5).fill(0).map((_, index) => (
-                    <div key={`skeleton-list-${index}`} className="flex gap-4 pb-6 border-b border-gray-200 last:border-0">
-                      <Skeleton className="h-16 w-24 rounded" />
-                      <div className="flex-1">
-                        <Skeleton className="h-5 w-full mb-2" />
-                        <Skeleton className="h-4 w-1/2" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : articles.length > 0 ? (
-                // Articles list with pagination
-                <>
-                  <div className="space-y-6">
-                    {articles.map((article) => (
-                      <div key={article.id} className="flex gap-4 pb-6 border-b border-gray-200 last:border-0">
-                        <div className="flex-shrink-0 w-24 h-16 bg-gray-100 rounded overflow-hidden">
-                          <img
-                            src={article.thumbnail || `https://placehold.co/96x64/eee/999?text=${article.id}`}
-                            alt={article.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div>
-                          <h4 className="font-bold mb-1 hover:text-purple-600">
-                            <Link href={`/bai-viet/${article.id}`}>{article.title}</Link>
-                          </h4>
-                          <div className="flex items-center text-xs text-gray-500">
-                            <span>{formatTime(article.published_at || article.created_at)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Pagination */}
-                  <div className="mt-8 flex justify-center">
-                    <Pagination
-                      page={page}
-                      count={totalPages}
-                      onPageChange={handlePageChange}
-                    />
-                  </div>
-                </>
-              ) : (
-                // Không có bài viết
-                <div className="text-center py-8 bg-gray-50 rounded-lg">
-                  <Cpu className="h-10 w-10 mx-auto text-gray-300 mb-2" />
-                  <p className="text-gray-500">Không tìm thấy bài viết nào phù hợp với tiêu chí hiện tại.</p>
+              
+              {/* Phân trang ở cuối */}
+              {!loading && articles.length > 0 && totalPages > 1 && (
+                <div className="mt-8 flex justify-center">
+                  <Pagination
+                    page={page}
+                    count={totalPages}
+                    onPageChange={handlePageChange}
+                  />
                 </div>
               )}
             </div>

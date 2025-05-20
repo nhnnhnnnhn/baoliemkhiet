@@ -154,15 +154,21 @@ export default function SearchPage() {
                         <span className="font-medium text-blue-600">{article.category?.name || "Không rõ"}</span>
                         <span className="mx-2">•</span>
                         <span>
-                          {article.published_at
-                            ? new Date(article.published_at).toLocaleDateString("vi-VN")
+                          {article.publishedAt
+                            ? new Date(article.publishedAt).toLocaleDateString("vi-VN")
                             : article.created_at
                               ? new Date(article.created_at).toLocaleDateString("vi-VN")
                               : ""}
                         </span>
                       </div>
-                      <h3 className="text-xl font-bold mb-2">{article.title}</h3>
-                      <p className="text-gray-600">{article.excerpt || (article.content?.slice(0, 120) + "...")}</p>
+                      <h3 className="text-xl font-bold mb-2">
+                        <Link href={`/article/${article.id}`} className="hover:text-red-600 transition-colors">
+                          {article.title}
+                        </Link>
+                      </h3>
+                      <p className="text-gray-600">
+                        <span dangerouslySetInnerHTML={{ __html: article.excerpt || (article.content?.slice(0, 120).replace(/<[^>]*>/g, '') + "...") || "" }}></span>
+                      </p>
                     </div>
                     <div className="w-32 h-24 bg-gray-100 rounded overflow-hidden shrink-0">
                       <img

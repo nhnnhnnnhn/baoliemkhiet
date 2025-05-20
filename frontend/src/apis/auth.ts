@@ -64,9 +64,10 @@ const authApi = {
     return await axiosClient.post('/auth/forgot-password', { email });
   },
 
-  async resetPassword(token: string, newPassword: string) {
+  async resetPassword(email: string, otp: string, newPassword: string) {
     return await axiosClient.post('/auth/reset-password', {
-      token,
+      email,
+      otp,
       newPassword,
     });
   },

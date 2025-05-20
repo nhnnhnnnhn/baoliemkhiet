@@ -143,17 +143,6 @@ export function SiteHeader({ variant = 'transparent' }: SiteHeaderProps) {
                 </Button>
               </Link>
             )}
-
-            <SafeLink href="/subscribe">
-              <Button
-                size="sm"
-                className={
-                  isScrolled ? "bg-black text-white hover:bg-gray-800" : "bg-white text-black hover:bg-gray-100"
-                }
-              >
-                NỘI DUNG PREMIUM
-              </Button>
-            </SafeLink>
           </div>
         </div>
       </div>
