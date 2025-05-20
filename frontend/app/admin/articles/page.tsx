@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useMemo } from "react"
 import Link from "next/link"
 import { ChevronLeftIcon, ChevronRightIcon, Download, Edit, Eye, Filter, MoreHorizontal, Plus, RefreshCw, Search, Trash2, CheckCircle, XCircle, ArrowUp, ArrowDown } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "@/src/store"
@@ -104,12 +104,24 @@ export default function ArticlesPage() {
   // Fetch articles on component mount or when page changes
   useEffect(() => {
     dispatch(handleGetArticles({
-      page: currentPage,
-      limit: 10,
+      limit: 100,
       sort: sortField,
       order: sortOrder
     }))
-  }, [dispatch, currentPage, sortField, sortOrder])
+  }, [dispatch, sortField, sortOrder])
+  
+  // Sort articles locally in the frontend
+  const sortedArticles = useMemo(() => {
+    const articlesToSort = [...(isSearching ? filteredArticles : articles)];
+    
+    // Chỉ sắp xếp theo ID để đảm bảo thứ tự từ bé đến lớn
+    return articlesToSort.sort((a, b) => {
+      const aId = parseInt(String(a.id));
+      const bId = parseInt(String(b.id));
+      
+      return sortOrder === 'asc' ? aId - bId : bId - aId;
+    });
+  }, [articles, filteredArticles, isSearching, sortOrder]);
   
   // Handle search input change with debounce
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
@@ -129,8 +141,7 @@ export default function ArticlesPage() {
         // If search query is empty, get all articles
         setIsSearching(false)
         dispatch(handleGetArticles({
-          page: currentPage,
-          limit: 10,
+          limit: 100,
           sort: sortField,
           order: sortOrder
         }))
@@ -150,8 +161,7 @@ export default function ArticlesPage() {
       if (searchQuery.trim() === '') {
         setIsSearching(false)
         dispatch(handleGetArticles({
-          page: currentPage, 
-          limit: 10, 
+          limit: 100, 
           sort: sortField, 
           order: sortOrder
         }))
@@ -205,8 +215,7 @@ export default function ArticlesPage() {
     
     // Reset to first page when sorting
     dispatch(handleGetArticles({
-      page: 1,
-      limit: 10,
+      limit: 100,
       sort: field,
       order: newOrder
     }));
@@ -227,8 +236,7 @@ export default function ArticlesPage() {
   // Handle refresh
   const handleRefresh = () => {
     dispatch(handleGetArticles({
-      page: 1,
-      limit: 10,
+      limit: 100,
       sort: sortField,
       order: sortOrder
     }))
@@ -458,7 +466,7 @@ export default function ArticlesPage() {
                   <td colSpan={9} className="text-center py-4">Không tìm thấy kết quả phù hợp</td>
                 </tr>
               ) : (
-                (isSearching ? filteredArticles : articles).map((article) => (
+                sortedArticles.map((article) => (
                   <tr 
                     key={article.id} 
                     className={`${styles.tableRow} ${highlightedArticleId && article.id.toString() === highlightedArticleId ? 'highlight-row' : ''}`}
