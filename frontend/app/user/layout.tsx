@@ -12,6 +12,8 @@ import { useLogout } from "@/hooks/use-logout"
 import { useState, Suspense } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useSelector } from "react-redux"
+import { selectCurrentUser } from "@/src/thunks/auth/authSlice"
 import {
   Bell,
   ChevronDown,
@@ -37,6 +39,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
   const logout = useLogout()
+  const currentUser = useSelector(selectCurrentUser)
 
   const isActive = (path: string) => {
     if (path === "/user" && pathname === "/user") {
@@ -54,6 +57,16 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
       <span>{children}</span>
     </Link>
   )
+
+  // Helper function to get avatar URL
+  const getAvatarUrl = (path: string | null | undefined) => {
+    if (!path) return `/placeholder.svg?height=40&width=40`;
+    if (path.startsWith('http')) return path;
+    if (path.startsWith('data:image')) return path;
+    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || '';
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${baseUrl}${cleanPath}`;
+  };
 
   const SidebarContent = () => (
     <div className={styles.sidebarContent}>
@@ -85,41 +98,8 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
         <div className={styles.navSection}>
           <div className={styles.navSectionTitle}>Tài khoản</div>
           <div className={styles.navLinks}>
-            <NavLink href="/user" icon={Home}>
-              Trang chủ
-            </NavLink>
             <NavLink href="/user/profile" icon={User}>
               Hồ sơ cá nhân
-            </NavLink>
-            <NavLink href="/user/payments" icon={CreditCard}>
-              Quản lý thanh toán
-            </NavLink>
-            <NavLink href="/user/settings" icon={Settings}>
-              Cài đặt
-            </NavLink>
-          </div>
-        </div>
-
-        <div className={styles.navSection}>
-          <div className={styles.navSectionTitle}>Nội dung</div>
-          <div className={styles.navLinks}>
-            <NavLink href="/user/comments" icon={MessageSquare}>
-              Bình luận của tôi
-            </NavLink>
-            <NavLink href="/user/following" icon={Users}>
-              Đang theo dõi
-            </NavLink>
-          </div>
-        </div>
-
-        <div className={styles.navSection}>
-          <div className={styles.navSectionTitle}>Thông báo</div>
-          <div className={styles.navLinks}>
-            <NavLink href="/user/notifications" icon={Bell}>
-              Thông báo
-            </NavLink>
-            <NavLink href="/user/reports" icon={AlertTriangle}>
-              Báo cáo
             </NavLink>
           </div>
         </div>
@@ -128,12 +108,12 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
       <div className={styles.sidebarFooter}>
         <div className={styles.userCard}>
           <div className={styles.userAvatar}>
-            <img src="/placeholder.svg?height=40&width=40" alt="User Avatar" className={styles.userAvatarImg} />
+            <img src={getAvatarUrl(currentUser?.avatar)} alt={currentUser?.fullname || 'User'} className={styles.userAvatarImg} />
             <span className={styles.userStatus}></span>
           </div>
           <div className={styles.userInfo}>
-            <div className={styles.userName}>Nguyễn Văn A</div>
-            <div className={styles.userRole}>Độc giả</div>
+            <div className={styles.userName}>{currentUser?.fullname || 'User'}</div>
+            <div className={styles.userRole}>{currentUser?.role || 'Độc giả'}</div>
           </div>
         </div>
       </div>
@@ -158,38 +138,30 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
       <div className={styles.mainContent}>
         {/* Header */}
         <header className={styles.header}>
-          <div className={styles.headerLeft}>
-            <Link href="/">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
-                  <Menu className="h-5 w-5" />
-                </Button>
-                <Link href="/">
-                  <Button variant="ghost" size="icon">
-                    <Home className="h-5 w-5" />
-                  </Button>
-                </Link>
-              </div>
-            </Link>
-            <div className={styles.searchContainer}>
-              <Search className={styles.searchIcon} />
-              <Input type="search" placeholder="Tìm kiếm..." className={styles.searchInput} />
-            </div>
-          </div>
+          <div className={styles.headerLeft}>            
+            <Link href="/">              
+              <div className="flex items-center gap-2">                
+                <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>                  
+                  <Menu className="h-5 w-5" />                
+                </Button>                
+                <Link href="/user/profile">                  
+                  <Button variant="ghost" size="icon">                    
+                    <Home className="h-5 w-5" />                  
+                  </Button>                
+                </Link>              
+              </div>            
+            </Link>          
+          </div>          
           <div className={styles.headerRight}>
-            <Button variant="ghost" size="icon" className={styles.headerAction}>
-              <Bell className="h-5 w-5" />
-              <span className={styles.notificationBadge}>2</span>
-            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 flex items-center gap-2 p-2">
                   <img
-                    src="/placeholder.svg?height=32&width=32"
-                    alt="User"
+                    src={getAvatarUrl(currentUser?.avatar)}
+                    alt={currentUser?.fullname || 'User'}
                     className="h-8 w-8 rounded-full"
                   />
-                  <span className="font-medium">Nguyễn Văn A</span>
+                  <span className="font-medium">{currentUser?.fullname || 'User'}</span>
                   <ChevronDown className="h-4 w-4 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
@@ -198,12 +170,6 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                   <Link href="/user/profile" className="flex items-center">
                     <User className="mr-2 h-4 w-4" />
                     <span>Hồ sơ cá nhân</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/user/settings" className="flex items-center">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Cài đặt</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={logout} className="cursor-pointer">
