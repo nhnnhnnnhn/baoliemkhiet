@@ -1,5 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import tagApi, { CreateTagPayload, GetTagsParams } from '@/src/apis/tag';
+import tagApi, { CreateTagPayload, GetTagsParams, UpdateTagPayload } from '@/src/apis/tag';
 
 // Thunk để lấy danh sách tag
 export const handleGetTags = createAsyncThunk(
@@ -62,6 +62,18 @@ export const handleDeleteTag = createAsyncThunk(
       return id;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Không thể xóa tag');
+    }
+  }
+);
+
+export const handleUpdateTag = createAsyncThunk(
+  'tag/updateTag',
+  async ({ id, data }: { id: number; data: UpdateTagPayload }, { rejectWithValue }) => {
+    try {
+      const response = await tagApi.updateTag(id, data);
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật thẻ');
     }
   }
 );

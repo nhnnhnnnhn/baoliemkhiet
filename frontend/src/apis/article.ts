@@ -123,6 +123,11 @@ export interface AuthorDashboardData {
   uniqueCategoryCount: number
 }
 
+export interface GetArticlesByTagResponse {
+  articles: Article[];
+  numberOfArticles: number;
+}
+
 const articleApi = {
   // Lấy danh sách bài viết
   getArticles: async (params?: GetArticlesParams): Promise<GetArticlesResponse> => {
@@ -165,7 +170,7 @@ const articleApi = {
   },
 
   // Lấy bài viết theo tag
-  getArticlesByTag: async (tagId: number): Promise<Article[]> => {
+  getArticlesByTag: async (tagId: number): Promise<GetArticlesByTagResponse> => {
     return axiosClient.get(`/articles/get-tag/${tagId}`)
   },
 

@@ -515,7 +515,17 @@ module.exports.getArticlesByTag = async (tagId) => {
       },
     },
   });
-  return articles;
+  // Đếm số lượng bài viết
+  const numberOfArticles = await prisma.article.count({
+    where: {
+      articleTags: {
+        some: {
+          tagId: Number(tagId),
+        },
+      },
+    },
+  });
+  return { articles, numberOfArticles };
 };
 
 // Get articles by date range

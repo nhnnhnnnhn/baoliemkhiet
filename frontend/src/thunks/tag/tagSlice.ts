@@ -1,6 +1,6 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from '@/src/store';
-import { handleCreateTag, handleDeleteTag, handleGetTagById, handleGetTags, handleGetTagsByArticleId } from './tagThunk';
+import { handleCreateTag, handleDeleteTag, handleGetTagById, handleGetTags, handleGetTagsByArticleId, handleUpdateTag } from './tagThunk';
 import { Tag as ApiTag } from '@/src/apis/tag';
 
 // Sử dụng lại kiểu Tag từ API để đảm bảo tính nhất quán
@@ -25,6 +25,9 @@ interface TagState {
   isDeletingTag: boolean;
   deleteTagError: string | null;
   deleteTagSuccess: boolean;
+  isUpdatingTag: boolean;
+  updateTagError: string | null;
+  updateTagSuccess: boolean;
 }
 
 const initialState: TagState = {
@@ -41,7 +44,10 @@ const initialState: TagState = {
   createTagSuccess: false,
   isDeletingTag: false,
   deleteTagError: null,
-  deleteTagSuccess: false
+  deleteTagSuccess: false,
+  isUpdatingTag: false,
+  updateTagError: null,
+  updateTagSuccess: false
 };
 
 const tagSlice = createSlice({
@@ -58,6 +64,10 @@ const tagSlice = createSlice({
     clearDeleteTagState: (state) => {
       state.deleteTagError = null;
       state.deleteTagSuccess = false;
+    },
+    clearUpdateTagState: (state) => {
+      state.updateTagError = null;
+      state.updateTagSuccess = false;
     }
   },
   extraReducers: (builder) => {
@@ -163,12 +173,31 @@ const tagSlice = createSlice({
         state.isDeletingTag = false;
         state.deleteTagError = action.payload as string;
         state.deleteTagSuccess = false;
+      })
+
+      // Xử lý cập nhật tag
+      .addCase(handleUpdateTag.pending, (state) => {
+        state.isUpdatingTag = true;
+        state.updateTagError = null;
+        state.updateTagSuccess = false;
+      })
+      .addCase(handleUpdateTag.fulfilled, (state, action) => {
+        state.isUpdatingTag = false;
+        state.updateTagSuccess = true;
+        const index = state.tags.findIndex((tag) => tag.id === action.payload.id);
+        if (index !== -1) {
+          state.tags[index] = action.payload;
+        }
+      })
+      .addCase(handleUpdateTag.rejected, (state, action) => {
+        state.isUpdatingTag = false;
+        state.updateTagError = action.payload as string;
       });
   }
 });
 
 // Export các actions
-export const { clearTagError, clearCreateTagState, clearDeleteTagState } = tagSlice.actions;
+export const { clearTagError, clearCreateTagState, clearDeleteTagState, clearUpdateTagState } = tagSlice.actions;
 
 // Export các selectors
 export const selectTags = (state: RootState) => state.tag.tags;
@@ -185,6 +214,9 @@ export const selectCreateTagSuccess = (state: RootState) => state.tag.createTagS
 export const selectIsDeletingTag = (state: RootState) => state.tag.isDeletingTag;
 export const selectDeleteTagError = (state: RootState) => state.tag.deleteTagError;
 export const selectDeleteTagSuccess = (state: RootState) => state.tag.deleteTagSuccess;
+export const selectIsUpdatingTag = (state: RootState) => state.tag.isUpdatingTag;
+export const selectUpdateTagError = (state: RootState) => state.tag.updateTagError;
+export const selectUpdateTagSuccess = (state: RootState) => state.tag.updateTagSuccess;
 
 // Export reducer
 export default tagSlice.reducer;

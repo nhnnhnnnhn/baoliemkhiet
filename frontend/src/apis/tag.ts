@@ -3,15 +3,20 @@ import axiosClient from './axiosClient'
 export interface Tag {
   id: number
   name: string
-  slug: string
-  created_at: string
-  updated_at: string
+  slug?: string
+  createdAt?: string
+  updatedAt?: string
+  articleCount?: number
   count?: number // Số lượng bài viết theo tag
 }
 
 export interface CreateTagPayload {
   name: string
   slug?: string // Có thể tự động tạo từ backend
+}
+
+export interface UpdateTagPayload {
+  name: string
 }
 
 export interface GetTagsResponse {
@@ -55,6 +60,11 @@ const tagApi = {
   // Tạo tag mới
   createTag: async (data: CreateTagPayload): Promise<Tag> => {
     return axiosClient.post('/tags', data)
+  },
+
+  // Cập nhật tag
+  updateTag: async (id: number, data: UpdateTagPayload): Promise<Tag> => {
+    return axiosClient.patch(`/tags/${id}`, data)
   },
 
   // Xóa tag

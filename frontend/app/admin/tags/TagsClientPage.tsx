@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react"
 import { Edit, Trash2, Plus, AlertCircle, RefreshCw, Save, Search } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "@/src/store"
-import { handleCreateTag, handleDeleteTag, handleGetTags } from "@/src/thunks/tag/tagThunk"
-import { selectCreateTagError, selectCreateTagSuccess, selectDeleteTagError, selectDeleteTagSuccess, selectError, selectIsCreatingTag, selectIsDeletingTag, selectIsLoading, selectTags, selectTotalTags, clearCreateTagState, clearDeleteTagState, clearTagError } from "@/src/thunks/tag/tagSlice"
+import { handleCreateTag, handleDeleteTag, handleGetTags, handleUpdateTag } from "@/src/thunks/tag/tagThunk"
+import { selectCreateTagError, selectCreateTagSuccess, selectDeleteTagError, selectDeleteTagSuccess, selectError, selectIsCreatingTag, selectIsDeletingTag, selectIsLoading, selectTags, selectTotalTags, selectIsUpdatingTag, selectUpdateTagError, selectUpdateTagSuccess, clearCreateTagState, clearDeleteTagState, clearUpdateTagState, clearTagError } from "@/src/thunks/tag/tagSlice"
 import { toast } from "@/components/ui/use-toast"
 
 import { Input } from "@/components/ui/input"
@@ -25,6 +25,9 @@ export default function TagsClientPage() {
   const isDeletingTag = useAppSelector(selectIsDeletingTag)
   const deleteTagError = useAppSelector(selectDeleteTagError)
   const deleteTagSuccess = useAppSelector(selectDeleteTagSuccess)
+  const isUpdatingTag = useAppSelector(selectIsUpdatingTag)
+  const updateTagError = useAppSelector(selectUpdateTagError)
+  const updateTagSuccess = useAppSelector(selectUpdateTagSuccess)
 
   // Local state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
@@ -86,6 +89,31 @@ export default function TagsClientPage() {
     }
   }, [deleteTagSuccess, deleteTagError, dispatch])
 
+  // Handle update tag success/error
+  useEffect(() => {
+    if (updateTagSuccess) {
+      toast({
+        title: "Thành công",
+        description: "Đã cập nhật thẻ thành công.",
+        variant: "default",
+      })
+      setIsEditModalOpen(false)
+      setSelectedTag(null)
+      setEditedTag({ name: "", slug: "" })
+      dispatch(clearUpdateTagState())
+      dispatch(handleGetTags({}))
+    }
+
+    if (updateTagError) {
+      toast({
+        title: "Lỗi",
+        description: updateTagError,
+        variant: "destructive",
+      })
+      dispatch(clearUpdateTagState())
+    }
+  }, [updateTagSuccess, updateTagError, dispatch])
+
   // Handler cho chức năng thêm tag
   const handleAddTag = () => {
     setIsAddModalOpen(true)
@@ -94,7 +122,10 @@ export default function TagsClientPage() {
   // Handler cho chức năng sửa tag
   const handleEditTag = (tag: TagType) => {
     setSelectedTag(tag)
-    setEditedTag({ name: tag.name, slug: tag.slug })
+    setEditedTag({ 
+      name: tag.name,
+      slug: tag.slug || generateSlug(tag.name)
+    })
     setIsEditModalOpen(true)
   }
 
@@ -114,19 +145,14 @@ export default function TagsClientPage() {
   }
 
   const confirmEditTag = () => {
-    if (!selectedTag || !editedTag.name || !editedTag.slug) return
+    if (!selectedTag || !editedTag.name) return
 
-    // Hiện tại API không hỗ trợ cập nhật tag
-    // Sẽ bổ sung khi API được cập nhật
-    toast({
-      title: "Chức năng chưa khả dụng",
-      description: "Tính năng cập nhật tag đang được phát triển.",
-      variant: "default",
-    })
-    
-    setIsEditModalOpen(false)
-    setSelectedTag(null)
-    setEditedTag({ name: "", slug: "" })
+    dispatch(handleUpdateTag({
+      id: selectedTag.id,
+      data: {
+        name: editedTag.name
+      }
+    }))
   }
 
   const confirmDeleteTag = () => {
@@ -209,14 +235,14 @@ export default function TagsClientPage() {
                 .filter((tag) => 
                   searchQuery
                     ? tag.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                      tag.slug.toLowerCase().includes(searchQuery.toLowerCase())
+                      (tag.slug?.toLowerCase() || '').includes(searchQuery.toLowerCase())
                     : true
                 )
                 .map((tag) => (
                 <tr key={tag.id}>
                   <td className="whitespace-nowrap px-4 py-2 text-sm">{tag.id}</td>
                   <td className="whitespace-nowrap px-4 py-2 text-sm font-medium">{tag.name}</td>
-                  <td className="whitespace-nowrap px-4 py-2 text-sm text-muted-foreground">{tag.count || 0}</td>
+                  <td className="whitespace-nowrap px-4 py-2 text-sm text-muted-foreground">{tag.articleCount || 0}</td>
                   <td className="whitespace-nowrap px-4 py-2 text-right text-sm">
                     <Button
                       variant="outline"
@@ -312,8 +338,8 @@ export default function TagsClientPage() {
 
       {/* Edit Tag Modal */}
       {isEditModalOpen && selectedTag && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-lg bg-white p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
             <h3 className="mb-4 text-lg font-medium">Chỉnh sửa thẻ</h3>
             <div className="mb-4 space-y-4">
               <div>
@@ -328,7 +354,7 @@ export default function TagsClientPage() {
                     const name = e.target.value
                     setEditedTag({
                       name,
-                      slug: generateSlug(name),
+                      slug: generateSlug(name)
                     })
                   }}
                   placeholder="Nhập tên thẻ"
@@ -336,14 +362,15 @@ export default function TagsClientPage() {
               </div>
               <div>
                 <label htmlFor="edit-slug" className="mb-2 block text-sm font-medium">
-                  Slug
+                  Slug (tự động tạo)
                 </label>
                 <Input
                   type="text"
                   id="edit-slug"
                   value={editedTag.slug}
-                  onChange={(e) => setEditedTag({ ...editedTag, slug: e.target.value })}
-                  placeholder="nhap-ten-the"
+                  disabled
+                  className="bg-gray-50"
+                  placeholder="slug-se-tu-dong-tao"
                 />
               </div>
             </div>
@@ -351,16 +378,16 @@ export default function TagsClientPage() {
               <Button
                 variant="outline"
                 onClick={() => setIsEditModalOpen(false)}
-                disabled={isLoading}
+                disabled={isUpdatingTag}
               >
                 Hủy
               </Button>
               <Button
                 variant="default"
                 onClick={confirmEditTag}
-                disabled={isLoading || !editedTag.name || !editedTag.slug}
+                disabled={isUpdatingTag || !editedTag.name}
               >
-                {isLoading ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                {isUpdatingTag ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                 Lưu
               </Button>
             </div>

@@ -22,4 +22,7 @@ router.get(
   tagController.getArticleTags
 );
 
+// Update a tag - needs auth and admin role
+router.patch("/:id", authMiddleware(), tagController.updateTag);
+
 module.exports = router;

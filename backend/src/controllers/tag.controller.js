@@ -50,10 +50,27 @@ const getArticleTags = controllerHandler(async (req, res) => {
   res.status(200).json(tags);
 });
 
+const updateTag = controllerHandler(async (req, res) => {
+  const { id } = req.params;
+  const { name} = req.body;
+
+  if (isNaN(id)) {
+    throw new Error("Invalid tag ID");
+  }
+
+  if (!name || typeof name !== "string" || name.trim().length === 0) {
+    throw new Error("Tag name is required and must be a non-empty string");
+  }
+
+  const updatedTag = await tagService.updateTag(parseInt(id), name.trim());
+  res.status(200).json(updatedTag);
+});
+
 module.exports = {
   createTag,
   deleteTag,
   getAllTags,
   getTagDetails,
   getArticleTags,
+  updateTag,
 };
