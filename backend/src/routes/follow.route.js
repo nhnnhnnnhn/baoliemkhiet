@@ -13,6 +13,13 @@ router.delete(
   followController.deleteFollow
 );
 
+// Delete a follower (by journalist)
+router.delete(
+  "/by-journalist/:followerId",
+  authMiddleware(),
+  followController.deleteFollowerByJournalist
+);
+
 // Get list of followers
 router.get("/followers/:userId", authMiddleware(), followController.getFollowers);
 

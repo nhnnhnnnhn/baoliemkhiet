@@ -31,17 +31,9 @@
             "hash": "33cc546cc10f9e29924688f634a2c9e4c3807db5fddf5ee5f7324aa63d3bb7e0"
         },
         {
-<<<<<<< HEAD
             "date": 1747679968163,
             "name": "logs\\log_20_05_2025.log",
             "hash": "0e5e8227f4f661be84f08350e7f7c6fc6f12277d61d1f9fa14dff954a1a425c7"
-
-=======
-
-            "date": 1747674001812,
-            "name": "logs\\log_20_05_2025.log",
-            "hash": "c58a8b916e24f6486453f485bcaf9be1963dc69621de43935042f2aaa12716f4"
->>>>>>> 084b91f42ddb815bfe4139d14eb55b803d11d41e
         }
     ],
     "hashType": "sha256"

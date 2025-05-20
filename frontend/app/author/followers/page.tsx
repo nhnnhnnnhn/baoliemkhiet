@@ -83,7 +83,7 @@ export default function AuthorFollowersPage() {
     if (authorId) {
       fetchFollowers()
     }
-  }, [authorId, page, timeFilter])
+  }, [authorId, page, timeFilter, sortBy])
 
   const fetchFollowers = async () => {
     if (!authorId) return
@@ -138,8 +138,7 @@ export default function AuthorFollowersPage() {
   // Handle removing follower (unfollow)
   const handleRemoveFollower = async (followerId: number) => {
     try {
-      // Technically, we're removing the follower's follow of current journalist
-      await followApi.unfollowJournalist(followerId)
+      await followApi.deleteFollowerByJournalist(followerId)
       toast({
         title: "Thành công",
         description: "Đã xóa người theo dõi khỏi danh sách",
@@ -293,7 +292,7 @@ export default function AuthorFollowersPage() {
               </CardContent>
               <CardFooter className="p-4 pt-0 flex justify-between">
                 <Link 
-                  href={`/profile/${follower.followerId}`}
+                  href={`/profile/${follower.follower?.email?.split('@')[0]}`}
                   className="text-sm text-blue-600 hover:underline flex items-center gap-1"
                 >
                   <User className="h-3.5 w-3.5" />

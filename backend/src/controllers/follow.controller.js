@@ -25,6 +25,18 @@ const deleteFollow = controllerHandler(async (req, res) => {
   res.status(204).send();
 });
 
+const deleteFollowerByJournalist = controllerHandler(async (req, res) => {
+  const journalistId = req.user.id;
+  const { followerId } = req.params;
+
+  if (isNaN(followerId)) {
+    throw new Error("Invalid follower ID");
+  }
+
+  await followService.deleteFollow(parseInt(followerId), journalistId);
+  res.status(204).send();
+});
+
 const getFollowers = controllerHandler(async (req, res) => {
   const { userId } = req.params;
   if (isNaN(userId)) {
@@ -58,6 +70,7 @@ const checkFollowing = controllerHandler(async (req, res) => {
 module.exports = {
   createFollow,
   deleteFollow,
+  deleteFollowerByJournalist,
   getFollowers,
   getFollowing,
   checkFollowing,

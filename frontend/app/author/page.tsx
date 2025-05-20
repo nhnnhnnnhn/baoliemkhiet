@@ -40,7 +40,7 @@ export default function AuthorDashboard() {
   // Calculate statistics from currentUser articles
   const stats = {
     total: currentUser?.articles?.length || 0,
-    published: currentUser?.articles?.filter(a => a.status === "PUBLISHED")?.length || 0,
+    published: currentUser?.articles?.filter(a => a.status === "APPROVED")?.length || 0,
     pending: currentUser?.articles?.filter(a => a.status === "PENDING")?.length || 0,
     draft: currentUser?.articles?.filter(a => a.status === "DRAFT")?.length || 0,
     views: currentUser?.articles?.reduce((sum, article) => sum + (article.views || 0), 0) || 0
@@ -175,14 +175,14 @@ export default function AuthorDashboard() {
                       <td className={styles.tableCell}>
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            article.status === "PUBLISHED"
+                            article.status === "APPROVED"
                               ? "bg-green-100 text-green-800"
                               : article.status === "PENDING"
                                 ? "bg-yellow-100 text-yellow-800"
                                 : "bg-gray-100 text-gray-800"
                           }`}
                         >
-                          {article.status === "PUBLISHED" ? "Đã xuất bản" :
+                          {article.status === "APPROVED" ? "Đã xuất bản" :
                            article.status === "PENDING" ? "Chờ duyệt" :
                            "Bản nháp"}
                         </span>

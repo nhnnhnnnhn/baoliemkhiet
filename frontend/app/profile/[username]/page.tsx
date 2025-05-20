@@ -130,12 +130,18 @@ export default function ProfilePage() {
       setArticlesLoading(true)
       const response = await articleApi.getArticlesByAuthor(userId)
       
-      // Sắp xếp bài viết từ mới đến cũ
-      const sortedArticles = [...(response.articles || [])].sort((a, b) => {
-        const dateA = new Date(a.publishedAt || a.created_at)
-        const dateB = new Date(b.publishedAt || b.created_at)
-        return dateB.getTime() - dateA.getTime()
-      })
+      // Lọc và sắp xếp bài viết đã xuất bản và được duyệt
+      const sortedArticles = [...(response.articles || [])]
+        .filter(article => 
+          article.status === "APPROVED" && 
+          article.publishedAt && 
+          new Date(article.publishedAt) <= new Date()
+        )
+        .sort((a, b) => {
+          const dateA = new Date(a.publishedAt || a.created_at)
+          const dateB = new Date(b.publishedAt || b.created_at)
+          return dateB.getTime() - dateA.getTime()
+        })
 
       // Lưu trữ toàn bộ bài viết đã sắp xếp
       setArticles(sortedArticles)

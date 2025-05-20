@@ -56,6 +56,18 @@ const followApi = {
     }
   },
 
+  // Delete a follower (by journalist)
+  deleteFollowerByJournalist: async (followerId: number): Promise<void> => {
+    try {
+      console.log(`[API] Deleting follower ${followerId}`);
+      await axiosClient.delete(`/follows/by-journalist/${followerId}`);
+      console.log('[API] Delete follower successful');
+    } catch (error) {
+      console.error('[API] Error deleting follower:', error);
+      throw error;
+    }
+  },
+
   // Get list of followers
   getFollowers: async (userId: number): Promise<Follow[]> => {
     try {
